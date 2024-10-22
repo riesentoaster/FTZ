@@ -1,0 +1,37 @@
+[env]
+CARGO_TARGET_DIR = "target"
+PROFILE = "release"
+PROFILE_DIR = "release"
+ZEPHYR_DIR = "../../zephyrproject/zephyr"
+
+[tasks.build_zephyr]
+script_runner = "@shell"
+script = '''
+cd ${ZEPHYR_DIR}
+. ../.venv/bin/activate
+west build -b native_sim samples/net/sockets/echo
+'''
+
+[tasks.clear_strace]
+script_runner = "@shell"
+script = '''
+rm -r strace
+mkdir -p strace
+'''
+
+[tasks.run]
+dependencies = ["build_zephyr", "clear_strace"]
+script_runner = "@shell"
+script = '''
+cargo build --profile release
+./${CARGO_TARGET_DIR}/${PROFILE_DIR}/fuzzer ${ZEPHYR_DIR}
+'''
+
+[tasks.hello_world_strace]
+script_runner = "@shell"
+script = '''
+cd ${ZEPHYR_DIR}
+. ../.venv/bin/activate
+west build -b native_sim -d build_hello_world samples/hello_world
+strace -f -e "trace=!clock_nanosleep,futex" ./build_hello_world/zephyr/zephyr.exe
+'''

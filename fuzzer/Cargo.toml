@@ -1,0 +1,18 @@
+[package]
+name = "fuzzer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libafl = { path = "../LibAFL/libafl" }
+libafl_bolts = { path = "../LibAFL/libafl_bolts" }
+wait-timeout = "0.2.0"
+pcap = "2.2.0"
+pnet = "0.35.0"
+pcap-file = "2.0.0"
+smoltcp = { version = "0.11.0", features = ["log", "iface-max-addr-count-3"] }
+log = "0.4.22"
+env_logger = "0.11.5"
+
+[features]
+std = ["smoltcp/log"]
