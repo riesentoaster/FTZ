@@ -10,3 +10,15 @@ Shared Memory is split in two such sub-buffers for the two directions, where `of
 - `0` for the packets going from the fuzzer to the system under test
 - `shmem_len/2` for packets going from the SUT to the fuzzer
 
+## Zephyr Diff
+
+Based on commit 8fda052826d. To generate the diff:
+
+```bash
+FUZZER_DIR="$(pwd)"
+cd ~/zephyrproject/zephyr
+git diff > "${FUZZER_DIR}/zephyr.diff"
+cd "${FUZZER_DIR}"
+```
+
+Apply using `git apply`.
