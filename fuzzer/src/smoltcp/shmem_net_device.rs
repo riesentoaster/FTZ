@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc, thread::sleep, time::Duration};
 
-use libafl_bolts::shmem::ShMem;
+use libafl_bolts::shmem::{MmapShMem, MmapShMemProvider, ShMem, ShMemProvider as _};
 
 use smoltcp::{
     phy::{self, Device, DeviceCapabilities},
@@ -86,27 +86,30 @@ where
     }
 }
 
-pub(crate) struct ShmemNetworkDevice<S>
-where
-    S: ShMem,
-{
-    shmem: ShmemNetDeviceBuffers<S>,
+pub(crate) struct ShmemNetworkDevice {
+    shmem: ShmemNetDeviceBuffers<MmapShMem>,
+    shmem_path: [u8; 20],
 }
 
-impl<S> ShmemNetworkDevice<S>
-where
-    S: ShMem,
-{
-    pub fn new(shmem: S) -> Self {
+impl ShmemNetworkDevice {
+    pub fn new(buf_size: usize) -> Self {
+        let shmem = MmapShMemProvider::new()
+            .unwrap()
+            .new_shmem(buf_size * 2 + 8) // two buffers plus two lengths
+            .unwrap();
+        shmem.persist_for_child_processes().unwrap();
+
+        let shmem_path = shmem.filename_path().unwrap();
+
         log::debug!("Created ShmemNetworkDevice");
         let mut shmem = ShmemNetDeviceBuffers::new(Rc::new(RefCell::new(shmem)));
         shmem.set_empty(); // clone the references, set the outgoing channel to nothing
         shmem.clone().into_rx().set_empty();
-        Self { shmem }
+        Self { shmem, shmem_path }
     }
 
     #[allow(unused)]
-    pub fn recv(&self) -> Option<Vec<u8>> {
+    pub fn try_recv(&self) -> Option<Vec<u8>> {
         let mut rx_shmem = self.shmem.clone().into_rx();
         rx_shmem.get_data_and_set_empty()
     }
@@ -125,17 +128,31 @@ where
         let rx = binding.get_size();
         log::debug!("status update: tx {}, rx {}", tx, rx);
     }
+
+    /// Reset the entire layer 1.
+    ///
+    /// This empties both buffers and puts them into a ready state.
+    #[allow(unused)]
+    pub fn reset(&mut self) {
+        self.shmem.reset();
+    }
+
+    pub fn get_shmem_path(&self) -> &[u8; 20] {
+        &self.shmem_path
+    }
+
+    /// Returns the length of the underlying shmem.
+    pub fn len(&self) -> usize {
+        self.shmem.len()
+    }
 }
 
-impl<S> Device for ShmemNetworkDevice<S>
-where
-    S: ShMem,
-{
+impl Device for ShmemNetworkDevice {
     type RxToken<'a> = RxToken
     where
         Self: 'a;
 
-    type TxToken<'a> = TxToken<S>
+    type TxToken<'a> = TxToken<MmapShMem>
     where
         Self: 'a;
 

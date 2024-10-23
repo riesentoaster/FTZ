@@ -15,7 +15,7 @@ west build -b native_sim samples/net/sockets/echo
 [tasks.clear_strace]
 script_runner = "@shell"
 script = '''
-rm -r strace
+rm -rf strace
 mkdir -p strace
 '''
 

@@ -12,19 +12,20 @@ use pnet::{
     },
     util::MacAddr,
 };
-use smoltcp::wire::Ipv6Address;
+
+use smoltcp::wire::{IpAddress, Ipv6Address};
 
 use crate::{
-    layers::data_link::parse_eth, packets::get_packets, pcap::add_packet_to_pcap_file_owned,
-    FUZZER_MAC_ADDR, IPV6_LINK_LOCAL_ADDR,
-};
-
-use super::{
-    data_link::DataLinkLayerPacket, network::NetworkLayerPacketType, upper::UpperLayerPacket,
+    layers::{
+        data_link::{parse_eth, DataLinkLayerPacket},
+        network::NetworkLayerPacketType,
+    },
+    packets::get_packets,
+    pcap::add_packet_to_pcap_file_owned,
 };
 
 #[allow(unused)]
-pub fn respond_to_arp(incoming: &DataLinkLayerPacket) -> Vec<u8> {
+pub fn respond_to_arp(incoming: &DataLinkLayerPacket, client_mac: [u8; 6]) -> Vec<u8> {
     let arp = match incoming.net() {
         NetworkLayerPacketType::Arp(p) => p,
         _ => panic!("Can not create an ARP response to {:?}", incoming),
@@ -48,7 +49,7 @@ pub fn respond_to_arp(incoming: &DataLinkLayerPacket) -> Vec<u8> {
     let eth = incoming.eth();
     let res_eth = Ethernet {
         destination: eth.source,
-        source: FUZZER_MAC_ADDR.into(),
+        source: client_mac.into(),
         ethertype: eth.ethertype,
         payload: res_arp_buf,
     };
@@ -61,20 +62,16 @@ pub fn respond_to_arp(incoming: &DataLinkLayerPacket) -> Vec<u8> {
     res_eth_buf
 }
 
-pub fn respond_to_icmpv6_multicast_listener_report_message(
+pub fn respond_to_icmpv6_neighbor_solicitation(
     incoming: &DataLinkLayerPacket,
+    mac_addr: [u8; 6],
+    ipv6_link_local_addr: IpAddress,
 ) -> Option<Vec<u8>> {
-    let icmp = match incoming.upper().unwrap() {
-        UpperLayerPacket::Icmpv6(p) => p,
-        UpperLayerPacket::Hopopt(_, p) => match p.as_ref() {
-            UpperLayerPacket::Icmpv6(ref p2) => p2,
-            _ => panic!(
-                "Did not receive ICMPv6 within HopOpt packet: {:?}",
-                incoming
-            ),
-        },
-        _ => panic!("Did not receive straight ICMPv6 packet: {:?}", incoming),
-    };
+    let icmp = incoming
+        .upper()
+        .expect("Packet did not have a layer 4 content")
+        .get_icmpv6()
+        .unwrap_or_else(|| panic!("Did not receive straight ICMPv6 packet: {:?}", incoming));
 
     if Icmpv6Types::NeighborSolicit != icmp.icmpv6_type {
         return None;
@@ -96,7 +93,7 @@ pub fn respond_to_icmpv6_multicast_listener_report_message(
     res_icmpv6_packet.populate(&res_icmpv6);
 
     let target_ip = [0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x16];
-    let source_ip = *IPV6_LINK_LOCAL_ADDR;
+    let source_ip = ipv6_link_local_addr;
 
     let checksum = icmpv6::checksum(
         &res_icmpv6_packet.to_immutable(),
@@ -160,7 +157,7 @@ pub fn respond_to_icmpv6_multicast_listener_report_message(
 
     let eth_res = Ethernet {
         destination: MacAddr(0x33, 0x33, 0x00, 0x00, 0x00, 0x16), // IPv6mcast_16
-        source: FUZZER_MAC_ADDR.into(),
+        source: mac_addr.into(),
         ethertype: EtherTypes::Ipv6,
         payload: res_net_buf,
     };

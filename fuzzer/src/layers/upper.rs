@@ -22,6 +22,15 @@ impl UpperLayerPacket {
     }
 
     #[must_use]
+    pub fn get_icmpv6(&self) -> Option<&Icmpv6> {
+        match self {
+            UpperLayerPacket::Icmpv6(icmpv6) => Some(icmpv6),
+            UpperLayerPacket::Hopopt(extension, upper) => upper.get_icmpv6(),
+            _ => None,
+        }
+    }
+
+    #[must_use]
     pub fn is_hopopt(&self) -> bool {
         matches!(self, Self::Hopopt(..))
     }

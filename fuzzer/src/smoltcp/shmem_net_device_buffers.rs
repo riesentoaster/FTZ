@@ -19,6 +19,22 @@ where
         Self { shmem, offset: 0 }
     }
 
+    pub fn reset(&mut self) {
+        self.shmem.borrow_mut().fill(0);
+        self.set_empty();
+        self.clone().into_rx().set_empty();
+    }
+
+    /// Returns the length of the underlying shmem.
+    pub fn len(&self) -> usize {
+        self.shmem.borrow().len()
+    }
+
+    /// Returns the directional buffer size, i.e. the max amount of data that can be transmitted.
+    pub fn buf_len(&self) -> usize {
+        self.shmem.borrow().len() / 2 - 4
+    }
+
     pub fn into_rx(mut self) -> Self {
         self = self.clone();
         self.offset = self.shmem.borrow().len() / 2;
