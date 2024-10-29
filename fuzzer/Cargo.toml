@@ -2,6 +2,13 @@
 name = "fuzzer"
 version = "0.1.0"
 edition = "2021"
+authors = ["Valentin Huber <contact@valentinhuber.me>"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
+debug = true
 
 [dependencies]
 libafl = { path = "../LibAFL/libafl" }
@@ -15,4 +22,5 @@ log = "0.4.22"
 env_logger = "0.11.5"
 
 [features]
-std = ["smoltcp/log"]
+std = ["log"]
+log = ["smoltcp/log"]

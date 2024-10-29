@@ -2,7 +2,27 @@
 
 Using LibAFL, I want to fuzz the TCP/IP stack of Zephyr.
 
-## Communication Protocol
+## Environment
+
+This project relies on a default installation of Zephyr relative to this folder at `../zephyrproject/zephyr`. The Python virtual environment should be placed at `../zephyrproject/.venv`.
+
+### Zephyr Diff
+
+Based on commit 8fda052826d. To generate the diff:
+
+```bash
+FUZZER_DIR="$(pwd)"
+cd ../zephyrproject/zephyr
+git diff > "${FUZZER_DIR}/zephyr.diff"
+cd "${FUZZER_DIR}"
+```
+
+Apply using `git apply`.
+
+## Communication Protocol/Custom Layer 1
+
+This project uses a custom OSI Layer 1 implementation based on shared memory to reduce performance implications on kernel interactions and make multiple parallel instances possible. Per default, the `native_sim` wrapper of Zephyr relies on a TUN interface, which only one process can use. With this custom implementation, only a single kernel interaction is necessary to setup the shared memory. Here is how the shared memory is used:
+
 - shmem\[`offset`\]:     Size, negative for ready
 - shmem\[`offset+1..`\]: Data
 
@@ -11,16 +31,3 @@ Shared Memory is split in two such sub-buffers for the two directions, where `of
 - `shmem_len/2` for packets going from the SUT to the fuzzer
 
 The environment variables `SHMEM_ETH_INTERFACE_NAME` and `SHMEM_ETH_INTERFACE_SIZE` are used to communicate the necessary information to the SUT.
-
-## Zephyr Diff
-
-Based on commit 8fda052826d. To generate the diff:
-
-```bash
-FUZZER_DIR="$(pwd)"
-cd ~/zephyrproject/zephyr
-git diff > "${FUZZER_DIR}/zephyr.diff"
-cd "${FUZZER_DIR}"
-```
-
-Apply using `git apply`.
