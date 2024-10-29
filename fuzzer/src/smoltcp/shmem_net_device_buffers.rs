@@ -31,6 +31,7 @@ where
     }
 
     /// Returns the directional buffer size, i.e. the max amount of data that can be transmitted.
+    #[allow(unused)]
     pub fn buf_len(&self) -> usize {
         self.shmem.borrow().len() / 2 - 4
     }
