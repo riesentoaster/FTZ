@@ -94,7 +94,7 @@ index 33729784d8e..a3d5c2ad089 100644
 +# CONFIG_ETHERNET_LOG_LEVEL_DBG=y # driver
 \ No newline at end of file
 diff --git a/samples/net/sockets/echo/src/socket_echo.c b/samples/net/sockets/echo/src/socket_echo.c
-index c8aad2bb068..8d51a63e521 100644
+index c8aad2bb068..f6202fbff27 100644
 --- a/samples/net/sockets/echo/src/socket_echo.c
 +++ b/samples/net/sockets/echo/src/socket_echo.c
 @@ -19,6 +19,7 @@
@@ -105,16 +105,15 @@ index c8aad2bb068..8d51a63e521 100644
  
  #endif
  
-@@ -36,6 +37,8 @@ int main(void)
+@@ -35,6 +36,7 @@ int main(void)
+ 		.sin6_port = htons(BIND_PORT),
  	};
  	static int counter;
- 
 +	init_coverage();
-+
+ 
  	serv = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
  	if (serv < 0) {
- 		printf("error: socket: %d\n", errno);
-@@ -45,15 +48,12 @@ int main(void)
+@@ -45,15 +47,12 @@ int main(void)
  	ret = getsockopt(serv, IPPROTO_IPV6, IPV6_V6ONLY, &opt, &optlen);
  	if (ret == 0) {
  		if (opt) {
@@ -130,12 +129,13 @@ index c8aad2bb068..8d51a63e521 100644
  			}
  		}
  	}
-@@ -68,8 +68,7 @@ int main(void)
+@@ -68,8 +67,8 @@ int main(void)
  		exit(1);
  	}
  
 -	printf("Single-threaded TCP echo server waits for a connection on "
 -	       "port %d...\n", BIND_PORT);
++	k_sleep(K_MSEC(100)); // wait until all setup code is done, to ensure consistent coverage
 +	reset_coverage();
  
  	while (1) {
@@ -157,7 +157,7 @@ index c8aad2bb068..8d51a63e521 100644
  	return 0;
  }
 diff --git a/scripts/native_simulator/common/src/include/nsi_host_trampolines.h b/scripts/native_simulator/common/src/include/nsi_host_trampolines.h
-index 31f954ee0cc..d204148fcea 100644
+index 31f954ee0cc..36ec7157b78 100644
 --- a/scripts/native_simulator/common/src/include/nsi_host_trampolines.h
 +++ b/scripts/native_simulator/common/src/include/nsi_host_trampolines.h
 @@ -17,11 +17,14 @@
@@ -176,7 +176,7 @@ index 31f954ee0cc..d204148fcea 100644
  void *nsi_host_calloc(unsigned long nmemb, unsigned long size);
  int nsi_host_close(int fd);
  /* void nsi_host_exit (int status); Use nsi_exit() instead */
-@@ -37,6 +40,19 @@ void *nsi_host_realloc(void *ptr, unsigned long size);
+@@ -37,6 +40,17 @@ void *nsi_host_realloc(void *ptr, unsigned long size);
  void nsi_host_srandom(unsigned int seed);
  char *nsi_host_strdup(const char *s);
  long nsi_host_write(int fd, const void *buffer, unsigned long size);
@@ -191,16 +191,14 @@ index 31f954ee0cc..d204148fcea 100644
 +bool incoming_available(void);
 +void init_coverage(void);
 +void reset_coverage(void);
-+
-+
  
  #ifdef __cplusplus
  }
 diff --git a/scripts/native_simulator/common/src/nsi_host_trampolines.c b/scripts/native_simulator/common/src/nsi_host_trampolines.c
-index eb378b7533f..050b43e27ed 100644
+index eb378b7533f..238e8118f02 100644
 --- a/scripts/native_simulator/common/src/nsi_host_trampolines.c
 +++ b/scripts/native_simulator/common/src/nsi_host_trampolines.c
-@@ -10,6 +10,16 @@
+@@ -10,6 +10,15 @@
  #include <unistd.h>
  #include <fcntl.h>
  #include <string.h>
@@ -211,13 +209,12 @@ index eb378b7533f..050b43e27ed 100644
 +#include <sys/stat.h>
 +#include <stdbool.h>
 +#include "nsi_host_trampolines.h"
-+#include <time.h>
 +#include <dlfcn.h>
 +
  
  void *nsi_host_calloc(unsigned long nmemb, unsigned long size)
  {
-@@ -75,3 +85,204 @@ long nsi_host_write(int fd, const void *buffer, unsigned long size)
+@@ -75,3 +84,204 @@ long nsi_host_write(int fd, const void *buffer, unsigned long size)
  {
  	return write(fd, buffer, size);
  }

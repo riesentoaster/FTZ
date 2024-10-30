@@ -29,15 +29,6 @@ pub static PCAP_PATH: &str = "./pcap.pcap";
 
 fn main() {
     env_logger::init();
-    // get_packets()
-    //     .into_iter()
-    //     .map_content(|e| parse_eth(e).unwrap())
-    //     .enumerate()
-    //     // .filter_content(|e| e.upper().is_some_and(UpperLayerPacket::is_tcp))
-    //     .for_each(|(i, e)| println!("{i}\n{:?}\n", e.deref()));
-    // get_packets()
-    //     .into_iter()
-    //     .for_each(add_packet_to_pcap_file_owned);
     let zephyr_dir = args()
         .nth(1)
         .expect("Did not receive the path to the Zephyr executable as a command line argument");

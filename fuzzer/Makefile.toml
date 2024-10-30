@@ -52,3 +52,11 @@ echo "\n\n\e[33mWarning: Not recompiling Zephyr. Use target run to do so.\e[0m\n
 sleep 1
 ${FUZZER_DIR} ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe
 '''
+
+[tasks.zephyr_diff]
+script_runner = "@shell"
+script = '''
+FUZZER_DIR="$(realpath ../zephyr.diff)"
+cd ${ZEPHYR_PROJECT_DIR}
+git diff > "${FUZZER_DIR}"
+'''
