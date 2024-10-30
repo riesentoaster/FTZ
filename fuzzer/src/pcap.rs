@@ -52,7 +52,7 @@ fn write_to_file(file: File) -> Result<usize, PcapError> {
             let (duration, packet) = e.deref();
             let len = packet.len();
 
-            log::info!(
+            log::debug!(
                 "#{} Attempting to write pcap entry dir: {:?}, time: {:?}, len: {}",
                 i + 1,
                 e.outer_to_string(),

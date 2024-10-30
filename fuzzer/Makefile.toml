@@ -6,25 +6,17 @@ INCLUDE_DIR = "include"
 CC_DIR = "${CARGO_TARGET_DIR}/${PROFILE_DIR}/libafl_cc"
 CXX_DIR = "${CARGO_TARGET_DIR}/${PROFILE_DIR}/libafl_cxx"
 COVERAGE_DIR = "./${CARGO_TARGET_DIR}/${INCLUDE_DIR}/coverage.o"
-ZEPHYR_DIR = "../../zephyrproject/zephyr"
+ZEPHYR_PROJECT_DIR = "../../zephyrproject/zephyr"
+ZEPHYR_EXE_DIR = "./${CARGO_TARGET_DIR}/target"
 FUZZER_DIR = "./${CARGO_TARGET_DIR}/${PROFILE_DIR}/fuzzer"
 
-[tasks.build_coverage]
-condition = { files_not_exist = ["${COVERAGE_DIR}"] }
-script_runner = "@shell"
-script = '''
-mkdir -p "${CARGO_TARGET_DIR}/${INCLUDE_DIR}"
-clang -m32 -c -o "${COVERAGE_DIR}" coverage.c
-'''
 
 [tasks.build_zephyr]
 script_runner = "@shell"
-dependencies = ["build_coverage"]
 script = '''
-export CUSTOM_CFLAGS="-g -O2 -fsanitize-coverage=trace-pc-guard"
-export CUSTOM_LDFLAGS="-rdynamic $(realpath ${COVERAGE_DIR})"
+export CUSTOM_TARGET_DIR="$(realpath ${ZEPHYR_EXE_DIR})"
 
-cd ${ZEPHYR_DIR}
+cd ${ZEPHYR_PROJECT_DIR}
 
 . ../.venv/bin/activate
 
@@ -33,16 +25,30 @@ export ZEPHYR_TOOLCHAIN_VARIANT="llvm"
 west build \
     -b native_sim \
     samples/net/sockets/echo \
+    -d "$CUSTOM_TARGET_DIR" \
     ${ZEPHYR_PRISTINE:+--pristine} \
     -- \
-    -DEXTRA_CFLAGS="${CUSTOM_CFLAGS}" \
-    -DEXTRA_LDFLAGS="${CUSTOM_LDFLAGS}"
+    -DEXTRA_CFLAGS="-g -O2 -fsanitize-coverage=trace-pc-guard"
 '''
 
-[tasks.run]
-dependencies = ["build_zephyr"]
+[tasks.build_fuzzer]
 script_runner = "@shell"
 script = '''
 cargo build --profile release
-${FUZZER_DIR} ${ZEPHYR_DIR}
+'''
+
+[tasks.run]
+dependencies = ["build_fuzzer", "build_zephyr"]
+script_runner = "@shell"
+script = '''
+${FUZZER_DIR} ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe
+'''
+
+[tasks.run_fast]
+dependencies = ["build_fuzzer"]
+script_runner = "@shell"
+script = '''
+echo "\n\n\e[33mWarning: Not recompiling Zephyr. Use target run to do so.\e[0m\n\n\n\n"
+sleep 1
+${FUZZER_DIR} ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe
 '''

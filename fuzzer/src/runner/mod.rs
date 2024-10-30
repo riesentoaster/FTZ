@@ -1,5 +1,6 @@
 use core::str;
 use std::{
+    ffi::CStr,
     os::unix::process::ExitStatusExt as _,
     sync::{
         mpsc::{self, TryRecvError},
@@ -10,10 +11,15 @@ use std::{
 };
 
 use client::setup_client_and_connect;
+use libafl::Error;
+use libafl_bolts::shmem::{
+    MmapShMem, MmapShMemProvider, ShMem as _, ShMemDescription, ShMemProvider as _,
+};
 use smoltcp::wire::IpAddress;
 
 use crate::{
-    runner::spawn::start_zephyr, smoltcp::shmem_net_device::ShmemNetworkDevice, SHMEM_SIZE,
+    runner::spawn::start_zephyr, smoltcp::shmem_net_device::ShmemNetworkDevice, COV_SHMEM_SIZE,
+    NETWORK_SHMEM_SIZE,
 };
 
 mod client;
@@ -31,47 +37,43 @@ static IPV6_LINK_LOCAL_ADDR: LazyLock<IpAddress> = LazyLock::new(|| {
 });
 static CLIENT_MAC_ADDR: [u8; 6] = [0x00, 0x00, 0x5e, 0x00, 0x53, 0xff];
 
-#[allow(unused)]
-#[derive(PartialEq, Clone)]
-pub enum RunType {
-    Default,
-    Strace,
-    Gdb,
-    NoConnect,
-}
-
 /// Runs Zephyr and interacts with it.
-pub fn run_zephyr(zephyr_dir: &str, ty: RunType) {
-    let device = ShmemNetworkDevice::new(SHMEM_SIZE);
+pub fn run_zephyr(zephyr_exec_path: &str) {
+    let (coverage_shmem, coverage_shmem_description) = get_coverage_shmem(COV_SHMEM_SIZE).unwrap();
+
+    let device = ShmemNetworkDevice::new(NETWORK_SHMEM_SIZE);
+
+    let net_shmem_name = CStr::from_bytes_until_nul(device.get_shmem_path())
+        .unwrap()
+        .to_str()
+        .unwrap();
+
+    let net_shmem_size = &device.len().to_string();
+
+    let cov_shmem_size = &coverage_shmem.len().to_string();
+    let cov_shmem_name = CStr::from_bytes_until_nul(&coverage_shmem_description.id)
+        .unwrap()
+        .to_str()
+        .unwrap();
+
+    let envs: &[(&str, &str)] = &[
+        ("SHMEM_ETH_INTERFACE_SIZE", net_shmem_size),
+        ("SHMEM_ETH_INTERFACE_NAME", net_shmem_name),
+        ("SHMEM_COVERAGE_NAME", cov_shmem_name),
+        ("SHMEM_COVERAGE_SIZE", cov_shmem_size),
+    ];
+
+    let args: &[&str] = &[];
+
     let (tx, rx) = mpsc::channel();
 
-    let zephyr_exec_dir = format!("{zephyr_dir}/build/zephyr/zephyr.exe");
-    let (cmd, args, timeout): (&str, Vec<_>, u64) = match ty {
-        RunType::Strace => (
-            "strace",
-            vec![
-                "-f",
-                "-ff",
-                "-o",
-                "./strace/pid",
-                "-e",
-                "trace=!clock_nanosleep,futex",
-                &zephyr_exec_dir,
-            ],
-            10,
-        ),
-        RunType::Gdb => ("gdb", vec![&zephyr_exec_dir], u64::MAX),
-        _ => (&zephyr_exec_dir, vec![], 10),
-    };
-
     start_zephyr(
-        cmd,
+        zephyr_exec_path,
         args,
-        device.get_shmem_path(),
-        device.len(),
+        envs,
         tx,
         Duration::from_millis(100),
-        Duration::from_secs(timeout),
+        Duration::from_secs(10),
     );
 
     log::info!("Started Zephyr");
@@ -93,33 +95,32 @@ pub fn run_zephyr(zephyr_dir: &str, ty: RunType) {
         Ok(None) => false, //timeout
     };
 
-    match ty {
-        RunType::NoConnect => log::info!("Zephyr finished with {:?}", rx.recv()),
-        RunType::Gdb => {
-            sleep(Duration::from_secs(10));
-            log::info!("Starting connection");
-            setup_client_and_connect(
-                device,
-                wait,
-                ZEPHYR_IP,
-                ZEPHYR_PORT,
-                CLIENT_PORT,
-                CLIENT_MAC_ADDR,
-                *IPV6_LINK_LOCAL_ADDR,
-                SETUP_TIMEOUT_MILLIS,
-                &MESSAGE,
-            );
-        }
-        _ => setup_client_and_connect(
-            device,
-            wait,
-            ZEPHYR_IP,
-            ZEPHYR_PORT,
-            CLIENT_PORT,
-            CLIENT_MAC_ADDR,
-            *IPV6_LINK_LOCAL_ADDR,
-            SETUP_TIMEOUT_MILLIS,
-            &MESSAGE,
-        ),
-    }
+    setup_client_and_connect(
+        device,
+        wait,
+        ZEPHYR_IP,
+        ZEPHYR_PORT,
+        CLIENT_PORT,
+        CLIENT_MAC_ADDR,
+        *IPV6_LINK_LOCAL_ADDR,
+        SETUP_TIMEOUT_MILLIS,
+        &MESSAGE,
+    );
+
+    log::info!(
+        "{} edges visited",
+        coverage_shmem.iter().filter(|e| **e != 0).count()
+    );
+}
+
+fn get_coverage_shmem(size: usize) -> Result<(MmapShMem, ShMemDescription), Error> {
+    let mut shmem_provider = MmapShMemProvider::default();
+    let shmem = shmem_provider
+        .new_shmem(size)
+        .expect("Could not get the shared memory map");
+
+    shmem.persist_for_child_processes()?;
+
+    let shmem_description = shmem.description();
+    Ok((shmem, shmem_description))
 }

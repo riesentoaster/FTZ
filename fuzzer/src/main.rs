@@ -23,7 +23,8 @@ use crate::{
     runner::run_zephyr,
 };
 
-pub static SHMEM_SIZE: usize = 1 << 16;
+pub static NETWORK_SHMEM_SIZE: usize = 1 << 16;
+pub static COV_SHMEM_SIZE: usize = 25632; // manually extracted
 pub static PCAP_PATH: &str = "./pcap.pcap";
 
 fn main() {
@@ -38,14 +39,10 @@ fn main() {
     //     .into_iter()
     //     .for_each(add_packet_to_pcap_file_owned);
     let zephyr_dir = args()
-    .nth(1)
-    .unwrap_or_else(|| {
-        let res = format!("{}/zephyrproject/zephyr", env!("HOME"));
-        println!("Did not receive zephyr's working directory as a command line argument, using '{}' instead", res);
-        res
-    });
+        .nth(1)
+        .expect("Did not receive the path to the Zephyr executable as a command line argument");
 
-    run_zephyr(&zephyr_dir, runner::RunType::Default);
+    run_zephyr(&zephyr_dir);
     dump_to_pcap_file(PCAP_PATH).unwrap();
 }
 
