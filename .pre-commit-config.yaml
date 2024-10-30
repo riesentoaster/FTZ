@@ -1,0 +1,13 @@
+repos:
+  - repo: local
+    hooks:
+      - id: create-zephyr-diff
+        name: Create Zephyr Diff
+        entry: sh
+        language: system
+        always_run: true  # Ensures the hook runs on every commit
+        args:
+          - -c
+          - |
+            cd fuzzer
+            cargo make zephyr_diff

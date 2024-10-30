@@ -195,7 +195,7 @@ index 31f954ee0cc..36ec7157b78 100644
  #ifdef __cplusplus
  }
 diff --git a/scripts/native_simulator/common/src/nsi_host_trampolines.c b/scripts/native_simulator/common/src/nsi_host_trampolines.c
-index eb378b7533f..238e8118f02 100644
+index eb378b7533f..352e9488cbe 100644
 --- a/scripts/native_simulator/common/src/nsi_host_trampolines.c
 +++ b/scripts/native_simulator/common/src/nsi_host_trampolines.c
 @@ -10,6 +10,15 @@
@@ -214,7 +214,7 @@ index eb378b7533f..238e8118f02 100644
  
  void *nsi_host_calloc(unsigned long nmemb, unsigned long size)
  {
-@@ -75,3 +84,204 @@ long nsi_host_write(int fd, const void *buffer, unsigned long size)
+@@ -75,3 +84,203 @@ long nsi_host_write(int fd, const void *buffer, unsigned long size)
  {
  	return write(fd, buffer, size);
  }
@@ -415,7 +415,6 @@ index eb378b7533f..238e8118f02 100644
 +
 +void __sanitizer_cov_trace_pc_guard(uint32_t *guard)
 +{
-+	// ignore coverage before initialization
-+	if (!cov_shmem_init) return;
++	if (!cov_shmem_init) return; // ignore coverage before initialization
 +	*(guard - guard_start + cov_shmem_ptr) += 1;
 +}
