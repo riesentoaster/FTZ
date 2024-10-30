@@ -8,16 +8,7 @@ This project relies on a default installation of Zephyr relative to this folder 
 
 ### Zephyr Diff
 
-Based on commit 8fda052826d. To generate the diff:
-
-```bash
-FUZZER_DIR="$(pwd)"
-cd ../zephyrproject/zephyr
-git diff > "${FUZZER_DIR}/zephyr.diff"
-cd "${FUZZER_DIR}"
-```
-
-Apply using `git apply`.
+Changes to Zephyr are stored in [zephyr.diff](./zephyr.diff). It is updated on each commit using [pre-commit](https://pre-commit.com). Apply it using `git apply`. It is based on commit `8fda052826d`.
 
 ## Communication Protocol/Custom Layer 1
 
