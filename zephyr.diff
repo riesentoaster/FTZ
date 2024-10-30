@@ -1,46 +1,25 @@
 diff --git a/drivers/ethernet/eth_native_posix.c b/drivers/ethernet/eth_native_posix.c
-index fdd63cced53..a2986c08d29 100644
+index fdd63cced53..b4618fe1132 100644
 --- a/drivers/ethernet/eth_native_posix.c
 +++ b/drivers/ethernet/eth_native_posix.c
-@@ -169,10 +169,31 @@ static void update_gptp(struct net_if *iface, struct net_pkt *pkt,
- 
- static int eth_send(const struct device *dev, struct net_pkt *pkt)
- {
-+	// MY_LOG("eth_send\n");
- 	struct eth_context *ctx = dev->data;
+@@ -173,6 +173,16 @@ static int eth_send(const struct device *dev, struct net_pkt *pkt)
  	int count = net_pkt_get_len(pkt);
-+	// MY_LOG("eth_send: got length\n");
  	int ret;
  
 +	uint8_t* buf = prepare_send_buf(count);
 +	while (buf == 0) {
-+		// MY_LOG("could not prep send buf\n");
 +		k_sleep(K_MSEC(CONFIG_ETH_NATIVE_POSIX_RX_TIMEOUT));
 +		buf = prepare_send_buf(count);
 +	}
-+	MY_LOG("eth_send: prep send buf\n");
 +	ret = net_pkt_read(pkt, buf, count);
-+	MY_LOG("eth_send: read pkt\n");
 +
-+	// printf("Send len %d: \"", count);
-+	// for (int i = 0; i < count; i++)
-+	// 	printf("%02x", send_buf[i]);
-+	// printf("\"\n");
 +	send_buf(count);
-+	MY_LOG("eth_send: sent pkt\n");
-+	MY_LOG("/eth_send\n");
 +	return ret;
 +
  	ret = net_pkt_read(pkt, ctx->send, count);
  	if (ret) {
  		return ret;
-@@ -225,27 +246,33 @@ static struct net_pkt *prepare_pkt(struct eth_context *ctx,
- 
- static int read_data(struct eth_context *ctx, int fd)
- {
-+
- 	struct net_if *iface = ctx->iface;
- 	struct net_pkt *pkt = NULL;
+@@ -230,7 +240,9 @@ static int read_data(struct eth_context *ctx, int fd)
  	int status;
  	int count;
  
@@ -51,26 +30,7 @@ index fdd63cced53..a2986c08d29 100644
  	if (count <= 0) {
  		return 0;
  	}
-+	MY_LOG("read_data\n");
- 
- 	pkt = prepare_pkt(ctx, count, &status);
- 	if (!pkt) {
- 		return status;
-+		MY_LOG("Error: read_data, could not prepare pkt\n");
- 	}
- 
- 	update_gptp(iface, pkt, false);
- 
- 	if (net_recv_data(iface, pkt) < 0) {
- 		net_pkt_unref(pkt);
-+		MY_LOG("Error: read_data, did not recv data\n");
- 	}
--
-+	MY_LOG("/read_data\n");
- 	return 0;
- }
- 
-@@ -258,13 +285,12 @@ static void eth_rx(void *p1, void *p2, void *p3)
+@@ -258,8 +270,8 @@ static void eth_rx(void *p1, void *p2, void *p3)
  	LOG_DBG("Starting ZETH RX thread");
  
  	while (1) {
@@ -81,12 +41,7 @@ index fdd63cced53..a2986c08d29 100644
  				read_data(ctx, ctx->dev_fd);
  				k_yield();
  			}
- 		}
--
- 		k_sleep(K_MSEC(CONFIG_ETH_NATIVE_POSIX_RX_TIMEOUT));
- 	}
- }
-@@ -356,7 +382,8 @@ static void eth_iface_init(struct net_if *iface)
+@@ -356,7 +368,8 @@ static void eth_iface_init(struct net_if *iface)
  	net_if_set_link_addr(iface, ll_addr->addr, ll_addr->len,
  			     NET_LINK_ETHERNET);
  
@@ -96,27 +51,17 @@ index fdd63cced53..a2986c08d29 100644
  	if (ctx->dev_fd < 0) {
  		LOG_ERR("Cannot create %s (%d/%s)", ctx->if_name, ctx->dev_fd,
  			strerror(-ctx->dev_fd));
-@@ -364,6 +391,10 @@ static void eth_iface_init(struct net_if *iface)
- 		/* Create a thread that will handle incoming data from host */
- 		create_rx_handler(ctx);
- 	}
-+
-+	char* a = net_if_get_link_addr(iface)->addr;
-+	printf("My mac addr: [%x:%x:%x:%x:%x:%x]\n", a[0], a[1], a[2], a[3], a[4], a[5]);
-+
- }
- 
- static
 diff --git a/samples/net/sockets/echo/prj.conf b/samples/net/sockets/echo/prj.conf
-index 33729784d8e..8464bd2ba99 100644
+index 33729784d8e..a3d5c2ad089 100644
 --- a/samples/net/sockets/echo/prj.conf
 +++ b/samples/net/sockets/echo/prj.conf
-@@ -21,3 +21,35 @@ CONFIG_NET_CONFIG_MY_IPV4_ADDR="192.0.2.1"
+@@ -21,3 +21,36 @@ CONFIG_NET_CONFIG_MY_IPV4_ADDR="192.0.2.1"
  CONFIG_NET_CONFIG_PEER_IPV4_ADDR="192.0.2.2"
  CONFIG_NET_CONFIG_MY_IPV6_ADDR="2001:db8::1"
  CONFIG_NET_CONFIG_PEER_IPV6_ADDR="2001:db8::2"
 +CONFIG_ETH_NATIVE_POSIX_RANDOM_MAC=n
 +CONFIG_ETH_NATIVE_POSIX_MAC_ADDR="02:00:5e:00:53:31"
++# CONFIG_ASAN=y
 +
 +
 +# CONFIG_LOG_BACKEND_FORMAT_TIMESTAMP=y
@@ -149,80 +94,70 @@ index 33729784d8e..8464bd2ba99 100644
 +# CONFIG_ETHERNET_LOG_LEVEL_DBG=y # driver
 \ No newline at end of file
 diff --git a/samples/net/sockets/echo/src/socket_echo.c b/samples/net/sockets/echo/src/socket_echo.c
-index c8aad2bb068..94343f00a6d 100644
+index c8aad2bb068..8d51a63e521 100644
 --- a/samples/net/sockets/echo/src/socket_echo.c
 +++ b/samples/net/sockets/echo/src/socket_echo.c
-@@ -17,15 +17,18 @@
+@@ -19,6 +19,7 @@
  
- #else
- 
-+#include "nsi_host_trampolines.h"
  #include <zephyr/net/socket.h>
  #include <zephyr/kernel.h>
-+#include <stdbool.h>
++#include "nsi_host_trampolines.h"
  
  #endif
  
- #define BIND_PORT 4242
+@@ -36,6 +37,8 @@ int main(void)
+ 	};
+ 	static int counter;
  
--int main(void)
--{
-+void nsi_exit(int exit_code); // from arch/posix/core/nsi_compat
++	init_coverage();
 +
-+int main(void) {
- 	int opt;
- 	socklen_t optlen = sizeof(int);
- 	int serv, ret;
-@@ -45,7 +48,7 @@ int main(void)
+ 	serv = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+ 	if (serv < 0) {
+ 		printf("error: socket: %d\n", errno);
+@@ -45,15 +48,12 @@ int main(void)
  	ret = getsockopt(serv, IPPROTO_IPV6, IPV6_V6ONLY, &opt, &optlen);
  	if (ret == 0) {
  		if (opt) {
 -			printf("IPV6_V6ONLY option is on, turning it off.\n");
-+			// printf("IPV6_V6ONLY option is on, turning it off.\n");
- 
+-
  			opt = 0;
  			ret = setsockopt(serv, IPPROTO_IPV6, IPV6_V6ONLY,
-@@ -53,7 +56,7 @@ int main(void)
+ 					 &opt, optlen);
  			if (ret < 0) {
  				printf("Cannot turn off IPV6_V6ONLY option\n");
  			} else {
 -				printf("Sharing same socket between IPv6 and IPv4\n");
-+				// printf("Sharing same socket between IPv6 and IPv4\n");
  			}
  		}
  	}
-@@ -68,8 +71,8 @@ int main(void)
+@@ -68,8 +68,7 @@ int main(void)
  		exit(1);
  	}
  
 -	printf("Single-threaded TCP echo server waits for a connection on "
 -	       "port %d...\n", BIND_PORT);
-+	// printf("Single-threaded TCP echo server waits for a connection on "
-+	//        "port %d...\n", BIND_PORT);
++	reset_coverage();
  
  	while (1) {
  		struct sockaddr_in6 client_addr;
-@@ -85,7 +88,7 @@ int main(void)
+@@ -85,7 +84,6 @@ int main(void)
  
  		inet_ntop(client_addr.sin6_family, &client_addr.sin6_addr,
  			  addr_str, sizeof(addr_str));
 -		printf("Connection #%d from %s\n", counter++, addr_str);
-+		MY_LOG("Connection #%d from %s\n", counter++, addr_str);
  
  		while (1) {
  			char buf[128], *p;
-@@ -113,7 +116,8 @@ int main(void)
+@@ -113,7 +111,6 @@ int main(void)
  
  error:
  		close(client);
 -		printf("Connection from %s closed\n", addr_str);
-+		MY_LOG("Connection from %s closed\n", addr_str);
-+		nsi_exit(0);
  	}
  	return 0;
  }
 diff --git a/scripts/native_simulator/common/src/include/nsi_host_trampolines.h b/scripts/native_simulator/common/src/include/nsi_host_trampolines.h
-index 31f954ee0cc..72a6bf17ec6 100644
+index 31f954ee0cc..d204148fcea 100644
 --- a/scripts/native_simulator/common/src/include/nsi_host_trampolines.h
 +++ b/scripts/native_simulator/common/src/include/nsi_host_trampolines.h
 @@ -17,11 +17,14 @@
@@ -241,7 +176,7 @@ index 31f954ee0cc..72a6bf17ec6 100644
  void *nsi_host_calloc(unsigned long nmemb, unsigned long size);
  int nsi_host_close(int fd);
  /* void nsi_host_exit (int status); Use nsi_exit() instead */
-@@ -37,6 +40,15 @@ void *nsi_host_realloc(void *ptr, unsigned long size);
+@@ -37,6 +40,19 @@ void *nsi_host_realloc(void *ptr, unsigned long size);
  void nsi_host_srandom(unsigned int seed);
  char *nsi_host_strdup(const char *s);
  long nsi_host_write(int fd, const void *buffer, unsigned long size);
@@ -254,18 +189,23 @@ index 31f954ee0cc..72a6bf17ec6 100644
 +bool is_setup(void);
 +int read_incoming(void* buf, unsigned long size);
 +bool incoming_available(void);
++void init_coverage(void);
++void reset_coverage(void);
++
++
  
  #ifdef __cplusplus
  }
 diff --git a/scripts/native_simulator/common/src/nsi_host_trampolines.c b/scripts/native_simulator/common/src/nsi_host_trampolines.c
-index eb378b7533f..15734754332 100644
+index eb378b7533f..050b43e27ed 100644
 --- a/scripts/native_simulator/common/src/nsi_host_trampolines.c
 +++ b/scripts/native_simulator/common/src/nsi_host_trampolines.c
-@@ -10,6 +10,15 @@
+@@ -10,6 +10,16 @@
  #include <unistd.h>
  #include <fcntl.h>
  #include <string.h>
 +#include <stdio.h>
++#include <stdint.h>
 +#include <fcntl.h>
 +#include <sys/mman.h>
 +#include <sys/stat.h>
@@ -277,62 +217,63 @@ index eb378b7533f..15734754332 100644
  
  void *nsi_host_calloc(unsigned long nmemb, unsigned long size)
  {
-@@ -75,3 +84,127 @@ long nsi_host_write(int fd, const void *buffer, unsigned long size)
+@@ -75,3 +85,204 @@ long nsi_host_write(int fd, const void *buffer, unsigned long size)
  {
  	return write(fd, buffer, size);
  }
 +
 +void custom_panic(const char* message) {
 +	fprintf(stderr, "PANIC in zephyr: %s\n", message);
-+	int* ptr = 0;
-+	*ptr = 0;
++	// int* ptr = 0;
++	// *ptr = 0;
++	exit(1);
 +}
 +
-+static int shmem_fd = 0;
-+static bool shmem_init = false;
-+static char* shmem_name = 0;
-+static size_t shmem_size = -1;
-+static int32_t* shmem_ptr_rx = 0;
-+static int32_t* shmem_ptr_tx = 0;
++static int net_shmem_fd = 0;
++static bool net_shmem_init = false;
++static char* net_shmem_name = 0;
++static size_t net_shmem_size = -1;
++static int32_t* net_shmem_ptr_rx = 0;
++static int32_t* net_shmem_ptr_tx = 0;
 +
 +void init_shmem_eth_interface(void) {
 +	MY_LOG("init_shmem_eth_interface\n");
-+	if (!shmem_init) {
++	if (!net_shmem_init) {
 +		MY_LOG("init_shmem_eth_interface: initializing\n");
-+		shmem_init = true;
-+		shmem_name = getenv("SHMEM_ETH_INTERFACE_NAME");
-+		if (shmem_name == 0) custom_panic("SHMEM_ETH_INTERFACE_NAME, the path to the mmap based shmem, is not set in the env");
-+		MY_LOG("shmem name: %s\n", shmem_name);
++		net_shmem_init = true;
++		net_shmem_name = getenv("SHMEM_ETH_INTERFACE_NAME");
++		if (net_shmem_name == 0) custom_panic("SHMEM_ETH_INTERFACE_NAME, the path to the mmap based shmem, is not set in the env");
++		MY_LOG("shmem name: %s\n", net_shmem_name);
 +
-+		char* shmem_size_str = getenv("SHMEM_ETH_INTERFACE_SIZE");
-+		if (shmem_size_str == 0) custom_panic("SHMEM_ETH_INTERFACE_SIZE, the size of the mmap based shmem, is not set in the env");
-+		MY_LOG("shmem size: %s\n", shmem_size_str);
++		char* net_shmem_size_str = getenv("SHMEM_ETH_INTERFACE_SIZE");
++		if (net_shmem_size_str == 0) custom_panic("SHMEM_ETH_INTERFACE_SIZE, the size of the mmap based shmem, is not set in the env");
++		MY_LOG("shmem size: %s\n", net_shmem_size_str);
 +
-+		shmem_size = atoi(shmem_size_str);
++		net_shmem_size = atoi(net_shmem_size_str);
 +
 +		// Open shared memory object
-+		shmem_fd = shm_open(shmem_name, O_CREAT | O_RDWR, 0666);
-+		if (shmem_fd == -1) custom_panic("shm_open broke");
++		net_shmem_fd = shm_open(net_shmem_name, O_CREAT | O_RDWR, 0666);
++		if (net_shmem_fd == -1) custom_panic("shm_open broke");
 +
 +		// Configure the size of the shared memory object
-+		ftruncate(shmem_fd, shmem_size);
++		ftruncate(net_shmem_fd, net_shmem_size);
 +
 +		// Memory map the shared memory object
-+		char* raw_ptr = mmap(0, shmem_size, PROT_READ | PROT_WRITE, MAP_SHARED, shmem_fd, 0);
++		char* raw_ptr = mmap(0, net_shmem_size, PROT_READ | PROT_WRITE, MAP_SHARED, net_shmem_fd, 0);
 +		if (raw_ptr == MAP_FAILED) custom_panic("mmap broke");
-+		shmem_ptr_rx = (int32_t*) raw_ptr;
-+		shmem_ptr_tx = (int32_t*) (raw_ptr + shmem_size / 2);
-+		// printf("Initialized shmem for the eth interface of size %u at %s", shmem_size, shmem_name);
++		net_shmem_ptr_rx = (int32_t*) raw_ptr;
++		net_shmem_ptr_tx = (int32_t*) (raw_ptr + net_shmem_size / 2);
++		// printf("Initialized shmem for the eth interface of size %u at %s", net_shmem_size, net_shmem_name);
 +	} else {
 +		printf("Warning: Calling init_shmem_eth_interface again\n");
 +	}
-+	MY_LOG("states at startup: tx %d, rx: %d\n", *shmem_ptr_tx, *shmem_ptr_rx);
++	MY_LOG("states at startup: tx %d, rx: %d\n", *net_shmem_ptr_tx, *net_shmem_ptr_rx);
 +	MY_LOG("/init_shmem_eth_interface\n");
 +}
 +
 +// void write_shmem(size_t size, const char* buf) {
-+// 	if (!shmem_init) custom_panic("Not initialized");
-+// 	int* shmem_int = (int*) ((int32_t *) shmem_ptr_rx);
++// 	if (!net_shmem_init) custom_panic("Not initialized");
++// 	int* shmem_int = (int*) ((int32_t *) net_shmem_ptr_rx);
 +// 	size_t iter = 0;
 +// 	while (*shmem_int != 0) if (iter++ > (1 << 0)) custom_panic("Not ready");
 +// 	*(shmem_int) = 2; // sender = zephyr
@@ -342,44 +283,44 @@ index eb378b7533f..15734754332 100644
 +// }
 +
 +// void close_shmem_eth_interface(void) {
-+// 	munmap(shmem_ptr_rx, shmem_size);
-+//     close(shmem_fd);
-+//     shm_unlink(shmem_name);   // Unlink the shared memory object when done
++// 	munmap(net_shmem_ptr_rx, net_shmem_size);
++//     close(net_shmem_fd);
++//     shm_unlink(net_shmem_name);   // Unlink the shared memory object when done
 +// }
 +
 +void* prepare_send_buf(size_t size) {
-+	if (!shmem_init)
++	if (!net_shmem_init)
 +		custom_panic("Not initialized");
 +
-+	if (size > (shmem_size / 2 - 4)) // size needs to fit in half the shmem minus the length of the length field
++	if (size > (net_shmem_size / 2 - 4)) // size needs to fit in half the shmem minus the length of the length field
 +		custom_panic("Attempting to send a frame too large");
 +
 +
-+	if ((*shmem_ptr_tx) >= 0) { // shmem[0] >= 0 means there is still a packet in the buffer
-+		// MY_LOG("buffer not ready, remaining size: %d\n", *shmem_ptr_tx);
++	if ((*net_shmem_ptr_tx) >= 0) { // shmem[0] >= 0 means there is still a packet in the buffer
++		// MY_LOG("buffer not ready, remaining size: %d\n", *net_shmem_ptr_tx);
 +		return 0;
 +	}
 +
 +	MY_LOG("prepared_send_buf\n");;
 +	
-+	return shmem_ptr_tx + 1;
++	return net_shmem_ptr_tx + 1;
 +}
 +
 +void send_buf(size_t size) {
 +	MY_LOG("send_buf\n");
-+	*shmem_ptr_tx = size; // set as sent
++	*net_shmem_ptr_tx = size; // set as sent
 +	MY_LOG("/send_buf\n");
 +}
 +
 +bool is_setup(void) {
-+	return shmem_init;
++	return net_shmem_init;
 +}
 +
 +int read_incoming(void* buf, unsigned long size) {
-+	if (!shmem_init)
++	if (!net_shmem_init)
 +		custom_panic("Not initialized");
 +	
-+	int32_t incoming_size = *shmem_ptr_rx;
++	int32_t incoming_size = *net_shmem_ptr_rx;
 +
 +	if (incoming_size < 0) // if no package was sent in this direction
 +		return -1;
@@ -388,65 +329,96 @@ index eb378b7533f..15734754332 100644
 +	if (incoming_size > size) // assuming the fuzzer checks sizes, this should be enough checks
 +		custom_panic("Incoming too large");
 +	
-+	void* res = memcpy(buf, (shmem_ptr_rx + 1), incoming_size);
++	void* res = memcpy(buf, (net_shmem_ptr_rx + 1), incoming_size);
 +	if (res == 0)
 +		custom_panic("Could not copy received data");
 +	
-+	*shmem_ptr_rx = -1; // status = ready
-+	MY_LOG("read %d %p %d\n", incoming_size, (void*)shmem_ptr_rx, *shmem_ptr_rx);
++	*net_shmem_ptr_rx = -1; // status = ready
++	MY_LOG("read %d %p %d\n", incoming_size, (void*)net_shmem_ptr_rx, *net_shmem_ptr_rx);
 +	MY_LOG("/read_incoming\n");
 +	
 +	return incoming_size;
 +}
 +
 +bool incoming_available(void) {
-+	if (!shmem_init)
++	if (!net_shmem_init)
 +		custom_panic("Not initialized");
 +
-+	return (*shmem_ptr_rx) >= 0;
++	return (*net_shmem_ptr_rx) >= 0;
 +}
-\ No newline at end of file
-diff --git a/subsys/net/ip/net_core.c b/subsys/net/ip/net_core.c
-index 8ab2fb93a3c..f5d64610cfa 100644
---- a/subsys/net/ip/net_core.c
-+++ b/subsys/net/ip/net_core.c
-@@ -508,16 +508,19 @@ int net_recv_data(struct net_if *iface, struct net_pkt *pkt)
- 	SYS_PORT_TRACING_FUNC_ENTER(net, recv_data, iface, pkt);
- 
- 	if (!pkt || !iface) {
-+		NET_DBG("Error: No packet or interface");
- 		ret = -EINVAL;
- 		goto err;
- 	}
- 
- 	if (net_pkt_is_empty(pkt)) {
-+		NET_DBG("Error: Empty packet");
- 		ret = -ENODATA;
- 		goto err;
- 	}
- 
- 	if (!net_if_flag_is_set(iface, NET_IF_UP)) {
-+		NET_DBG("Error: Network interface flag not set");
- 		ret = -ENETDOWN;
- 		goto err;
- 	}
-diff --git a/subsys/net/ip/net_if.c b/subsys/net/ip/net_if.c
-index 0d0248158f7..d1d55c01540 100644
---- a/subsys/net/ip/net_if.c
-+++ b/subsys/net/ip/net_if.c
-@@ -470,6 +470,7 @@ enum net_verdict net_if_send_data(struct net_if *iface, struct net_pkt *pkt)
- 		if (l2 == NULL) {
- 			/* Offloaded ifaces may choose not to use an L2 at all. */
- 			NET_WARN("no l2 for iface %p, discard pkt", iface);
-+			// printf("no l2 for iface %p, discard pkt", iface);
- 			verdict = NET_DROP;
- 			goto done;
- 		} else if (l2->send == NULL) {
-@@ -477,6 +478,7 @@ enum net_verdict net_if_send_data(struct net_if *iface, struct net_pkt *pkt)
- 			 * might simply not implement send.
- 			 */
- 			NET_WARN("l2 for iface %p cannot send, discard pkt", iface);
-+			// printf("l2 for iface %p cannot send, discard pkt", iface);
- 			verdict = NET_DROP;
- 			goto done;
- 		}
++
++static int cov_shmem_fd = 0;
++static bool cov_shmem_init = false;
++static char *cov_shmem_name = 0;
++static size_t cov_shmem_size = -1;
++static uint32_t *cov_shmem_ptr = 0;
++static uint32_t *guard_stop = 0;
++static uint32_t *guard_start = 0;
++
++void init_coverage(void) {
++	MY_LOG("init_coverage\n");
++	if (!cov_shmem_init) {
++		MY_LOG("init_coverage: initializing\n");
++		cov_shmem_init = true;
++		cov_shmem_name = getenv("SHMEM_COVERAGE_NAME");
++		if (cov_shmem_name == 0) custom_panic("SHMEM_COVERAGE_NAME, the path to the mmap based shmem, is not set in the env");
++		MY_LOG("shmem name: %s\n", cov_shmem_name);
++
++		char* cov_shmem_size_str = getenv("SHMEM_COVERAGE_SIZE");
++		if (cov_shmem_size_str == 0) custom_panic("SHMEM_COVERAGE_SIZE, the size of the mmap based shmem, is not set in the env");
++		MY_LOG("shmem size: %s\n", cov_shmem_size_str);
++
++		cov_shmem_size = atoi(cov_shmem_size_str);
++		if (guard_stop == 0) custom_panic("Coverage guards not initialized when initing coverage shmem");
++		uint32_t required_size = (guard_stop - guard_start) * 4;
++		if (cov_shmem_size != required_size) {
++			printf("Received shmem of size %d, needed shmem of size %d\n", cov_shmem_size, required_size);
++			custom_panic("Coverage shared memory has wrong size.");
++		}
++
++		// Open shared memory object
++		cov_shmem_fd = shm_open(cov_shmem_name, O_CREAT | O_RDWR, 0666);
++		if (cov_shmem_fd == -1) custom_panic("shm_open broke");
++
++		// Configure the size of the shared memory object
++		ftruncate(cov_shmem_fd, cov_shmem_size);
++
++		// Memory map the shared memory object
++		cov_shmem_ptr = mmap(0, cov_shmem_size, PROT_READ | PROT_WRITE, MAP_SHARED, cov_shmem_fd, 0);
++		if (cov_shmem_ptr == MAP_FAILED) custom_panic("mmap broke");
++	} else {
++		printf("Warning: Calling init_coverage again\n");
++	}
++}
++
++void reset_coverage(void) {
++	if (!cov_shmem_init)
++		custom_panic("attempting to reset non-initialized coverage shmem");
++	memset(cov_shmem_ptr, 0, cov_shmem_size);
++}
++
++
++void __sanitizer_cov_trace_pc_guard_init(uint32_t *start, uint32_t *stop)
++{
++  if (start == stop)
++  {
++    MY_LOG("Skipping initialization");
++    return;
++  };
++
++
++  MY_LOG("Coverage initialization");
++  guard_start = start;
++  guard_stop = stop;
++
++  memset(guard_start, 0, guard_stop - guard_start);
++
++  MY_LOG("Done with initialization\n");
++}
++
++void __sanitizer_cov_trace_pc_guard(uint32_t *guard)
++{
++	// ignore coverage before initialization
++	if (!cov_shmem_init) return;
++	*(guard - guard_start + cov_shmem_ptr) += 1;
++}
