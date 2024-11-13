@@ -1,2 +1,7 @@
 /target
 *.pcap
+*.log
+monitor.toml
+solutions
+corpus
+*.tmp

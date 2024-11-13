@@ -1,13 +1,14 @@
 use std::{cell::RefCell, rc::Rc, thread::sleep, time::Duration};
 
-use libafl_bolts::shmem::{MmapShMem, MmapShMemProvider, ShMem, ShMemProvider as _};
+use libafl::Error;
+use libafl_bolts::shmem::{MmapShMem, MmapShMemProvider, ShMemDescription, ShMemProvider as _};
 
 use smoltcp::{
     phy::{self, Device, DeviceCapabilities},
     time::Instant,
 };
 
-use crate::{direction::Direction, layers::data_link::parse_eth, pcap::add_packet_to_pcap_file};
+use crate::layers::data_link::parse_eth;
 
 use super::shmem_net_device_buffers::ShmemNetDeviceBuffers;
 
@@ -25,17 +26,11 @@ impl phy::RxToken for RxToken {
     }
 }
 
-pub struct TxToken<S>
-where
-    S: ShMem,
-{
-    shmem: ShmemNetDeviceBuffers<S>,
+pub struct TxToken {
+    shmem: ShmemNetDeviceBuffers<MmapShMem>,
 }
 
-impl<S> phy::TxToken for TxToken<S>
-where
-    S: ShMem,
-{
+impl phy::TxToken for TxToken {
     fn consume<R, F>(mut self, len: usize, f: F) -> R
     where
         F: FnOnce(&mut [u8]) -> R,
@@ -48,26 +43,10 @@ where
 
         let mut buf = vec![0; len];
         let res = f(&mut buf);
+        // log::warn!("Sent: {}", BASE64_STANDARD.encode(&buf));
 
         match parse_eth(&buf) {
             Ok(p) => {
-                // if p.net().is_arp() {
-                //     log::info!("Attempting to send ARP packet, manually responding.");
-                //     add_packet_to_pcap_file(Direction::Outgoing(&buf));
-                //     log::debug!("Request with len {}: {:?}", buf.len(), p);
-                //     buf = respond_to_arp(&p);
-                //     len = buf.len();
-                //     log::debug!(
-                //         "Response with len {}: {:?}",
-                //         buf.len(),
-                //         parse_eth(&buf).unwrap()
-                //     );
-                //     let mut rx_shmem = self.shmem.into_rx();
-                //     rx_shmem.prep_data(len).copy_from_slice(&buf);
-                //     rx_shmem.send(len);
-                //     return res;
-                // }
-
                 log::debug!(
                     "Attempting to send packet with len {} of type {}",
                     buf.len(),
@@ -77,8 +56,6 @@ where
             Err(e) => panic!("Could not parse outgoing packet: {:?}", e),
         }
 
-        add_packet_to_pcap_file(Direction::Outgoing(&buf));
-
         self.shmem.prep_data(len).copy_from_slice(&buf);
         self.shmem.send(len);
         log::debug!("Sent the following packet: {:?}", parse_eth(&buf));
@@ -86,26 +63,19 @@ where
     }
 }
 
-pub(crate) struct ShmemNetworkDevice {
+pub struct ShmemNetworkDevice {
     shmem: ShmemNetDeviceBuffers<MmapShMem>,
-    shmem_path: [u8; 20],
 }
 
 impl ShmemNetworkDevice {
-    pub fn new(buf_size: usize) -> Self {
-        let shmem = MmapShMemProvider::new()
-            .unwrap()
-            .new_shmem(buf_size * 2 + 8) // two buffers plus two lengths
-            .unwrap();
-        shmem.persist_for_child_processes().unwrap();
-
-        let shmem_path = shmem.filename_path().unwrap();
+    pub fn new(buf_size: usize) -> Result<Self, Error> {
+        let shmem = MmapShMemProvider::new()?.new_shmem_persistent(buf_size * 2 + 8)?; // two buffers plus two lengths
 
         log::debug!("Created ShmemNetworkDevice");
         let mut shmem = ShmemNetDeviceBuffers::new(Rc::new(RefCell::new(shmem)));
         shmem.set_empty(); // clone the references, set the outgoing channel to nothing
         shmem.clone().into_rx().set_empty();
-        Self { shmem, shmem_path }
+        Ok(Self { shmem })
     }
 
     #[allow(unused)]
@@ -137,13 +107,8 @@ impl ShmemNetworkDevice {
         self.shmem.reset();
     }
 
-    pub fn get_shmem_path(&self) -> &[u8; 20] {
-        &self.shmem_path
-    }
-
-    /// Returns the length of the underlying shmem.
-    pub fn len(&self) -> usize {
-        self.shmem.len()
+    pub fn get_shmem_description(&self) -> ShMemDescription {
+        self.shmem.description()
     }
 }
 
@@ -152,16 +117,16 @@ impl Device for ShmemNetworkDevice {
     where
         Self: 'a;
 
-    type TxToken<'a> = TxToken<MmapShMem>
+    type TxToken<'a> = TxToken
     where
         Self: 'a;
 
     fn receive(&mut self, _timestamp: Instant) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
         let mut rx_shmem = self.shmem.clone().into_rx();
         rx_shmem.get_data_and_set_empty().map(|data| {
+            // log::warn!("Received: {}", BASE64_STANDARD.encode(&data));
             log::debug!("Recieved {} bytes", data.len());
             log::debug!("Package contents: {:?}", parse_eth(&data).unwrap());
-            add_packet_to_pcap_file(Direction::Incoming(&data));
             (
                 RxToken { buf: data },
                 TxToken {

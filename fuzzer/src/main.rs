@@ -1,27 +1,18 @@
+use std::io::{self, Write};
+
+#[allow(unused)]
+use fuzzer::fuzz;
+use pcap::dump_to_pcap_file;
+
 mod direction;
 
+mod cli;
+mod fuzzer;
 mod layers;
 mod packets;
 mod pcap;
 mod runner;
 mod smoltcp;
-
-use std::env::args;
-#[allow(unused_imports)]
-use std::{
-    io::{self, Write},
-    ops::Deref as _,
-    sync::LazyLock,
-};
-
-#[allow(unused_imports)]
-use crate::{
-    direction::DirectionIteratorExt as _,
-    layers::data_link::parse_eth,
-    packets::get_packets,
-    pcap::{add_packet_to_pcap_file, add_packet_to_pcap_file_owned, dump_to_pcap_file},
-    runner::run_zephyr,
-};
 
 pub static NETWORK_SHMEM_SIZE: usize = 1 << 16;
 pub static COV_SHMEM_SIZE: usize = 25632; // manually extracted
@@ -29,11 +20,60 @@ pub static PCAP_PATH: &str = "./pcap.pcap";
 
 fn main() {
     env_logger::init();
-    let zephyr_dir = args()
-        .nth(1)
-        .expect("Did not receive the path to the Zephyr executable as a command line argument");
+    fuzz();
 
-    run_zephyr(&zephyr_dir);
+    // let opt = Opt::parse();
+    // let mut cov_shmem = MmapShMemProvider::new()
+    //     .unwrap()
+    //     .new_shmem(COV_SHMEM_SIZE)
+    //     .unwrap();
+    // let cov_raw_observer = unsafe {
+    //     StdMapObserver::from_mut_ptr("coverage_observer", cov_shmem.as_mut_ptr(), cov_shmem.len())
+    // };
+    // let cov_observer = HitcountsMapObserver::new(cov_raw_observer).track_indices();
+    // let time_observer = TimeObserver::new("time");
+    // let time_feedback = TimeFeedback::new(&time_observer);
+    // let cov_feedback = MaxMapFeedback::new(&cov_observer);
+    // let cov_observer_handle = cov_observer.handle();
+    // let time_observer_handle = time_observer.handle();
+    // let observers = tuple_list!(cov_observer, time_observer);
+    // cov_shmem.persist_for_child_processes().unwrap();
+    // let mut executor = ZepyhrExecutor::new(
+    //     observers,
+    //     cov_shmem,
+    //     opt.zephyr_exec_dir().to_path_buf(),
+    //     NETWORK_SHMEM_SIZE,
+    // );
+
+    // let mut state = StdState::new(
+    //     StdRand::new(),
+    //     InMemoryCorpus::new(),
+    //     InMemoryCorpus::new(),
+    //     &mut feedback_or!(time_feedback, cov_feedback),
+    //     &mut (),
+    // )
+    // .unwrap();
+    // let mut input = MultipartInput::new();
+    // input.add_part("test".to_owned(), BytesInput::from(vec![1, 2, 3]));
+    // let res = executor
+    //     .run_target(
+    //         &mut NopFuzzer::new(),
+    //         &mut state,
+    //         &mut NopEventManager::new(),
+    //         &input,
+    //     )
+    //     .unwrap();
+    // println!("{:?}", res);
+    // println!("{:?}", input);
+    // println!(
+    //     "{:?}",
+    //     executor
+    //         .observers()
+    //         .get(&time_observer_handle)
+    //         .unwrap()
+    //         .last_runtime()
+    // );
+
     dump_to_pcap_file(PCAP_PATH).unwrap();
 }
 

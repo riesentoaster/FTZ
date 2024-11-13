@@ -18,13 +18,12 @@ static PACKETS: LazyLock<Mutex<Vec<Direction<(Duration, Vec<u8>)>>>> =
     LazyLock::new(|| Mutex::new(vec![]));
 static START_TIME: LazyLock<Instant> = LazyLock::new(Instant::now);
 
-pub fn add_packet_to_pcap_file(raw: Direction<&[u8]>) {
-    PACKETS
-        .lock()
-        .unwrap()
-        .push(raw.map(|e| (Instant::now().duration_since(*START_TIME), e.to_vec())));
+#[allow(unused)]
+fn add_packet_to_pcap_file(raw: Direction<&[u8]>) {
+    add_packet_to_pcap_file_owned(raw.map(|e| e.to_vec()));
 }
-pub fn add_packet_to_pcap_file_owned(raw: Direction<Vec<u8>>) {
+#[allow(unused)]
+fn add_packet_to_pcap_file_owned(raw: Direction<Vec<u8>>) {
     PACKETS
         .lock()
         .unwrap()

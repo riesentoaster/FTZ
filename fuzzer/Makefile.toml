@@ -41,7 +41,7 @@ cargo build --profile release
 dependencies = ["build_fuzzer", "build_zephyr"]
 script_runner = "@shell"
 script = '''
-${FUZZER_DIR} ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe
+${FUZZER_DIR} --zephyr-exec-dir ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe --stdout stdout.log --stderr stderr.log --monitor-path monitor.toml ${@}
 '''
 
 [tasks.run_fast]
@@ -50,7 +50,7 @@ script_runner = "@shell"
 script = '''
 echo "\n\n\e[33mWarning: Not recompiling Zephyr. Use target run to do so.\e[0m\n\n\n\n"
 sleep 1
-${FUZZER_DIR} ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe
+${FUZZER_DIR} --zephyr-exec-dir ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe --stdout stdout.log --stderr stderr.log --monitor-path monitor.toml ${@}
 '''
 
 [tasks.zephyr_diff]

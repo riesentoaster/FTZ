@@ -1,6 +1,6 @@
 use std::{cell::RefCell, ptr::slice_from_raw_parts_mut, rc::Rc};
 
-use libafl_bolts::shmem::ShMem;
+use libafl_bolts::shmem::{ShMem, ShMemDescription};
 
 #[derive(Clone)]
 pub struct ShmemNetDeviceBuffers<S>
@@ -25,17 +25,6 @@ where
         self.clone().into_rx().set_empty();
     }
 
-    /// Returns the length of the underlying shmem.
-    pub fn len(&self) -> usize {
-        self.shmem.borrow().len()
-    }
-
-    /// Returns the directional buffer size, i.e. the max amount of data that can be transmitted.
-    #[allow(unused)]
-    pub fn buf_len(&self) -> usize {
-        self.shmem.borrow().len() / 2 - 4
-    }
-
     pub fn into_rx(mut self) -> Self {
         self = self.clone();
         self.offset = self.shmem.borrow().len() / 2;
@@ -48,7 +37,7 @@ where
             .borrow_mut()
             .as_mut_ptr()
             .wrapping_byte_add(self.offset);
-        log::debug!(
+        log::trace!(
             "value at ptr for offset {}: {}",
             self.offset,
             *cast_to_i32(res)
@@ -89,6 +78,10 @@ where
             self.set_empty();
             vec
         })
+    }
+
+    pub fn description(&self) -> ShMemDescription {
+        self.shmem.borrow().description()
     }
 }
 

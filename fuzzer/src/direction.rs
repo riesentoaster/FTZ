@@ -23,6 +23,13 @@ impl<T> Direction<T> {
             Direction::Incoming(_) => "Incoming",
         }
     }
+
+    pub fn inner(self) -> T {
+        match self {
+            Direction::Outgoing(e) => e,
+            Direction::Incoming(e) => e,
+        }
+    }
 }
 
 #[allow(unused)]

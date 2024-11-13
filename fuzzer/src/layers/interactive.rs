@@ -21,7 +21,6 @@ use crate::{
         network::NetworkLayerPacketType,
     },
     packets::get_packets,
-    pcap::add_packet_to_pcap_file_owned,
 };
 
 #[allow(unused)]
@@ -62,7 +61,7 @@ pub fn respond_to_arp(incoming: &DataLinkLayerPacket, client_mac: [u8; 6]) -> Ve
     res_eth_buf
 }
 
-pub fn respond_to_icmpv6_neighbor_solicitation(
+pub fn create_response_to_icmpv6_neighbor_solicitation(
     incoming: &DataLinkLayerPacket,
     mac_addr: [u8; 6],
     ipv6_link_local_addr: IpAddress,
@@ -171,7 +170,6 @@ pub fn respond_to_icmpv6_neighbor_solicitation(
     let should_raw = &get_packets()[6];
     let should = parse_eth(should_raw).unwrap();
 
-    add_packet_to_pcap_file_owned(get_packets()[6].clone());
     log::debug!(
         "Comparing generated and captured packet:\ngen: {:02x?}\ncap: {:02x?}\ngen: {:02x?}\ncap: {:02x?}",
         re_parsed,

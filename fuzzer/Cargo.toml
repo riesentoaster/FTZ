@@ -12,7 +12,7 @@ license = "MIT"
 debug = true
 
 [dependencies]
-libafl = { path = "../LibAFL/libafl" }
+libafl = { path = "../LibAFL/libafl", features = ["multipart_inputs"] }
 libafl_bolts = { path = "../LibAFL/libafl_bolts" }
 wait-timeout = "0.2.0"
 pcap = "2.2.0"
@@ -21,7 +21,11 @@ pcap-file = "2.0.0"
 smoltcp = { version = "0.11.0", features = ["log", "iface-max-addr-count-3"] }
 log = "0.4.22"
 env_logger = "0.11.5"
+clap = { version = "4.5.20", features = ["derive"] }
+serde = { version = "1.0.214", features = ["derive"] }
+ahash = "0.8.11"
+base64 = "0.22.1"
 
 [features]
-std = ["log"]
-log = ["smoltcp/log"]
+default = []
+tui = []
