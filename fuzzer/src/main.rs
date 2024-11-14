@@ -1,13 +1,11 @@
 use std::io::{self, Write};
 
-#[allow(unused)]
-use fuzzer::fuzz;
-use pcap::dump_to_pcap_file;
+use pcap::dump_global_packets_to_pcap_file;
+use runner::fuzz;
 
 mod direction;
 
 mod cli;
-mod fuzzer;
 mod layers;
 mod packets;
 mod pcap;
@@ -74,7 +72,7 @@ fn main() {
     //         .last_runtime()
     // );
 
-    dump_to_pcap_file(PCAP_PATH).unwrap();
+    dump_global_packets_to_pcap_file(PCAP_PATH, true).unwrap();
 }
 
 #[allow(unused)]

@@ -6,7 +6,6 @@ use pnet::packet::{
     FromPacket,
 };
 
-#[allow(unused)]
 #[derive(Debug)]
 pub enum UpperLayerPacket {
     Icmpv6(Icmpv6),
@@ -51,7 +50,6 @@ impl UpperLayerPacket {
     }
 }
 
-#[allow(unused)]
 pub fn parse_hopopt(packet: &[u8]) -> Result<UpperLayerPacket, String> {
     let ext_packet =
         HopByHopPacket::new(packet).ok_or("Could not parse HopByHopPacket".to_string())?;

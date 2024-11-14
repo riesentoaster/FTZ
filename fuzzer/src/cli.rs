@@ -11,7 +11,7 @@ use libafl_bolts::core_affinity::Cores;
     about = "A fuzzer for the TCP/IP stack of Zephyr",
     author = "Valentin Huber <contact@valentinhuber.me>"
 )]
-pub struct Opt {
+pub struct Cli {
     #[arg(
     short,
     long,
@@ -30,6 +30,24 @@ pub struct Opt {
         default_value = "1"
     )]
     overcommit: usize,
+
+    #[arg(
+        short,
+        long,
+        action,
+        help = "Only run a single iteration of the fuzzer. Overrides cores and overcommmit to 1 each.",
+        name = "FUZZ_ONE"
+    )]
+    fuzz_one: bool,
+
+    #[arg(
+        short,
+        long,
+        action,
+        help = "Only load/generate the corpus. Do not perform any fuzzing. Overrides --cores and --overcommmit to 1 each. Overrides --fuzz-one",
+        name = "LOAD_ONLY"
+    )]
+    load_only: bool,
 
     #[arg(
         short = 'p',
@@ -94,7 +112,7 @@ pub struct Opt {
     stderr: Option<PathBuf>,
 }
 
-impl Opt {
+impl Cli {
     pub fn remote_broker_addr(&self) -> Option<SocketAddr> {
         self.remote_broker_addr
     }
@@ -137,5 +155,13 @@ impl Opt {
 
     pub fn overcommit(&self) -> usize {
         self.overcommit
+    }
+
+    pub fn fuzz_one(&self) -> bool {
+        self.fuzz_one
+    }
+
+    pub fn load_only(&self) -> bool {
+        self.load_only
     }
 }

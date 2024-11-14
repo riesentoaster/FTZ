@@ -1,5 +1,5 @@
 diff --git a/drivers/ethernet/eth_native_posix.c b/drivers/ethernet/eth_native_posix.c
-index fdd63cced53..b4618fe1132 100644
+index fdd63cced53..e35b22e40c9 100644
 --- a/drivers/ethernet/eth_native_posix.c
 +++ b/drivers/ethernet/eth_native_posix.c
 @@ -173,6 +173,16 @@ static int eth_send(const struct device *dev, struct net_pkt *pkt)
@@ -8,7 +8,7 @@ index fdd63cced53..b4618fe1132 100644
  
 +	uint8_t* buf = prepare_send_buf(count);
 +	while (buf == 0) {
-+		k_sleep(K_MSEC(CONFIG_ETH_NATIVE_POSIX_RX_TIMEOUT));
++		k_sleep(K_MSEC(1));
 +		buf = prepare_send_buf(count);
 +	}
 +	ret = net_pkt_read(pkt, buf, count);
@@ -30,7 +30,7 @@ index fdd63cced53..b4618fe1132 100644
  	if (count <= 0) {
  		return 0;
  	}
-@@ -258,8 +270,8 @@ static void eth_rx(void *p1, void *p2, void *p3)
+@@ -258,14 +270,14 @@ static void eth_rx(void *p1, void *p2, void *p3)
  	LOG_DBG("Starting ZETH RX thread");
  
  	while (1) {
@@ -41,6 +41,13 @@ index fdd63cced53..b4618fe1132 100644
  				read_data(ctx, ctx->dev_fd);
  				k_yield();
  			}
+ 		}
+ 
+-		k_sleep(K_MSEC(CONFIG_ETH_NATIVE_POSIX_RX_TIMEOUT));
++		k_sleep(K_MSEC(1));
+ 	}
+ }
+ 
 @@ -356,7 +368,8 @@ static void eth_iface_init(struct net_if *iface)
  	net_if_set_link_addr(iface, ll_addr->addr, ll_addr->len,
  			     NET_LINK_ETHERNET);

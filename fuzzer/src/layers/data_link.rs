@@ -10,7 +10,6 @@ use super::{
     upper::UpperLayerPacket,
 };
 
-#[allow(unused)]
 pub struct DataLinkLayerPacket {
     upper: Option<UpperLayerPacket>,
     net: NetworkLayerPacketType,
@@ -19,17 +18,16 @@ pub struct DataLinkLayerPacket {
 
 impl Debug for DataLinkLayerPacket {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        f.write_str("--------------------------------\nDataLinkLayerPacket {\n\tupper: ")?;
+        f.write_str("DataLinkLayerPacket {\n\tupper: ")?;
         self.upper.fmt(f)?;
         f.write_str("\n\tnet:   ")?;
         self.net().fmt(f)?;
         f.write_str("\n\teth:   ")?;
         self.eth().fmt(f)?;
-        f.write_str("\n}\n--------------------------------")
+        f.write_str("\n}")
     }
 }
 
-#[allow(unused)]
 impl DataLinkLayerPacket {
     pub fn upper(&self) -> Option<&UpperLayerPacket> {
         self.upper.as_ref()
@@ -56,7 +54,6 @@ impl DataLinkLayerPacket {
     }
 }
 
-#[allow(unused)]
 pub fn parse_eth(input: &[u8]) -> Result<DataLinkLayerPacket, String> {
     let eth = EthernetPacket::new(input)
         .ok_or(format!(

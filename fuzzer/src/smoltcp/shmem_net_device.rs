@@ -1,14 +1,24 @@
-use std::{cell::RefCell, rc::Rc, thread::sleep, time::Duration};
+use std::{
+    cell::RefCell,
+    rc::Rc,
+    thread::sleep,
+    time::{Duration, Instant},
+};
 
 use libafl::Error;
 use libafl_bolts::shmem::{MmapShMem, MmapShMemProvider, ShMemDescription, ShMemProvider as _};
 
-use smoltcp::{
-    phy::{self, Device, DeviceCapabilities},
-    time::Instant,
-};
+use pnet::packet::icmpv6::Icmpv6Types;
+use smoltcp::phy::{self, Device, DeviceCapabilities};
 
-use crate::layers::data_link::parse_eth;
+use crate::{
+    direction::Direction,
+    layers::{
+        data_link::parse_eth, interactive::create_response_to_icmpv6_neighbor_solicitation,
+        upper::UpperLayerPacket,
+    },
+    runner::{CLIENT_MAC_ADDR, IPV6_LINK_LOCAL_ADDR, SETUP_TIMEOUT},
+};
 
 use super::shmem_net_device_buffers::ShmemNetDeviceBuffers;
 
@@ -38,7 +48,7 @@ impl phy::TxToken for TxToken {
         log::debug!("Sending {len} bytes");
         while !self.shmem.is_empty() {
             log::info!("not ready");
-            sleep(Duration::from_millis(500));
+            sleep(Duration::from_millis(10));
         }
 
         let mut buf = vec![0; len];
@@ -78,13 +88,11 @@ impl ShmemNetworkDevice {
         Ok(Self { shmem })
     }
 
-    #[allow(unused)]
     pub fn try_recv(&self) -> Option<Vec<u8>> {
         let mut rx_shmem = self.shmem.clone().into_rx();
         rx_shmem.get_data_and_set_empty()
     }
 
-    #[allow(unused)]
     pub fn send(&mut self, data: &[u8]) {
         self.shmem.prep_data(data.len()).copy_from_slice(data);
         self.shmem.send(data.len());
@@ -102,13 +110,46 @@ impl ShmemNetworkDevice {
     /// Reset the entire layer 1.
     ///
     /// This empties both buffers and puts them into a ready state.
-    #[allow(unused)]
     pub fn reset(&mut self) {
         self.shmem.reset();
     }
 
     pub fn get_shmem_description(&self) -> ShMemDescription {
         self.shmem.description()
+    }
+
+    pub fn init_zephyr(
+        &mut self,
+        mut package_logger: impl FnMut(Direction<Vec<u8>>),
+    ) -> Result<(), Error> {
+        let start = Instant::now();
+        while start.elapsed() < SETUP_TIMEOUT {
+            if let Some(p) = self.try_recv() {
+                let parsed = parse_eth(&p).map_err(Error::illegal_argument)?;
+                if let Some(icmpv6) = parsed.upper().and_then(UpperLayerPacket::get_icmpv6) {
+                    if icmpv6.icmpv6_type == Icmpv6Types::NeighborSolicit {
+                        let res =
+                        create_response_to_icmpv6_neighbor_solicitation(&parsed, CLIENT_MAC_ADDR, *IPV6_LINK_LOCAL_ADDR).ok_or({
+                            Error::illegal_argument(format!("Could not calculate return package for an incoming icmpv6 message:\n{:?}", parsed))
+                        })?;
+                        self.send(&res);
+                        package_logger(Direction::Outgoing(res));
+                    } else {
+                        log::debug!(
+                            "Received icmpv6 package of type other than NeighborSolicit of upper type {:?}",
+                            icmpv6.icmpv6_type
+                        );
+                    }
+                } else {
+                    log::info!(
+                        "Received weird (i.e. non-icmpv6) package during setup: {:?}",
+                        parsed
+                    );
+                }
+                package_logger(Direction::Incoming(p));
+            }
+        }
+        Ok(())
     }
 }
 
@@ -121,7 +162,10 @@ impl Device for ShmemNetworkDevice {
     where
         Self: 'a;
 
-    fn receive(&mut self, _timestamp: Instant) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
+    fn receive(
+        &mut self,
+        _timestamp: smoltcp::time::Instant,
+    ) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
         let mut rx_shmem = self.shmem.clone().into_rx();
         rx_shmem.get_data_and_set_empty().map(|data| {
             // log::warn!("Received: {}", BASE64_STANDARD.encode(&data));
@@ -136,7 +180,7 @@ impl Device for ShmemNetworkDevice {
         })
     }
 
-    fn transmit(&mut self, _timestamp: Instant) -> Option<Self::TxToken<'_>> {
+    fn transmit(&mut self, _timestamp: smoltcp::time::Instant) -> Option<Self::TxToken<'_>> {
         log::debug!("Retrieving TxToken");
         Some(TxToken {
             shmem: self.shmem.clone(),

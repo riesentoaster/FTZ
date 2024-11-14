@@ -1,5 +1,10 @@
-use std::{net::Ipv6Addr, ops::Deref};
-
+use crate::{
+    layers::{
+        data_link::{parse_eth, DataLinkLayerPacket},
+        network::NetworkLayerPacketType,
+    },
+    packets::get_packets,
+};
 use pnet::{
     packet::{
         arp::{Arp, ArpOperations, MutableArpPacket},
@@ -12,16 +17,8 @@ use pnet::{
     },
     util::MacAddr,
 };
-
 use smoltcp::wire::{IpAddress, Ipv6Address};
-
-use crate::{
-    layers::{
-        data_link::{parse_eth, DataLinkLayerPacket},
-        network::NetworkLayerPacketType,
-    },
-    packets::get_packets,
-};
+use std::net::Ipv6Addr;
 
 #[allow(unused)]
 pub fn respond_to_arp(incoming: &DataLinkLayerPacket, client_mac: [u8; 6]) -> Vec<u8> {
@@ -170,13 +167,23 @@ pub fn create_response_to_icmpv6_neighbor_solicitation(
     let should_raw = &get_packets()[6];
     let should = parse_eth(should_raw).unwrap();
 
-    log::debug!(
-        "Comparing generated and captured packet:\ngen: {:02x?}\ncap: {:02x?}\ngen: {:02x?}\ncap: {:02x?}",
-        re_parsed,
-        should,
-        eth_res_buf,
-        get_packets()[6].deref()
-    );
+    if eth_res_buf == **should_raw {
+        log::trace!(
+            "Comparing generated and captured packet:\ngen: {:02x?}\ncap: {:02x?}\ngen: {:02x?}\ncap: {:02x?}",
+            re_parsed,
+            should,
+            eth_res_buf,
+            *get_packets()[6]
+        );
+    } else {
+        log::warn!(
+            "Difference between generated and captured packet:\ngen: {:02x?}\ncap: {:02x?}\ngen: {:02x?}\ncap: {:02x?}",
+            re_parsed,
+            should,
+            eth_res_buf,
+            *get_packets()[6]
+        );
+    }
 
     Some(eth_res_buf)
 }

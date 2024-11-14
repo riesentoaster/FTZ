@@ -10,7 +10,6 @@ ZEPHYR_PROJECT_DIR = "../../zephyrproject/zephyr"
 ZEPHYR_EXE_DIR = "./${CARGO_TARGET_DIR}/target"
 FUZZER_DIR = "./${CARGO_TARGET_DIR}/${PROFILE_DIR}/fuzzer"
 
-
 [tasks.build_zephyr]
 script_runner = "@shell"
 script = '''
@@ -32,16 +31,14 @@ west build \
 '''
 
 [tasks.build_fuzzer]
-script_runner = "@shell"
-script = '''
-cargo build --profile release
-'''
+command = "cargo"
+args = ["build", "--profile", "release"]
 
 [tasks.run]
 dependencies = ["build_fuzzer", "build_zephyr"]
 script_runner = "@shell"
 script = '''
-${FUZZER_DIR} --zephyr-exec-dir ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe --stdout stdout.log --stderr stderr.log --monitor-path monitor.toml ${@}
+${FUZZER_DIR} --zephyr-exec-dir ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe --monitor-path monitor.toml ${@}
 '''
 
 [tasks.run_fast]
@@ -50,7 +47,7 @@ script_runner = "@shell"
 script = '''
 echo "\n\n\e[33mWarning: Not recompiling Zephyr. Use target run to do so.\e[0m\n\n\n\n"
 sleep 1
-${FUZZER_DIR} --zephyr-exec-dir ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe --stdout stdout.log --stderr stderr.log --monitor-path monitor.toml ${@}
+${FUZZER_DIR} --zephyr-exec-dir ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe --monitor-path monitor.toml ${@}
 '''
 
 [tasks.zephyr_diff]
@@ -59,4 +56,67 @@ script = '''
 FUZZER_DIR="$(realpath ../zephyr.diff)"
 cd ${ZEPHYR_PROJECT_DIR}
 git diff > "${FUZZER_DIR}"
+'''
+
+[tasks.extract_pcap]
+script_runner = "@shell"
+script = '''
+counter=0
+
+find corpus -type f -name ".*.metadata" | while read -r metadata_file; do
+    base_name=$(basename "$metadata_file" .metadata)
+    dir_name=$(dirname "$metadata_file")
+
+    pcap_data=$(grep pcap "$metadata_file" | cut -d\" -f4)
+
+    error_data="for entry #$counter in $metadata_file"
+
+    if test -n "$pcap_data"; then
+        echo "$pcap_data" | base64 -d > "${dir_name}/${counter}.pcap"
+        if [ ! $? ]; then
+            echo "Could not decode and store the pcap file ${error_data}"
+            exit 1
+        fi
+    else
+        echo "No pcap data found ${error_data}. Skipping."
+    fi
+
+    if test -f "$dir_name/$counter.libafl_lock"; then
+        echo "Target file for lock ${counter} already present, skipping ($error_data)"
+    elif test -f "$dir_name/$base_name.lafl_lock"; then
+        mv "$dir_name/$base_name.lafl_lock" "$dir_name/$counter.lafl_lock"
+        if [ ! $? ]; then
+            echo "Could not move lock file $error_data"
+            exit 1
+        fi
+    else
+        echo "Did not find lock file $error_data"
+    fi
+
+    if test -f "$dir_name/$counter.metadata"; then
+        echo "Target file for metadata ${counter} already present, skipping ($error_data)"
+    elif test -f "$dir_name/$base_name.metadata"; then
+        mv "$dir_name/$base_name.metadata" "$dir_name/$counter.metadata"
+        if [ ! $? ]; then
+            echo "Could not move lock file $error_data"
+            exit 1
+        fi
+    else
+        echo "Did not find metadata file $error_data"
+    fi
+
+    if test -f "$dir_name/$counter"; then
+        echo "Target file for input ${counter} already present, skipping ($error_data)"
+    elif test -f "$dir_name/$(echo $base_name | cut -c 2-)"; then
+        mv "$dir_name/$(echo $base_name | cut -c 2-)" "$dir_name/$counter"
+        if [ ! $? ]; then
+            echo "Could not move input file $error_data"
+            exit 1
+        fi
+    else
+        echo "Did not find input file $error_data, skipping"
+    fi
+
+    counter=$((counter + 1))
+done
 '''

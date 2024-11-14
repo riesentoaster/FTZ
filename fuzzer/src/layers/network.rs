@@ -8,7 +8,6 @@ use pnet::packet::{
 
 use super::upper::{parse_hopopt, parse_icmpv6, parse_tcp, UpperLayerPacket};
 
-#[allow(unused)]
 #[derive(Debug)]
 pub enum NetworkLayerPacketType {
     Ipv4(Ipv4),

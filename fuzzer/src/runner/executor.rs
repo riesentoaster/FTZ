@@ -1,6 +1,11 @@
 use std::{
-    ffi::CStr, fmt::Debug, marker::PhantomData, os::unix::process::ExitStatusExt as _,
-    path::PathBuf, thread::sleep,
+    ffi::CStr,
+    fmt::Debug,
+    marker::PhantomData,
+    os::unix::process::ExitStatusExt as _,
+    path::PathBuf,
+    process::{Command, Stdio},
+    thread::sleep,
 };
 
 use libafl::{
@@ -15,17 +20,18 @@ use libafl_bolts::{
     tuples::{Handle, MatchName, MatchNameRef, RefIndexable},
 };
 
-use crate::runner::{zephyr::init_zephyr, INTER_SEND_WAIT};
+use crate::runner::INTER_SEND_WAIT;
 
 use crate::smoltcp::shmem_net_device::ShmemNetworkDevice;
 
-use super::{input::ZephyrInput, metadata::PacketObserver, thread::RunnerThread};
+use super::{input::ZephyrInput, metadata::PacketObserver};
 
 pub struct ZepyhrExecutor<S, OT> {
     observers: OT,
     packet_observer: Handle<PacketObserver>,
     device: ShmemNetworkDevice,
-    thread: RunnerThread,
+    envs: Vec<(String, String)>,
+    zephyr_exec_path: PathBuf,
     phantom: PhantomData<S>,
 }
 
@@ -33,32 +39,29 @@ impl<S, OT> ZepyhrExecutor<S, OT> {
     pub fn new(
         observers: OT,
         packet_observer: Handle<PacketObserver>,
-        cov_shmem_description: &ShMemDescription,
+        cov_shmem_desc: &ShMemDescription,
         zephyr_exec_path: PathBuf,
         network_buf_size: usize,
     ) -> Result<Self, Error> {
         let device = ShmemNetworkDevice::new(network_buf_size)?;
-        let net_shmem_description = device.get_shmem_description();
-        let net_shmem_size = net_shmem_description.size.to_string();
-        let net_shmem_name = get_path_for_mmap_shmem(&net_shmem_description)?;
+        let net_shmem_desc = device.get_shmem_description();
 
-        let cov_shmem_size = &cov_shmem_description.size.to_string();
-        let cov_shmem_name = get_path_for_mmap_shmem(cov_shmem_description)?;
-
-        let envs: &[(&str, &str)] = &[
-            ("SHMEM_ETH_INTERFACE_SIZE", &net_shmem_size.to_string()),
-            ("SHMEM_ETH_INTERFACE_NAME", net_shmem_name),
-            ("SHMEM_COVERAGE_SIZE", &cov_shmem_size.to_string()),
-            ("SHMEM_COVERAGE_NAME", cov_shmem_name),
-        ];
-
-        let thread = RunnerThread::new(zephyr_exec_path, envs);
+        let envs = ([
+            (&"SHMEM_ETH_INTERFACE_SIZE", &net_shmem_desc.size),
+            (&"SHMEM_ETH_INTERFACE_NAME", &get_path(&net_shmem_desc)?),
+            (&"SHMEM_COVERAGE_SIZE", &cov_shmem_desc.size),
+            (&"SHMEM_COVERAGE_NAME", &get_path(cov_shmem_desc)?),
+        ] as [(&dyn ToString, &dyn ToString); 4])
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect();
 
         Ok(Self {
             observers,
             packet_observer,
             device,
-            thread,
+            envs,
+            zephyr_exec_path,
             phantom: PhantomData,
         })
     }
@@ -93,16 +96,15 @@ where
 
         self.device.reset();
 
-        let start = self.thread.start();
+        let mut child = Command::new(self.zephyr_exec_path.clone())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .envs(self.envs.to_owned())
+            .spawn()
+            .map_err(|e| Error::unknown(format!("Could not start command: {e:?}")))?;
 
-        if let Err(e) = start {
-            log::warn!("Received error from start command: {:?}", e);
-            return Err(e);
-        }
-
-        init_zephyr(&mut self.device, |packet| {
-            packets_observer.add_packet(packet.inner())
-        })?;
+        self.device
+            .init_zephyr(|packet| packets_observer.add_packet(packet.inner()))?;
 
         log::debug!("Started Zephyr");
 
@@ -116,13 +118,11 @@ where
             }
         }
 
-        let kill = self.thread.kill();
+        let res = child.try_wait().unwrap();
+        child.kill().unwrap();
+        child.wait().unwrap();
 
-        if let Err(e) = &kill {
-            log::warn!("Received error from kill command: {:?}", e);
-        }
-
-        let res = match kill?.map(|status| status.signal()) {
+        let res = match res.map(|status| status.signal()) {
             Some(Some(_)) => ExitKind::Crash,
             Some(None) => ExitKind::Ok,
             None => ExitKind::Ok,
@@ -159,13 +159,10 @@ impl<S, OT> HasObservers for ZepyhrExecutor<S, OT> {
     }
 }
 
-fn get_path_for_mmap_shmem(shmem_description: &ShMemDescription) -> Result<&str, Error> {
-    CStr::from_bytes_until_nul(&shmem_description.id)
+fn get_path(shmem_desc: &ShMemDescription) -> Result<&str, Error> {
+    CStr::from_bytes_until_nul(&shmem_desc.id)
         .map_err(|e| {
-            Error::illegal_argument(format!(
-                "Error parsing path from shmem description: {:?}",
-                e
-            ))
+            Error::illegal_argument(format!("Error parsing path from shmem desc: {:?}", e))
         })?
         .to_str()
         .map_err(|e| {

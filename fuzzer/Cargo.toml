@@ -25,6 +25,7 @@ clap = { version = "4.5.20", features = ["derive"] }
 serde = { version = "1.0.214", features = ["derive"] }
 ahash = "0.8.11"
 base64 = "0.22.1"
+hex = "0.4.3"
 
 [features]
 default = []

@@ -1,5 +1,5 @@
 use crate::{
-    cli::Opt,
+    cli::Cli,
     runner::{
         CorpusEnum, PacketFeedback, PacketObserver, ZephyrInteractionGenerator, ZepyhrExecutor,
     },
@@ -8,7 +8,7 @@ use crate::{
 use clap::Parser as _;
 use libafl::{
     corpus::{Corpus, OnDiskCorpus},
-    events::{EventConfig, Launcher},
+    events::{EventConfig, EventRestarter, Launcher, LlmpRestartingEventManager},
     feedback_or, feedback_or_fast,
     feedbacks::{CrashFeedback, MaxMapFeedback, TimeFeedback, TimeoutFeedback},
     monitors::OnDiskTomlMonitor,
@@ -20,7 +20,8 @@ use libafl::{
     Error, Fuzzer as _, StdFuzzer,
 };
 use libafl_bolts::{
-    rands::StdRand,
+    core_affinity::Cores,
+    rands::{Rand as _, StdRand},
     shmem::{MmapShMemProvider, ShMem, ShMemProvider as _, StdShMemProvider},
     tuples::{tuple_list, Handled},
     AsSliceMut,
@@ -34,7 +35,7 @@ use libafl::monitors::MultiMonitor;
 
 pub fn fuzz() {
     log::info!("Initializing fuzzer");
-    let opt = Opt::parse();
+    let opt = Cli::parse();
 
     if let Some(corpus_dir) = opt.corpus_dir() {
         if corpus_dir.exists() {
@@ -47,7 +48,9 @@ pub fn fuzz() {
 
     let mut shmem_provider = MmapShMemProvider::default();
 
-    let mut run_client = |state: Option<_>, mut manager, _core_id| {
+    let mut run_client = |state: Option<_>,
+                          mut manager: LlmpRestartingEventManager<_, _, _>,
+                          _core_id| {
         log::info!("Initializing fuzzing client");
         let mut cov_shmem = shmem_provider.new_shmem_persistent(COV_SHMEM_SIZE)?;
         let cov_shmem_description = cov_shmem.description();
@@ -136,8 +139,19 @@ pub fn fuzz() {
         } else {
             log::info!("Did not need to load initial inputs");
         }
+
         log::info!("Starting Fuzzing");
-        fuzzer.fuzz_loop(&mut stages, &mut executor, &mut state, &mut manager)?;
+
+        if opt.load_only() {
+            manager.send_exiting()?;
+            return Err(Error::shutting_down());
+        } else if opt.fuzz_one() {
+            fuzzer.fuzz_one(&mut stages, &mut executor, &mut state, &mut manager)?;
+            manager.send_exiting()?;
+            return Err(Error::shutting_down());
+        } else {
+            fuzzer.fuzz_loop(&mut stages, &mut executor, &mut state, &mut manager)?;
+        }
         Ok(())
     };
 
@@ -145,22 +159,38 @@ pub fn fuzz() {
     let base_monitor = TuiMonitor::builder()
         .title("Zephyr TCP/IP Stack Fuzzer")
         .build();
+
     #[cfg(not(feature = "tui"))]
-    let base_monitor = MultiMonitor::new(|m| log::info!("{m}"));
+    let base_monitor = {
+        let mut rand = StdRand::new();
+        MultiMonitor::new(move |m| {
+            if rand.next() % 10 == 0 && m.contains("GLOBAL") {
+                log::info!("{m}")
+            }
+        })
+    };
 
     let monitor = OnDiskTomlMonitor::with_update_interval(
         opt.monitor_path(),
         base_monitor,
-        Duration::from_millis(100),
+        Duration::from_secs(10),
     );
+
+    let cores = if opt.fuzz_one() {
+        Cores::from_cmdline("1").unwrap()
+    } else {
+        opt.cores().clone()
+    };
+
+    let overcommit = if opt.fuzz_one() { 1 } else { opt.overcommit() };
 
     match Launcher::builder()
         .shmem_provider(StdShMemProvider::new().expect("Failed to init shared memory"))
         .configuration(EventConfig::from_name("default"))
         .monitor(monitor)
         .run_client(&mut run_client)
-        .cores(opt.cores())
-        .overcommit(opt.overcommit())
+        .cores(&cores)
+        .overcommit(overcommit)
         .broker_port(opt.broker_port())
         .remote_broker_addr(opt.remote_broker_addr())
         .stdout_file(opt.stdout().and_then(|e| e.as_os_str().to_str()))

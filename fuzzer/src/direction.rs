@@ -17,6 +17,7 @@ impl<T> Direction<T> {
         }
     }
 
+    #[allow(unused)]
     pub fn outer_to_string(&self) -> &str {
         match self {
             Direction::Outgoing(_) => "Outgoing",
