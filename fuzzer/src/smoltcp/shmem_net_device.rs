@@ -20,7 +20,7 @@ use crate::{
     runner::{CLIENT_MAC_ADDR, IPV6_LINK_LOCAL_ADDR, SETUP_TIMEOUT},
 };
 
-use super::shmem_net_device_buffers::ShmemNetDeviceBuffers;
+use super::shmem_net_device_buffers::ShmemNetDeviceBuffer;
 
 pub struct RxToken {
     buf: Vec<u8>,
@@ -37,7 +37,7 @@ impl phy::RxToken for RxToken {
 }
 
 pub struct TxToken {
-    shmem: ShmemNetDeviceBuffers<MmapShMem>,
+    shmem: ShmemNetDeviceBuffer<MmapShMem>,
 }
 
 impl phy::TxToken for TxToken {
@@ -74,7 +74,8 @@ impl phy::TxToken for TxToken {
 }
 
 pub struct ShmemNetworkDevice {
-    shmem: ShmemNetDeviceBuffers<MmapShMem>,
+    tx_shmem: ShmemNetDeviceBuffer<MmapShMem>,
+    rx_shmem: ShmemNetDeviceBuffer<MmapShMem>,
 }
 
 impl ShmemNetworkDevice {
@@ -82,40 +83,31 @@ impl ShmemNetworkDevice {
         let shmem = MmapShMemProvider::new()?.new_shmem_persistent(buf_size * 2 + 8)?; // two buffers plus two lengths
 
         log::debug!("Created ShmemNetworkDevice");
-        let mut shmem = ShmemNetDeviceBuffers::new(Rc::new(RefCell::new(shmem)));
-        shmem.set_empty(); // clone the references, set the outgoing channel to nothing
-        shmem.clone().into_rx().set_empty();
-        Ok(Self { shmem })
+        let (tx_shmem, rx_shmem) = ShmemNetDeviceBuffer::new(Rc::new(RefCell::new(shmem)));
+        let mut res = Self { tx_shmem, rx_shmem };
+        res.reset();
+        Ok(res)
     }
 
-    pub fn try_recv(&self) -> Option<Vec<u8>> {
-        let mut rx_shmem = self.shmem.clone().into_rx();
-        rx_shmem.get_data_and_set_empty()
+    pub fn try_recv(&mut self) -> Option<Vec<u8>> {
+        self.rx_shmem.get_data_and_set_empty()
     }
 
     pub fn send(&mut self, data: &[u8]) {
-        self.shmem.prep_data(data.len()).copy_from_slice(data);
-        self.shmem.send(data.len());
-    }
-
-    #[allow(unused)]
-    pub fn log_status(&mut self) {
-        let mut binding = self.shmem.clone();
-        let tx = binding.get_size();
-        let mut binding = self.shmem.clone().into_rx();
-        let rx = binding.get_size();
-        log::debug!("status update: tx {}, rx {}", tx, rx);
+        self.tx_shmem.prep_data(data.len()).copy_from_slice(data);
+        self.tx_shmem.send(data.len());
     }
 
     /// Reset the entire layer 1.
     ///
     /// This empties both buffers and puts them into a ready state.
     pub fn reset(&mut self) {
-        self.shmem.reset();
+        self.tx_shmem.reset();
+        self.rx_shmem.reset();
     }
 
     pub fn get_shmem_description(&self) -> ShMemDescription {
-        self.shmem.description()
+        self.rx_shmem.description()
     }
 
     pub fn init_zephyr(
@@ -166,15 +158,14 @@ impl Device for ShmemNetworkDevice {
         &mut self,
         _timestamp: smoltcp::time::Instant,
     ) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
-        let mut rx_shmem = self.shmem.clone().into_rx();
-        rx_shmem.get_data_and_set_empty().map(|data| {
+        self.rx_shmem.get_data_and_set_empty().map(|data| {
             // log::warn!("Received: {}", BASE64_STANDARD.encode(&data));
             log::debug!("Recieved {} bytes", data.len());
             log::debug!("Package contents: {:?}", parse_eth(&data).unwrap());
             (
                 RxToken { buf: data },
                 TxToken {
-                    shmem: self.shmem.clone(),
+                    shmem: self.tx_shmem.clone(),
                 },
             )
         })
@@ -183,7 +174,7 @@ impl Device for ShmemNetworkDevice {
     fn transmit(&mut self, _timestamp: smoltcp::time::Instant) -> Option<Self::TxToken<'_>> {
         log::debug!("Retrieving TxToken");
         Some(TxToken {
-            shmem: self.shmem.clone(),
+            shmem: self.tx_shmem.clone(),
         })
     }
 

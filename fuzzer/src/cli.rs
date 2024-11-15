@@ -44,7 +44,7 @@ pub struct Cli {
         short,
         long,
         action,
-        help = "Only load/generate the corpus. Do not perform any fuzzing. Overrides --cores and --overcommmit to 1 each. Overrides --fuzz-one",
+        help = "Only load/generate the corpus. Do not perform any fuzzing.",
         name = "LOAD_ONLY"
     )]
     load_only: bool,

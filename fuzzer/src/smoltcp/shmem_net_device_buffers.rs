@@ -3,7 +3,7 @@ use std::{cell::RefCell, ptr::slice_from_raw_parts_mut, rc::Rc};
 use libafl_bolts::shmem::{ShMem, ShMemDescription};
 
 #[derive(Clone)]
-pub struct ShmemNetDeviceBuffers<S>
+pub struct ShmemNetDeviceBuffer<S>
 where
     S: ShMem,
 {
@@ -11,24 +11,29 @@ where
     offset: usize,
 }
 
-impl<S> ShmemNetDeviceBuffers<S>
+impl<S> ShmemNetDeviceBuffer<S>
 where
     S: ShMem,
 {
-    pub fn new(shmem: Rc<RefCell<S>>) -> Self {
-        Self { shmem, offset: 0 }
+    /// (tx, rx)
+    pub fn new(shmem: Rc<RefCell<S>>) -> (Self, Self) {
+        let directional_size = shmem.borrow().len();
+        (
+            Self {
+                shmem: shmem.clone(),
+                offset: 0,
+            },
+            Self {
+                shmem,
+                offset: directional_size / 2,
+            },
+        )
     }
 
     pub fn reset(&mut self) {
-        self.shmem.borrow_mut().fill(0);
+        let directional_len = self.shmem.borrow().len() / 2;
+        self.shmem.borrow_mut()[self.offset..(self.offset + directional_len)].fill(0);
         self.set_empty();
-        self.clone().into_rx().set_empty();
-    }
-
-    pub fn into_rx(mut self) -> Self {
-        self = self.clone();
-        self.offset = self.shmem.borrow().len() / 2;
-        self
     }
 
     fn get_ptr(&mut self) -> *mut u8 {
