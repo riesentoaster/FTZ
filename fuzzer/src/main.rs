@@ -1,6 +1,5 @@
 use std::io::{self, Write};
 
-use pcap::dump_global_packets_to_pcap_file;
 use runner::fuzz;
 
 mod direction;
@@ -12,9 +11,9 @@ mod pcap;
 mod runner;
 mod smoltcp;
 
-pub static NETWORK_SHMEM_SIZE: usize = 1 << 16;
-pub static COV_SHMEM_SIZE: usize = 25632; // manually extracted
-pub static PCAP_PATH: &str = "./pcap.pcap";
+pub const NETWORK_SHMEM_SIZE: usize = 1 << 16;
+pub const COV_SHMEM_SIZE: usize = 25632; // manually extracted
+pub const PCAP_PATH: &str = "./pcap.pcap";
 
 fn main() {
     env_logger::init();
@@ -72,7 +71,7 @@ fn main() {
     //         .last_runtime()
     // );
 
-    dump_global_packets_to_pcap_file(PCAP_PATH, true).unwrap();
+    // dump_global_packets_to_pcap_file(PCAP_PATH, true).unwrap();
 }
 
 #[allow(unused)]

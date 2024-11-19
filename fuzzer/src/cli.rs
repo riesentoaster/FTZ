@@ -100,6 +100,15 @@ pub struct Cli {
         short,
         long,
         action,
+        help = "Force clear the corpus if it already exists",
+        name = "CLEAR_CORPUS"
+    )]
+    clear_corpus: bool,
+
+    #[arg(
+        short,
+        long,
+        action,
         help = "Resume with corpus from last run. Requires that the corpus direction is specified using --corpus-dir",
         name = "RESUME"
     )]
@@ -163,5 +172,9 @@ impl Cli {
 
     pub fn load_only(&self) -> bool {
         self.load_only
+    }
+
+    pub fn clear_corpus(&self) -> bool {
+        self.clear_corpus
     }
 }

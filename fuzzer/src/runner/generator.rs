@@ -13,6 +13,16 @@ use crate::smoltcp::shmem_net_device::ShmemNetworkDevice;
 
 use super::input::ZephyrInput;
 
+static FIXED: [&str; 7] = [
+    "////////AABeAFP/CAYAAQgABgQAAQAAXgBT/8AAAgL////////AAAIB",
+    "AgBeAFMxAABeAFP/CABFAAA0AABAAEAGtsDAAAICwAACATRBEJJ3NoxQAAAAAIAC//+lxwAAAgQFpgMDAQQCAAAA",
+    "AgBeAFMxAABeAFP/CAYAAQgABgQAAgAAXgBT/8AAAgICAF4AUzHAAAIB",
+    "AgBeAFMxAABeAFP/CABFAAAoAABAAEAGtszAAAICwAACATRBEJJ3NoxRBIh75VAQ//9jCAAA",
+    "AgBeAFMxAABeAFP/CABFAABXAABAAEAGtp3AAAICwAACATRBEJJ3NoxRBIh75VAY///eZAAAekosc0dWKzowUGNUQ10lRHB8LndkaSt3bzxNeSlSQWMjJiEjZjVLI1hnUTM0XEU=",
+    "AgBeAFMxAABeAFP/CABFAAAoAABAAEAGtszAAAICwAACATRBEJJ3NoyABIh8FFAR//9iqQAA",
+    "AgBeAFMxAABeAFP/CABFAAAoAABAAEAGtszAAAICwAACATRBEJJ3NoyBBIh8FVAQ//9iqAAA"
+];
+
 #[allow(dead_code)]
 pub struct ZephyrInteractionGenerator<'a> {
     device: ShmemNetworkDevice,
@@ -51,7 +61,7 @@ where
         //     |_| {},
         // )?;
 
-        log::info!("Prepared Zephyr");
+        // log::info!("Prepared Zephyr");
 
         // let rand = state.rand_mut();
         // let message_len = rand.between(1, 100);
@@ -72,13 +82,12 @@ where
         // log::info!("Zephyr finished");
 
         // input.add_part("test".to_string(), BytesInput::new(vec![1, 2, 3]));
-        ["////////AABeAFP/CAYAAQgABgQAAQAAXgBT/8AAAgL////////AAAIB",
-    "AgBeAFMxAABeAFP/CABFAAA0AABAAEAGtsDAAAICwAACATRBEJJ3NoxQAAAAAIAC//+lxwAAAgQFpgMDAQQCAAAA",
-    "AgBeAFMxAABeAFP/CAYAAQgABgQAAgAAXgBT/8AAAgICAF4AUzHAAAIB",
-    "AgBeAFMxAABeAFP/CABFAAAoAABAAEAGtszAAAICwAACATRBEJJ3NoxRBIh75VAQ//9jCAAA",
-    "AgBeAFMxAABeAFP/CABFAABXAABAAEAGtp3AAAICwAACATRBEJJ3NoxRBIh75VAY///eZAAAekosc0dWKzowUGNUQ10lRHB8LndkaSt3bzxNeSlSQWMjJiEjZjVLI1hnUTM0XEU=",
-    "AgBeAFMxAABeAFP/CABFAAAoAABAAEAGtszAAAICwAACATRBEJJ3NoyABIh8FFAR//9iqQAA",
-    "AgBeAFMxAABeAFP/CABFAAAoAABAAEAGtszAAAICwAACATRBEJJ3NoyBBIh8FVAQ//9iqAAA"].iter().map(|e|BASE64_STANDARD.decode(e).unwrap()).map(BytesInput::from).enumerate().for_each(|(i,e)| input.add_part(i.to_string(), e));
+        FIXED
+            .iter()
+            .map(|e| BASE64_STANDARD.decode(e).unwrap())
+            .map(BytesInput::from)
+            .enumerate()
+            .for_each(|(i, e)| input.add_part(i.to_string(), e));
         Ok(input)
     }
 }

@@ -89,6 +89,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arbitrary-int"
+version = "1.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c84fc003e338a6f69fbd4f7fe9f92b535ff13e9af8997f3b14b6ddff8b1df46d"
+
+[[package]]
 name = "arrayvec"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -131,6 +137,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "bitbybit"
+version = "1.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb157f9753a7cddfcf4a4f5fed928fbf4ce1b7b64b6bcc121d7a9f95d698997b"
+dependencies = [
+ "arbitrary-int",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.85",
+]
+
+[[package]]
 name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -155,26 +173,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b294e30387378958e8bf8f4242131b930ea615ff81e8cac2440cea0a6013190"
 dependencies = [
  "byteorder",
-]
-
-[[package]]
-name = "c2rust-bitfields"
-version = "0.19.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "367e5d1b30f28be590b6b3868da1578361d29d9bfac516d22f497d28ed7c9055"
-dependencies = [
- "c2rust-bitfields-derive",
-]
-
-[[package]]
-name = "c2rust-bitfields-derive"
-version = "0.19.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a279db9c50c4024eeca1a763b6e0f033848ce74e83e47454bcf8a8a98f7b0b56"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -522,13 +520,14 @@ checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
 
 [[package]]
 name = "libafl"
-version = "0.13.2"
+version = "0.14.0"
 dependencies = [
  "ahash",
+ "arbitrary-int",
  "arrayvec",
  "backtrace",
  "bincode",
- "c2rust-bitfields",
+ "bitbybit",
  "const_format",
  "const_panic",
  "hashbrown",
@@ -555,7 +554,7 @@ dependencies = [
 
 [[package]]
 name = "libafl_bolts"
-version = "0.13.2"
+version = "0.14.0"
 dependencies = [
  "ahash",
  "backtrace",
@@ -586,7 +585,7 @@ dependencies = [
 
 [[package]]
 name = "libafl_derive"
-version = "0.13.2"
+version = "0.14.0"
 dependencies = [
  "proc-macro2",
  "quote",

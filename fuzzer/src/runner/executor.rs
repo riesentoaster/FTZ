@@ -6,6 +6,7 @@ use std::{
     path::PathBuf,
     process::{Command, Stdio},
     thread::sleep,
+    time::Instant,
 };
 
 use libafl::{
@@ -81,7 +82,7 @@ where
         _mgr: &mut EM,
         input: &Self::Input,
     ) -> Result<ExitKind, Error> {
-        log::debug!("Starting input run on target");
+        log::debug!("Starting input run #{} on target", state.executions());
         *state.executions_mut() += 1;
 
         self.observers.pre_exec_child_all(state, input)?;
@@ -111,10 +112,13 @@ where
         for e in input.parts() {
             packets_observer.add_packet(e.bytes().to_vec());
             self.device.send(e.bytes());
-            sleep(INTER_SEND_WAIT);
-            while let Some(incoming) = self.device.try_recv() {
-                packets_observer.add_packet(incoming);
-                sleep(INTER_SEND_WAIT);
+            let mut last_packet_time = Instant::now();
+            while last_packet_time.elapsed() < INTER_SEND_WAIT {
+                if let Some(incoming) = self.device.try_recv() {
+                    packets_observer.add_packet(incoming);
+                    last_packet_time = Instant::now();
+                }
+                sleep(INTER_SEND_WAIT / 10);
             }
         }
 

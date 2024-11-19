@@ -33,6 +33,7 @@ fn add_packet_to_global_pcap_file_owned(raw: Direction<Vec<u8>>) {
         .push(raw.map(|e| (Instant::now().duration_since(*START_TIME), e)));
 }
 
+#[allow(unused)]
 pub fn dump_global_packets_to_pcap_file<P: AsRef<Path>>(
     path: P,
     append: bool,

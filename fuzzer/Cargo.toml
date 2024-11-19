@@ -13,7 +13,9 @@ debug = true
 
 [dependencies]
 libafl = { path = "../LibAFL/libafl", features = ["multipart_inputs"] }
-libafl_bolts = { path = "../LibAFL/libafl_bolts" }
+libafl_bolts = { path = "../LibAFL/libafl_bolts", features = [
+    "errors_backtrace",
+] }
 wait-timeout = "0.2.0"
 pcap = "2.2.0"
 pnet = "0.35.0"

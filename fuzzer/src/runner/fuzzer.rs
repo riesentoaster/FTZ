@@ -3,7 +3,7 @@ use crate::{
     runner::{
         CorpusEnum, PacketFeedback, PacketObserver, ZephyrInteractionGenerator, ZepyhrExecutor,
     },
-    COV_SHMEM_SIZE, NETWORK_SHMEM_SIZE,
+    wait_for_newline, COV_SHMEM_SIZE, NETWORK_SHMEM_SIZE,
 };
 use clap::Parser as _;
 use libafl::{
@@ -12,21 +12,20 @@ use libafl::{
     feedback_or, feedback_or_fast,
     feedbacks::{CrashFeedback, MaxMapFeedback, TimeFeedback, TimeoutFeedback},
     monitors::OnDiskTomlMonitor,
-    mutators::{havoc_mutations, StdScheduledMutator},
-    observers::{CanTrack, HitcountsMapObserver, StdMapObserver, TimeObserver},
+    mutators::{MutationResult, NopMutator, StdMOptMutator},
+    observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, TimeObserver},
     schedulers::StdScheduler,
-    stages::StdMutationalStage,
+    stages::{CalibrationStage, StdMutationalStage},
     state::{HasCorpus as _, StdState},
     Error, Fuzzer as _, StdFuzzer,
 };
 use libafl_bolts::{
     core_affinity::Cores,
-    rands::{Rand as _, StdRand},
+    rands::StdRand,
     shmem::{MmapShMemProvider, ShMem, ShMemProvider as _, StdShMemProvider},
     tuples::{tuple_list, Handled},
-    AsSliceMut,
 };
-use std::{fs, time::Duration};
+use std::{fs, ptr::NonNull, time::Duration};
 
 #[cfg(feature = "tui")]
 use libafl::monitors::tui::TuiMonitor;
@@ -39,8 +38,12 @@ pub fn fuzz() {
 
     if let Some(corpus_dir) = opt.corpus_dir() {
         if corpus_dir.exists() {
-            log::warn!("Removing previous corpus entries");
-            fs::remove_dir_all(corpus_dir).unwrap();
+            if !opt.clear_corpus() {
+                println!("There is a previous corpus at this dir, press enter to remove dir");
+                wait_for_newline();
+                println!("Removing previous corpus");
+            }
+            let _ = fs::remove_dir_all(corpus_dir);
         }
     }
 
@@ -55,16 +58,24 @@ pub fn fuzz() {
         let mut cov_shmem = shmem_provider.new_shmem_persistent(COV_SHMEM_SIZE)?;
         let cov_shmem_description = cov_shmem.description();
 
-        let cov_raw_observer =
-            StdMapObserver::from_mut_slice("coverage_observer", cov_shmem.as_slice_mut().into());
+        let cov_raw_observer = unsafe {
+            ConstMapObserver::from_mut_ptr(
+                "coverage_observer",
+                NonNull::new(cov_shmem.as_mut_ptr())
+                    .expect("map ptr is null")
+                    .cast::<[u8; COV_SHMEM_SIZE]>(),
+            )
+        };
 
         let cov_observer = HitcountsMapObserver::new(cov_raw_observer).track_indices();
         let time_observer = TimeObserver::new("time_observer");
         let packet_observer = PacketObserver::new();
         let packet_observer_handle = packet_observer.handle();
+        let cov_feedback = MaxMapFeedback::new(&cov_observer);
+        let calibration_stage = CalibrationStage::new(&cov_feedback);
 
         let mut feedback = feedback_or!(
-            MaxMapFeedback::new(&cov_observer),
+            cov_feedback,
             TimeFeedback::new(&time_observer),
             PacketFeedback::new(&packet_observer),
         );
@@ -86,9 +97,10 @@ pub fn fuzz() {
             .expect("Could not create state")
         });
 
-        let mut stages = tuple_list!(StdMutationalStage::new(StdScheduledMutator::new(
-            havoc_mutations()
-        )));
+        let mutations = tuple_list!(NopMutator::new(MutationResult::Mutated));
+        let mutator = StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);
+
+        let mut stages = tuple_list!(mutator, calibration_stage);
 
         let scheduler = StdScheduler::new();
 
@@ -126,7 +138,7 @@ pub fn fuzz() {
 
                 log::info!("Loaded {} inputs from disk", state.corpus().count());
             } else {
-                log::info!("Generating inputs");
+                log::debug!("Generating inputs");
                 state.generate_initial_inputs(
                     &mut fuzzer,
                     &mut executor,
@@ -161,14 +173,7 @@ pub fn fuzz() {
         .build();
 
     #[cfg(not(feature = "tui"))]
-    let base_monitor = {
-        let mut rand = StdRand::new();
-        MultiMonitor::new(move |m| {
-            if rand.next() % 10 == 0 && m.contains("GLOBAL") {
-                log::info!("{m}")
-            }
-        })
-    };
+    let base_monitor = { MultiMonitor::new(|m| log::info!("{m}")) };
 
     let monitor = OnDiskTomlMonitor::with_update_interval(
         opt.monitor_path(),
@@ -195,11 +200,12 @@ pub fn fuzz() {
         .remote_broker_addr(opt.remote_broker_addr())
         .stdout_file(opt.stdout().and_then(|e| e.as_os_str().to_str()))
         .stderr_file(opt.stderr().and_then(|e| e.as_os_str().to_str()))
+        .launch_delay(80)
         .build()
         .launch()
     {
         Ok(()) => (),
         Err(Error::ShuttingDown) => log::info!("Fuzzing stopped by user. Good bye."),
-        Err(err) => panic!("Failed to run launcher: {err:?}"),
+        Err(err) => panic!("Failed to run launcher: {}", err),
     }
 }
