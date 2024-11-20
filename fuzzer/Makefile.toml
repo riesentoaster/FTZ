@@ -13,21 +13,36 @@ FUZZER_DIR = "./${CARGO_TARGET_DIR}/${PROFILE_DIR}/fuzzer"
 [tasks.build_zephyr]
 script_runner = "@shell"
 script = '''
-export CUSTOM_TARGET_DIR="$(realpath ${ZEPHYR_EXE_DIR})"
+echo "Testing for changes in zephyr compared to diff file"
+
+DIFF_PATH="$(realpath ../zephyr.diff)"
+CUSTOM_TARGET_DIR="$(realpath ${ZEPHYR_EXE_DIR})"
+CURRENT_DIR="$(pwd)"
 
 cd ${ZEPHYR_PROJECT_DIR}
+git diff > /tmp/zephyr.diff
+if diff /tmp/zephyr.diff $DIFF_PATH > /dev/null; then
+    echo "\n\n\e[33mWarning: Not recompiling Zephyr. Use target run to do so.\e[0m\n\n\n\n"
+    sleep 1
+else
+    echo "Found changes, recompiling Zephyr"
 
-. ../.venv/bin/activate
+    . ../.venv/bin/activate
 
-export ZEPHYR_TOOLCHAIN_VARIANT="llvm"
+    export ZEPHYR_TOOLCHAIN_VARIANT="llvm"
 
-west build \
-    -b native_sim \
-    samples/net/sockets/echo \
-    -d "$CUSTOM_TARGET_DIR" \
-    ${ZEPHYR_PRISTINE:+--pristine} \
-    -- \
-    -DEXTRA_CFLAGS="-g -O2 -fsanitize-coverage=trace-pc-guard"
+    west build \
+        -b native_sim \
+        samples/net/sockets/echo \
+        -d "$CUSTOM_TARGET_DIR" \
+        ${ZEPHYR_PRISTINE:+--pristine} \
+        -- \
+        -DEXTRA_CFLAGS="-g -O2 -fsanitize-coverage=trace-pc-guard"
+    
+    cd $CURRENT_DIR
+    echo "Adding changes to git"
+    cargo make zephyr_diff
+fi
 '''
 
 [tasks.build_fuzzer]
@@ -41,21 +56,12 @@ script = '''
 ${FUZZER_DIR} --zephyr-exec-dir ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe --monitor-path monitor.toml ${@}
 '''
 
-[tasks.run_fast]
-dependencies = ["build_fuzzer"]
-script_runner = "@shell"
-script = '''
-echo "\n\n\e[33mWarning: Not recompiling Zephyr. Use target run to do so.\e[0m\n\n\n\n"
-sleep 1
-${FUZZER_DIR} --zephyr-exec-dir ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe --monitor-path monitor.toml ${@}
-'''
-
 [tasks.zephyr_diff]
 script_runner = "@shell"
 script = '''
-FUZZER_DIR="$(realpath ../zephyr.diff)"
+DIFF_PATH="$(realpath ../zephyr.diff)"
 cd ${ZEPHYR_PROJECT_DIR}
-git diff > "${FUZZER_DIR}"
+git diff > "${DIFF_PATH}"
 '''
 
 [tasks.extract_pcap]

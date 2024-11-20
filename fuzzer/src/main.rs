@@ -16,7 +16,9 @@ pub const COV_SHMEM_SIZE: usize = 25632; // manually extracted
 pub const PCAP_PATH: &str = "./pcap.pcap";
 
 fn main() {
-    env_logger::init();
+    env_logger::builder()
+        .target(env_logger::Target::Stdout)
+        .init();
     fuzz();
 
     // let opt = Opt::parse();

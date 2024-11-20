@@ -91,28 +91,10 @@ pub struct Cli {
     #[arg(
         short,
         long,
-        help = "Store the corpus on disk at the specified part",
-        name = "CORPUS_DIR"
+        help = "Redirect Zephyr's output to this file",
+        name = "ZEPHYR_OUT_DIR"
     )]
-    corpus_dir: Option<PathBuf>,
-
-    #[arg(
-        short,
-        long,
-        action,
-        help = "Force clear the corpus if it already exists",
-        name = "CLEAR_CORPUS"
-    )]
-    clear_corpus: bool,
-
-    #[arg(
-        short,
-        long,
-        action,
-        help = "Resume with corpus from last run. Requires that the corpus direction is specified using --corpus-dir",
-        name = "RESUME"
-    )]
-    resume: bool,
+    zephyr_out_dir: Option<PathBuf>,
 
     #[arg(short, long, help = "Set the stdout path", name = "STDOUT")]
     stdout: Option<PathBuf>,
@@ -154,14 +136,6 @@ impl Cli {
         &self.solutions_dir
     }
 
-    pub fn corpus_dir(&self) -> Option<&PathBuf> {
-        self.corpus_dir.as_ref()
-    }
-
-    pub fn resume(&self) -> bool {
-        self.resume
-    }
-
     pub fn overcommit(&self) -> usize {
         self.overcommit
     }
@@ -174,7 +148,7 @@ impl Cli {
         self.load_only
     }
 
-    pub fn clear_corpus(&self) -> bool {
-        self.clear_corpus
+    pub fn zephyr_out_dir(&self) -> Option<&PathBuf> {
+        self.zephyr_out_dir.as_ref()
     }
 }

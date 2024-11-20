@@ -1,16 +1,17 @@
 use crate::{
     cli::Cli,
     runner::{
-        CorpusEnum, PacketFeedback, PacketObserver, ZephyrInteractionGenerator, ZepyhrExecutor,
+        objective::CrashLoggingFeedback, PacketFeedback, PacketObserver,
+        ZephyrInteractionGenerator, ZepyhrExecutor,
     },
-    wait_for_newline, COV_SHMEM_SIZE, NETWORK_SHMEM_SIZE,
+    COV_SHMEM_SIZE, NETWORK_SHMEM_SIZE,
 };
 use clap::Parser as _;
 use libafl::{
-    corpus::{Corpus, OnDiskCorpus},
+    corpus::{Corpus, InMemoryCorpus, OnDiskCorpus},
     events::{EventConfig, EventRestarter, Launcher, LlmpRestartingEventManager},
-    feedback_or, feedback_or_fast,
-    feedbacks::{CrashFeedback, MaxMapFeedback, TimeFeedback, TimeoutFeedback},
+    feedback_or_fast,
+    feedbacks::{MaxMapFeedback, TimeFeedback},
     monitors::OnDiskTomlMonitor,
     mutators::{MutationResult, NopMutator, StdMOptMutator},
     observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, TimeObserver},
@@ -25,7 +26,7 @@ use libafl_bolts::{
     shmem::{MmapShMemProvider, ShMem, ShMemProvider as _, StdShMemProvider},
     tuples::{tuple_list, Handled},
 };
-use std::{fs, ptr::NonNull, time::Duration};
+use std::{path::PathBuf, ptr::NonNull, time::Duration};
 
 #[cfg(feature = "tui")]
 use libafl::monitors::tui::TuiMonitor;
@@ -35,17 +36,6 @@ use libafl::monitors::MultiMonitor;
 pub fn fuzz() {
     log::info!("Initializing fuzzer");
     let opt = Cli::parse();
-
-    if let Some(corpus_dir) = opt.corpus_dir() {
-        if corpus_dir.exists() {
-            if !opt.clear_corpus() {
-                println!("There is a previous corpus at this dir, press enter to remove dir");
-                wait_for_newline();
-                println!("Removing previous corpus");
-            }
-            let _ = fs::remove_dir_all(corpus_dir);
-        }
-    }
 
     let zephyr_exec_path = opt.zephyr_exec_dir();
 
@@ -74,22 +64,26 @@ pub fn fuzz() {
         let cov_feedback = MaxMapFeedback::new(&cov_observer);
         let calibration_stage = CalibrationStage::new(&cov_feedback);
 
-        let mut feedback = feedback_or!(
-            cov_feedback,
+        let mut feedback = feedback_or_fast!(
             TimeFeedback::new(&time_observer),
             PacketFeedback::new(&packet_observer),
+            cov_feedback,
         );
 
-        let mut objective = feedback_or_fast!(CrashFeedback::new(), TimeoutFeedback::new());
-        let observers = tuple_list!(cov_observer, time_observer, packet_observer);
+        let mut objective = feedback_or_fast!(
+            TimeFeedback::new(&time_observer),
+            PacketFeedback::new(&packet_observer),
+            CrashLoggingFeedback::new(),
+        );
+
+        let mut observers = tuple_list!(cov_observer, time_observer, packet_observer);
 
         let solutions = OnDiskCorpus::new(opt.solutions_dir())?;
-        let corpus = CorpusEnum::new(opt.corpus_dir())?;
 
         let mut state = state.unwrap_or_else(|| {
             StdState::new(
                 StdRand::new(),
-                corpus,
+                InMemoryCorpus::new(),
                 solutions,
                 &mut feedback,
                 &mut objective,
@@ -106,48 +100,27 @@ pub fn fuzz() {
 
         let mut fuzzer = StdFuzzer::new(scheduler, feedback, objective);
 
-        let mut generator = ZephyrInteractionGenerator::new(
-            NETWORK_SHMEM_SIZE,
-            &cov_shmem_description,
-            zephyr_exec_path,
-        )?;
+        let mut generator = ZephyrInteractionGenerator::new();
 
         let mut executor = ZepyhrExecutor::new(
-            observers,
+            &mut observers,
             packet_observer_handle,
             &cov_shmem_description,
             zephyr_exec_path.to_path_buf(),
+            opt.zephyr_out_dir().map(PathBuf::to_owned),
             NETWORK_SHMEM_SIZE,
         )?;
 
         if state.must_load_initial_inputs() {
-            if opt.resume() {
-                let corpus_dir = opt
-                    .corpus_dir()
-                    .expect("The corpus directory needs to be specified when resuming")
-                    .to_path_buf();
-
-                log::info!("Loading inputs from disk at {:#?}", corpus_dir);
-
-                state.load_initial_inputs(
-                    &mut fuzzer,
-                    &mut executor,
-                    &mut manager,
-                    &[corpus_dir],
-                )?;
-
-                log::info!("Loaded {} inputs from disk", state.corpus().count());
-            } else {
-                log::debug!("Generating inputs");
-                state.generate_initial_inputs(
-                    &mut fuzzer,
-                    &mut executor,
-                    &mut generator,
-                    &mut manager,
-                    1,
-                )?;
-                log::info!("Generated {} inputs", state.corpus().count());
-            }
+            log::debug!("Generating inputs");
+            state.generate_initial_inputs(
+                &mut fuzzer,
+                &mut executor,
+                &mut generator,
+                &mut manager,
+                1,
+            )?;
+            log::info!("Generated {} inputs", state.corpus().count());
         } else {
             log::info!("Did not need to load initial inputs");
         }

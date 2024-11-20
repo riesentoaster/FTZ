@@ -1,5 +1,5 @@
 diff --git a/drivers/ethernet/eth_native_posix.c b/drivers/ethernet/eth_native_posix.c
-index fdd63cced53..e35b22e40c9 100644
+index fdd63cced53..7427d474462 100644
 --- a/drivers/ethernet/eth_native_posix.c
 +++ b/drivers/ethernet/eth_native_posix.c
 @@ -173,6 +173,16 @@ static int eth_send(const struct device *dev, struct net_pkt *pkt)
@@ -8,7 +8,7 @@ index fdd63cced53..e35b22e40c9 100644
  
 +	uint8_t* buf = prepare_send_buf(count);
 +	while (buf == 0) {
-+		k_sleep(K_MSEC(1));
++		k_sleep(K_MSEC(10));
 +		buf = prepare_send_buf(count);
 +	}
 +	ret = net_pkt_read(pkt, buf, count);
@@ -44,7 +44,7 @@ index fdd63cced53..e35b22e40c9 100644
  		}
  
 -		k_sleep(K_MSEC(CONFIG_ETH_NATIVE_POSIX_RX_TIMEOUT));
-+		k_sleep(K_MSEC(1));
++		k_sleep(K_MSEC(10));
  	}
  }
  
@@ -101,7 +101,7 @@ index 33729784d8e..a3d5c2ad089 100644
 +# CONFIG_ETHERNET_LOG_LEVEL_DBG=y # driver
 \ No newline at end of file
 diff --git a/samples/net/sockets/echo/src/socket_echo.c b/samples/net/sockets/echo/src/socket_echo.c
-index c8aad2bb068..f6202fbff27 100644
+index c8aad2bb068..2066c518b0a 100644
 --- a/samples/net/sockets/echo/src/socket_echo.c
 +++ b/samples/net/sockets/echo/src/socket_echo.c
 @@ -19,6 +19,7 @@
@@ -142,7 +142,7 @@ index c8aad2bb068..f6202fbff27 100644
  
 -	printf("Single-threaded TCP echo server waits for a connection on "
 -	       "port %d...\n", BIND_PORT);
-+	k_sleep(K_MSEC(100)); // wait until all setup code is done, to ensure consistent coverage
++	k_sleep(K_MSEC(200)); // wait until all setup code is done, to ensure consistent coverage
 +	reset_coverage();
  
  	while (1) {
@@ -164,7 +164,7 @@ index c8aad2bb068..f6202fbff27 100644
  	return 0;
  }
 diff --git a/scripts/native_simulator/common/src/include/nsi_host_trampolines.h b/scripts/native_simulator/common/src/include/nsi_host_trampolines.h
-index 31f954ee0cc..36ec7157b78 100644
+index 31f954ee0cc..fa84aa61e83 100644
 --- a/scripts/native_simulator/common/src/include/nsi_host_trampolines.h
 +++ b/scripts/native_simulator/common/src/include/nsi_host_trampolines.h
 @@ -17,11 +17,14 @@
@@ -183,7 +183,7 @@ index 31f954ee0cc..36ec7157b78 100644
  void *nsi_host_calloc(unsigned long nmemb, unsigned long size);
  int nsi_host_close(int fd);
  /* void nsi_host_exit (int status); Use nsi_exit() instead */
-@@ -37,6 +40,17 @@ void *nsi_host_realloc(void *ptr, unsigned long size);
+@@ -37,6 +40,18 @@ void *nsi_host_realloc(void *ptr, unsigned long size);
  void nsi_host_srandom(unsigned int seed);
  char *nsi_host_strdup(const char *s);
  long nsi_host_write(int fd, const void *buffer, unsigned long size);
@@ -198,14 +198,15 @@ index 31f954ee0cc..36ec7157b78 100644
 +bool incoming_available(void);
 +void init_coverage(void);
 +void reset_coverage(void);
++uint32_t read_u32_from_random();
  
  #ifdef __cplusplus
  }
 diff --git a/scripts/native_simulator/common/src/nsi_host_trampolines.c b/scripts/native_simulator/common/src/nsi_host_trampolines.c
-index eb378b7533f..352e9488cbe 100644
+index eb378b7533f..07648bb9837 100644
 --- a/scripts/native_simulator/common/src/nsi_host_trampolines.c
 +++ b/scripts/native_simulator/common/src/nsi_host_trampolines.c
-@@ -10,6 +10,15 @@
+@@ -10,6 +10,14 @@
  #include <unistd.h>
  #include <fcntl.h>
  #include <string.h>
@@ -217,11 +218,10 @@ index eb378b7533f..352e9488cbe 100644
 +#include <stdbool.h>
 +#include "nsi_host_trampolines.h"
 +#include <dlfcn.h>
-+
  
  void *nsi_host_calloc(unsigned long nmemb, unsigned long size)
  {
-@@ -75,3 +84,203 @@ long nsi_host_write(int fd, const void *buffer, unsigned long size)
+@@ -75,3 +83,223 @@ long nsi_host_write(int fd, const void *buffer, unsigned long size)
  {
  	return write(fd, buffer, size);
  }
@@ -329,6 +329,12 @@ index eb378b7533f..352e9488cbe 100644
 +	if (incoming_size < 0) // if no package was sent in this direction
 +		return -1;
 +		
++	// if (read_u32_from_random() < (1 << 20)) {
++	// 	fprintf(stderr, "Faked null pointer deref in zephyr\n");
++	// 	int* ptr = 0;
++	// 	*ptr = 0;
++	// }
++
 +	MY_LOG("read_incoming\n");
 +	if (incoming_size > size) // assuming the fuzzer checks sizes, this should be enough checks
 +		custom_panic("Incoming too large");
@@ -424,4 +430,18 @@ index eb378b7533f..352e9488cbe 100644
 +{
 +	if (!cov_shmem_init) return; // ignore coverage before initialization
 +	*(guard - guard_start + cov_shmem_ptr) += 1;
++}
++
++uint32_t read_u32_from_random() {
++    int fd = open("/dev/random", O_RDONLY);
++    if (fd < 0) custom_panic("Could not open random device");
++
++    uint32_t value;
++    if (read(fd, &value, sizeof(value)) != sizeof(value)) {
++        close(fd);
++        custom_panic("Could not read random value");
++    }
++
++    close(fd);
++    return value;
 +}

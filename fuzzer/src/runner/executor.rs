@@ -1,6 +1,7 @@
 use std::{
     ffi::CStr,
     fmt::Debug,
+    fs::OpenOptions,
     marker::PhantomData,
     os::unix::process::ExitStatusExt as _,
     path::PathBuf,
@@ -27,21 +28,23 @@ use crate::smoltcp::shmem_net_device::ShmemNetworkDevice;
 
 use super::{input::ZephyrInput, metadata::PacketObserver};
 
-pub struct ZepyhrExecutor<S, OT> {
-    observers: OT,
+pub struct ZepyhrExecutor<'a, S, OT> {
+    observers: &'a mut OT,
     packet_observer: Handle<PacketObserver>,
     device: ShmemNetworkDevice,
     envs: Vec<(String, String)>,
     zephyr_exec_path: PathBuf,
+    zephyr_out_path: Option<PathBuf>,
     phantom: PhantomData<S>,
 }
 
-impl<S, OT> ZepyhrExecutor<S, OT> {
+impl<'a, S, OT> ZepyhrExecutor<'a, S, OT> {
     pub fn new(
-        observers: OT,
+        observers: &'a mut OT,
         packet_observer: Handle<PacketObserver>,
         cov_shmem_desc: &ShMemDescription,
         zephyr_exec_path: PathBuf,
+        zephyr_out_path: Option<PathBuf>,
         network_buf_size: usize,
     ) -> Result<Self, Error> {
         let device = ShmemNetworkDevice::new(network_buf_size)?;
@@ -63,12 +66,13 @@ impl<S, OT> ZepyhrExecutor<S, OT> {
             device,
             envs,
             zephyr_exec_path,
+            zephyr_out_path,
             phantom: PhantomData,
         })
     }
 }
 
-impl<EM, Z, S, OT> Executor<EM, Z> for ZepyhrExecutor<S, OT>
+impl<'a, EM, Z, S, OT> Executor<EM, Z> for ZepyhrExecutor<'a, S, OT>
 where
     Z: UsesState<State = S>,
     EM: UsesState<State = S>,
@@ -97,9 +101,25 @@ where
 
         self.device.reset();
 
+        let stdio = self
+            .zephyr_out_path
+            .as_ref()
+            .map(|path| {
+                let file = OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                    .expect("Failed to open file");
+                (
+                    Stdio::from(file.try_clone().expect("Could not clone zephyr outfile")),
+                    Stdio::from(file),
+                )
+            })
+            .unwrap_or((Stdio::null(), Stdio::null()));
+
         let mut child = Command::new(self.zephyr_exec_path.clone())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
+            .stdout(stdio.0)
+            .stderr(stdio.1)
             .envs(self.envs.to_owned())
             .spawn()
             .map_err(|e| Error::unknown(format!("Could not start command: {e:?}")))?;
@@ -118,7 +138,7 @@ where
                     packets_observer.add_packet(incoming);
                     last_packet_time = Instant::now();
                 }
-                sleep(INTER_SEND_WAIT / 10);
+                sleep(INTER_SEND_WAIT / 5);
             }
         }
 
@@ -144,22 +164,22 @@ where
     }
 }
 
-impl<S, OT> UsesState for ZepyhrExecutor<S, OT>
+impl<'a, S, OT> UsesState for ZepyhrExecutor<'a, S, OT>
 where
     S: State,
 {
     type State = S;
 }
 
-impl<S, OT> HasObservers for ZepyhrExecutor<S, OT> {
+impl<'a, S, OT> HasObservers for ZepyhrExecutor<'a, S, OT> {
     type Observers = OT;
 
     fn observers(&self) -> RefIndexable<&Self::Observers, Self::Observers> {
-        RefIndexable::from(&self.observers)
+        RefIndexable::from(&*self.observers)
     }
 
     fn observers_mut(&mut self) -> RefIndexable<&mut Self::Observers, Self::Observers> {
-        RefIndexable::from(&mut self.observers)
+        RefIndexable::from(&mut *self.observers)
     }
 }
 
