@@ -31,5 +31,7 @@ base64 = "0.22.1"
 hex = "0.4.3"
 
 [features]
-default = []
-tui = []
+default = ["ondisk_corpus"]
+tui = ["libafl/tui_monitor"]
+ondisk_corpus = []
+hashes = []

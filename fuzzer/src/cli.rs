@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, path::PathBuf};
+use std::path::PathBuf;
 
 use clap::{self, Parser};
 
@@ -50,18 +50,6 @@ pub struct Cli {
     load_only: bool,
 
     #[arg(
-        short = 'p',
-        long,
-        help = "Choose the broker TCP port, default is 1337",
-        name = "PORT",
-        default_value = "1337"
-    )]
-    broker_port: u16,
-
-    #[arg(short = 'a', long, help = "Specify a remote broker", name = "REMOTE")]
-    remote_broker_addr: Option<SocketAddr>,
-
-    #[arg(
         short,
         long,
         help = "Set the Zephyr executable path",
@@ -69,24 +57,6 @@ pub struct Cli {
         required = true
     )]
     zephyr_exec_dir: PathBuf,
-
-    #[arg(
-        short,
-        long,
-        help = "Set the path for the monitor .toml file",
-        name = "MONITOR_PATH",
-        default_value = "/dev/null"
-    )]
-    monitor_path: PathBuf,
-
-    #[arg(
-        short,
-        long,
-        help = "Set the output directory, default is ./solutions",
-        name = "SOLUTIONS_DIR",
-        default_value = "./solutions"
-    )]
-    solutions_dir: PathBuf,
 
     #[arg(
         short,
@@ -104,14 +74,6 @@ pub struct Cli {
 }
 
 impl Cli {
-    pub fn remote_broker_addr(&self) -> Option<SocketAddr> {
-        self.remote_broker_addr
-    }
-
-    pub fn broker_port(&self) -> u16 {
-        self.broker_port
-    }
-
     pub fn cores(&self) -> &Cores {
         &self.cores
     }
@@ -120,20 +82,12 @@ impl Cli {
         &self.zephyr_exec_dir
     }
 
-    pub fn monitor_path(&self) -> &PathBuf {
-        &self.monitor_path
-    }
-
     pub fn stdout(&self) -> Option<&PathBuf> {
         self.stdout.as_ref()
     }
 
     pub fn stderr(&self) -> Option<&PathBuf> {
         self.stderr.as_ref()
-    }
-
-    pub fn solutions_dir(&self) -> &PathBuf {
-        &self.solutions_dir
     }
 
     pub fn overcommit(&self) -> usize {

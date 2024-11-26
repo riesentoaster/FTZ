@@ -1,5 +1,5 @@
 diff --git a/drivers/ethernet/eth_native_posix.c b/drivers/ethernet/eth_native_posix.c
-index fdd63cced53..7427d474462 100644
+index fdd63cced53..a89691cf788 100644
 --- a/drivers/ethernet/eth_native_posix.c
 +++ b/drivers/ethernet/eth_native_posix.c
 @@ -173,6 +173,16 @@ static int eth_send(const struct device *dev, struct net_pkt *pkt)
@@ -8,7 +8,7 @@ index fdd63cced53..7427d474462 100644
  
 +	uint8_t* buf = prepare_send_buf(count);
 +	while (buf == 0) {
-+		k_sleep(K_MSEC(10));
++		k_sleep(K_MSEC(5));
 +		buf = prepare_send_buf(count);
 +	}
 +	ret = net_pkt_read(pkt, buf, count);
@@ -44,7 +44,7 @@ index fdd63cced53..7427d474462 100644
  		}
  
 -		k_sleep(K_MSEC(CONFIG_ETH_NATIVE_POSIX_RX_TIMEOUT));
-+		k_sleep(K_MSEC(10));
++		k_sleep(K_MSEC(5));
  	}
  }
  

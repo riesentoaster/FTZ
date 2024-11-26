@@ -3,5 +3,6 @@
 *.log
 monitor.toml
 solutions
-corpus
+corpus*
 *.tmp
+hashes.txt

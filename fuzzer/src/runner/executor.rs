@@ -9,6 +9,11 @@ use std::{
     thread::sleep,
     time::Instant,
 };
+#[cfg(feature = "hashes")]
+use std::{
+    hash::{DefaultHasher, Hash, Hasher},
+    io::Write,
+};
 
 use libafl::{
     executors::{Executor, ExitKind, HasObservers},
@@ -142,6 +147,24 @@ where
             }
         }
 
+        #[cfg(feature = "hashes")]
+        {
+            let mut hasher = DefaultHasher::new();
+            packets_observer
+                .get_packets()
+                .iter()
+                .map(|(_, p)| p.clone())
+                .collect::<Vec<_>>()
+                .hash(&mut hasher);
+            OpenOptions::new()
+                .append(true)
+                .create(true)
+                .open("hashes.txt")
+                .unwrap()
+                .write_all(format!("{}\n", hasher.finish()).as_bytes())
+                .unwrap();
+        }
+
         let res = child.try_wait().unwrap();
         child.kill().unwrap();
         child.wait().unwrap();
@@ -152,13 +175,9 @@ where
             None => ExitKind::Ok,
         };
 
-        if res == ExitKind::Crash {
-            log::info!("Got crash!");
-        }
+        self.observers.post_exec_child_all(state, input, &res)?;
 
         log::debug!("Zephyr exited with ExitKind::{:#?}", res);
-
-        self.observers.post_exec_child_all(state, input, &res)?;
 
         Ok(res)
     }

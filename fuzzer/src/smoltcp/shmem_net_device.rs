@@ -14,7 +14,11 @@ use smoltcp::phy::{self, Device, DeviceCapabilities};
 use crate::{
     direction::Direction,
     layers::{
-        data_link::parse_eth, interactive::create_response_to_icmpv6_neighbor_solicitation,
+        data_link::parse_eth,
+        interactive::{
+            create_response_to_icmpv6_neighbor_solicitation,
+            create_response_to_icmpv6_router_solicitation,
+        },
         upper::UpperLayerPacket,
     },
     runner::{CLIENT_MAC_ADDR, IPV6_LINK_LOCAL_ADDR, SETUP_TIMEOUT},
@@ -119,18 +123,27 @@ impl ShmemNetworkDevice {
             if let Some(p) = self.try_recv() {
                 let parsed = parse_eth(&p).map_err(Error::illegal_argument)?;
                 if let Some(icmpv6) = parsed.upper().and_then(UpperLayerPacket::get_icmpv6) {
-                    if icmpv6.icmpv6_type == Icmpv6Types::NeighborSolicit {
-                        let res =
-                        create_response_to_icmpv6_neighbor_solicitation(&parsed, CLIENT_MAC_ADDR, *IPV6_LINK_LOCAL_ADDR).ok_or({
-                            Error::illegal_argument(format!("Could not calculate return package for an incoming icmpv6 message:\n{:?}", parsed))
-                        })?;
-                        self.send(&res);
-                        package_logger(Direction::Outgoing(res));
-                    } else {
-                        log::debug!(
-                            "Received icmpv6 package of type other than NeighborSolicit of upper type {:?}",
+                    match icmpv6.icmpv6_type {
+                        Icmpv6Types::NeighborSolicit => {
+                            let res = create_response_to_icmpv6_neighbor_solicitation(&parsed, CLIENT_MAC_ADDR, *IPV6_LINK_LOCAL_ADDR).ok_or({
+                                Error::illegal_argument(format!("Could not calculate return package for an incoming icmpv6 message:\n{:?}", parsed))
+                            })?;
+                            self.send(&res);
+                            package_logger(Direction::Outgoing(res));
+                        }
+                        Icmpv6Types::RouterSolicit => {
+                            let res = create_response_to_icmpv6_router_solicitation(&parsed, CLIENT_MAC_ADDR, *IPV6_LINK_LOCAL_ADDR).ok_or({
+                                Error::illegal_argument(format!("Could not calculate return package for an incoming icmpv6 message:\n{:?}", parsed))
+                            })?;
+                            self.send(&res);
+                            package_logger(Direction::Outgoing(res));
+                        }
+                        _ => {
+                            log::debug!(
+                            "Received icmpv6 package of type other than NeighborSolicit or RouterSolicit of upper type {:?}",
                             icmpv6.icmpv6_type
                         );
+                        }
                     }
                 } else {
                     log::info!(

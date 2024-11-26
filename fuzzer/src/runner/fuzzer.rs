@@ -8,7 +8,7 @@ use crate::{
 };
 use clap::Parser as _;
 use libafl::{
-    corpus::{Corpus, InMemoryCorpus, OnDiskCorpus},
+    corpus::{Corpus, OnDiskCorpus},
     events::{EventConfig, EventRestarter, Launcher, LlmpRestartingEventManager},
     feedback_or_fast,
     feedbacks::{MaxMapFeedback, TimeFeedback},
@@ -32,6 +32,9 @@ use std::{path::PathBuf, ptr::NonNull, time::Duration};
 use libafl::monitors::tui::TuiMonitor;
 #[cfg(not(feature = "tui"))]
 use libafl::monitors::MultiMonitor;
+
+#[cfg(not(feature = "ondisk_corpus"))]
+use libafl::corpus::InMemoryCorpus;
 
 pub fn fuzz() {
     log::info!("Initializing fuzzer");
@@ -78,12 +81,17 @@ pub fn fuzz() {
 
         let mut observers = tuple_list!(cov_observer, time_observer, packet_observer);
 
-        let solutions = OnDiskCorpus::new(opt.solutions_dir())?;
+        let solutions = OnDiskCorpus::new("./solutions")?;
+
+        #[cfg(feature = "ondisk_corpus")]
+        let corpus = OnDiskCorpus::new("./corpus")?;
+        #[cfg(not(feature = "ondisk_corpus"))]
+        let corpus = InMemoryCorpus::new();
 
         let mut state = state.unwrap_or_else(|| {
             StdState::new(
                 StdRand::new(),
-                InMemoryCorpus::new(),
+                corpus,
                 solutions,
                 &mut feedback,
                 &mut objective,
@@ -149,7 +157,7 @@ pub fn fuzz() {
     let base_monitor = { MultiMonitor::new(|m| log::info!("{m}")) };
 
     let monitor = OnDiskTomlMonitor::with_update_interval(
-        opt.monitor_path(),
+        "./monitor.toml",
         base_monitor,
         Duration::from_secs(10),
     );
@@ -169,8 +177,6 @@ pub fn fuzz() {
         .run_client(&mut run_client)
         .cores(&cores)
         .overcommit(overcommit)
-        .broker_port(opt.broker_port())
-        .remote_broker_addr(opt.remote_broker_addr())
         .stdout_file(opt.stdout().and_then(|e| e.as_os_str().to_str()))
         .stderr_file(opt.stderr().and_then(|e| e.as_os_str().to_str()))
         .launch_delay(80)

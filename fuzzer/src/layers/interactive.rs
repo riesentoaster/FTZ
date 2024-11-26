@@ -187,3 +187,105 @@ pub fn create_response_to_icmpv6_neighbor_solicitation(
 
     Some(eth_res_buf)
 }
+
+pub fn create_response_to_icmpv6_router_solicitation(
+    incoming: &DataLinkLayerPacket,
+    mac_addr: [u8; 6],
+    ipv6_link_local_addr: IpAddress,
+) -> Option<Vec<u8>> {
+    // Extract the ICMPv6 packet from the incoming packet
+    let icmp = incoming
+        .upper()
+        .expect("Packet did not have a layer 4 content")
+        .get_icmpv6()
+        .unwrap_or_else(|| panic!("Did not receive straight ICMPv6 packet: {:?}", incoming));
+
+    // Check if the packet is a Router Solicitation (Type 133)
+    if icmp.icmpv6_type != Icmpv6Types::RouterSolicit {
+        return None;
+    }
+
+    // Create the ICMPv6 Router Advertisement message (Type 134)
+    let mut ra_payload = Vec::new();
+
+    // Router Advertisement message fields
+    let cur_hop_limit = 64; // Default hop limit
+    let flags = 0x00; // No M or O flags set
+    let router_lifetime = 0u16.to_be_bytes(); // Lifetime zero since we're not a real router
+    let reachable_time = 0u32.to_be_bytes(); // Zero as per default
+    let retrans_timer = 0u32.to_be_bytes(); // Zero as per default
+
+    // Construct the fixed part of the RA message
+    ra_payload.push(cur_hop_limit);
+    ra_payload.push(flags);
+    ra_payload.extend_from_slice(&router_lifetime);
+    ra_payload.extend_from_slice(&reachable_time);
+    ra_payload.extend_from_slice(&retrans_timer);
+
+    // Add the Source Link-Layer Address option (Type 1)
+    ra_payload.push(1); // Option Type: Source Link-Layer Address
+    ra_payload.push(1); // Option Length: 1 (means 8 octets)
+    ra_payload.extend_from_slice(&mac_addr);
+
+    // Create the ICMPv6 header
+    let res_icmpv6 = Icmpv6 {
+        icmpv6_type: Icmpv6Types::RouterAdvert,
+        icmpv6_code: Icmpv6Codes::NoCode,
+        checksum: 0,
+        payload: ra_payload.clone(),
+    };
+
+    // Serialize the ICMPv6 packet
+    let res_icmpv6_len = MutableIcmpv6Packet::packet_size(&res_icmpv6);
+    let mut res_icmpv6_buf = vec![0; res_icmpv6_len];
+    let mut res_icmpv6_packet = MutableIcmpv6Packet::new(&mut res_icmpv6_buf).unwrap();
+    res_icmpv6_packet.populate(&res_icmpv6);
+
+    // Calculate the ICMPv6 checksum
+    let net = match incoming.net() {
+        NetworkLayerPacketType::Ipv6(ipv6) => ipv6,
+        _ => panic!("Expected IPv6 packet"),
+    };
+
+    let dest_ip = net.source;
+    let source_ip = &Ipv6Address::from_bytes(ipv6_link_local_addr.as_bytes()).into();
+
+    let checksum = icmpv6::checksum(&res_icmpv6_packet.to_immutable(), source_ip, &dest_ip);
+
+    res_icmpv6_packet.set_checksum(checksum);
+
+    // Create the IPv6 header
+    let res_net = Ipv6 {
+        version: 6,
+        traffic_class: 0,
+        flow_label: 0,
+        payload_length: res_icmpv6_buf.len() as u16,
+        next_header: IpNextHeaderProtocols::Icmpv6,
+        hop_limit: 255, // As per RFC 4861
+        source: *source_ip,
+        destination: dest_ip,
+        payload: res_icmpv6_buf,
+    };
+
+    // Serialize the IPv6 packet
+    let res_net_len = MutableIpv6Packet::packet_size(&res_net);
+    let mut res_net_buf = vec![0; res_net_len];
+    let mut res_net_packet = MutableIpv6Packet::new(&mut res_net_buf).unwrap();
+    res_net_packet.populate(&res_net);
+
+    // Create the Ethernet frame
+    let eth_res = Ethernet {
+        destination: incoming.eth().source, // Send back to the soliciting host
+        source: mac_addr.into(),
+        ethertype: EtherTypes::Ipv6,
+        payload: res_net_buf,
+    };
+
+    // Serialize the Ethernet frame
+    let eth_res_len = MutableEthernetPacket::packet_size(&eth_res);
+    let mut eth_res_buf = vec![0; eth_res_len];
+    let mut eth_res_packet = MutableEthernetPacket::new(&mut eth_res_buf).unwrap();
+    eth_res_packet.populate(&eth_res);
+
+    Some(eth_res_buf)
+}

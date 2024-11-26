@@ -12,6 +12,8 @@ use libafl_bolts::{
     Named,
 };
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "hashes")]
+use std::hash::{DefaultHasher, Hash as _, Hasher};
 use std::{
     borrow::Cow,
     time::{Duration, SystemTime},
@@ -31,7 +33,7 @@ impl PacketObserver {
         }
     }
 
-    fn get_packets(&self) -> &Vec<(Duration, Vec<u8>)> {
+    pub fn get_packets(&self) -> &Vec<(Duration, Vec<u8>)> {
         &self.packets
     }
 
@@ -56,8 +58,10 @@ impl Named for PacketObserver {
 
 #[derive(SerdeAny, Serialize, Deserialize, Debug)]
 pub struct PacketMetadata {
-    packets: Vec<(Duration, String)>,
+    #[cfg(feature = "hashes")]
+    hash: u64,
     pcap: String,
+    packets: Vec<(Duration, String)>,
 }
 
 /// Feedback adding packets captured by a [`PacketObserver`] to a metadata field.
@@ -101,10 +105,9 @@ where
                 (
                     *timestamp,
                     match parse_eth(packet) {
-                        Ok(p) => format!("{:?}: {:?}", timestamp, p),
+                        Ok(p) => format!("{:?}", p),
                         Err(p) => format!(
-                            "{:?}: Error when parsing packet: {}.\n original data: 0x{:?}",
-                            timestamp,
+                            "Error when parsing packet: {}.\n original data: 0x{:?}",
                             p,
                             hex::encode(packet)
                         ),
@@ -114,7 +117,6 @@ where
             .collect();
 
         let mut writer = Vec::new();
-
         write_pcap(
             &observer
                 .get_packets()
@@ -123,23 +125,37 @@ where
                 .collect::<Vec<_>>(),
             &mut writer,
         )?;
+        let pcap = BASE64_STANDARD.encode(writer);
+
+        #[cfg(feature = "hashes")]
+        {
+            let mut hasher = DefaultHasher::new();
+            observer
+                .get_packets()
+                .iter()
+                .map(|(_, p)| p.clone())
+                .collect::<Vec<_>>()
+                .hash(&mut hasher);
+            let hash = hasher.finish();
+        }
 
         testcase.add_metadata(PacketMetadata {
             packets,
-            pcap: BASE64_STANDARD.encode(writer),
+            pcap,
+            #[cfg(feature = "hashes")]
+            hash,
         });
         Ok(())
     }
 
     fn is_interesting(
         &mut self,
-        state: &mut S,
-        manager: &mut EM,
-        input: &I,
-        observers: &OT,
+        _state: &mut S,
+        _manager: &mut EM,
+        _input: &I,
+        _observers: &OT,
         _exit_kind: &ExitKind,
     ) -> Result<bool, Error> {
-        self.append_metadata(state, manager, observers, &mut Testcase::new(input))?;
         Ok(false)
     }
 }

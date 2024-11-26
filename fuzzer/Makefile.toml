@@ -53,7 +53,7 @@ args = ["build", "--profile", "release"]
 dependencies = ["build_fuzzer", "build_zephyr"]
 script_runner = "@shell"
 script = '''
-${FUZZER_DIR} --zephyr-exec-dir ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe --monitor-path monitor.toml ${@}
+${FUZZER_DIR} --zephyr-exec-dir ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe ${@}
 '''
 
 [tasks.zephyr_diff]
