@@ -128,7 +128,7 @@ where
         let pcap = BASE64_STANDARD.encode(writer);
 
         #[cfg(feature = "hashes")]
-        {
+        let hash = {
             let mut hasher = DefaultHasher::new();
             observer
                 .get_packets()
@@ -136,8 +136,8 @@ where
                 .map(|(_, p)| p.clone())
                 .collect::<Vec<_>>()
                 .hash(&mut hasher);
-            let hash = hasher.finish();
-        }
+            hasher.finish()
+        };
 
         testcase.add_metadata(PacketMetadata {
             packets,
