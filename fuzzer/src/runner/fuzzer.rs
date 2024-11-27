@@ -4,6 +4,7 @@ use crate::{
         objective::CrashLoggingFeedback, PacketFeedback, PacketObserver,
         ZephyrInteractionGenerator, ZepyhrExecutor,
     },
+    shmem::get_shmem,
     COV_SHMEM_SIZE, NETWORK_SHMEM_SIZE,
 };
 use clap::Parser as _;
@@ -16,25 +17,30 @@ use libafl::{
     mutators::{MutationResult, NopMutator, StdMOptMutator},
     observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, TimeObserver},
     schedulers::StdScheduler,
-    stages::{CalibrationStage, StdMutationalStage},
+    stages::StdMutationalStage,
     state::{HasCorpus as _, StdState},
     Error, Fuzzer as _, StdFuzzer,
 };
 use libafl_bolts::{
     core_affinity::Cores,
     rands::StdRand,
-    shmem::{MmapShMemProvider, ShMem, ShMemProvider as _, StdShMemProvider},
+    shmem::{ShMem, ShMemProvider as _, StdShMemProvider},
     tuples::{tuple_list, Handled},
 };
 use std::{path::PathBuf, ptr::NonNull, time::Duration};
 
-#[cfg(feature = "tui")]
+#[cfg(feature = "monitor_tui")]
 use libafl::monitors::tui::TuiMonitor;
-#[cfg(not(feature = "tui"))]
+#[cfg(feature = "monitor_log")]
 use libafl::monitors::MultiMonitor;
+#[cfg(feature = "monitor_none")]
+use libafl::monitors::NopMonitor;
 
 #[cfg(not(feature = "ondisk_corpus"))]
 use libafl::corpus::InMemoryCorpus;
+
+#[cfg(feature = "stability")]
+use libafl::stages::CalibrationStage;
 
 pub fn fuzz() {
     log::info!("Initializing fuzzer");
@@ -42,13 +48,13 @@ pub fn fuzz() {
 
     let zephyr_exec_path = opt.zephyr_exec_dir();
 
-    let mut shmem_provider = MmapShMemProvider::default();
-
     let mut run_client = |state: Option<_>,
                           mut manager: LlmpRestartingEventManager<_, _, _>,
                           _core_id| {
         log::info!("Initializing fuzzing client");
-        let mut cov_shmem = shmem_provider.new_shmem_persistent(COV_SHMEM_SIZE)?;
+        let mut rand = StdRand::new();
+
+        let mut cov_shmem = get_shmem(COV_SHMEM_SIZE, &mut rand)?;
         let cov_shmem_description = cov_shmem.description();
 
         let cov_raw_observer = unsafe {
@@ -65,6 +71,7 @@ pub fn fuzz() {
         let packet_observer = PacketObserver::new();
         let packet_observer_handle = packet_observer.handle();
         let cov_feedback = MaxMapFeedback::new(&cov_observer);
+        #[cfg(feature = "stability")]
         let calibration_stage = CalibrationStage::new(&cov_feedback);
 
         let mut feedback = feedback_or_fast!(
@@ -89,19 +96,16 @@ pub fn fuzz() {
         let corpus = InMemoryCorpus::new();
 
         let mut state = state.unwrap_or_else(|| {
-            StdState::new(
-                StdRand::new(),
-                corpus,
-                solutions,
-                &mut feedback,
-                &mut objective,
-            )
-            .expect("Could not create state")
+            StdState::new(rand, corpus, solutions, &mut feedback, &mut objective)
+                .expect("Could not create state")
         });
 
         let mutations = tuple_list!(NopMutator::new(MutationResult::Mutated));
         let mutator = StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);
 
+        #[cfg(not(feature = "stability"))]
+        let mut stages = tuple_list!(mutator);
+        #[cfg(feature = "stability")]
         let mut stages = tuple_list!(mutator, calibration_stage);
 
         let scheduler = StdScheduler::new();
@@ -117,6 +121,7 @@ pub fn fuzz() {
             zephyr_exec_path.to_path_buf(),
             opt.zephyr_out_dir().map(PathBuf::to_owned),
             NETWORK_SHMEM_SIZE,
+            &mut rand,
         )?;
 
         if state.must_load_initial_inputs() {
@@ -148,13 +153,17 @@ pub fn fuzz() {
         Ok(())
     };
 
-    #[cfg(feature = "tui")]
-    let base_monitor = TuiMonitor::builder()
-        .title("Zephyr TCP/IP Stack Fuzzer")
-        .build();
+    #[cfg(feature = "monitor_tui")]
+    let base_monitor = {
+        TuiMonitor::builder()
+            .title("Zephyr TCP/IP Stack Fuzzer")
+            .build()
+    };
 
-    #[cfg(not(feature = "tui"))]
-    let base_monitor = { MultiMonitor::new(|m| log::info!("{m}")) };
+    #[cfg(feature = "monitor_log")]
+    let base_monitor = MultiMonitor::new(|m| log::info!("{m}"));
+    #[cfg(feature = "monitor_none")]
+    let base_monitor = NopMonitor::new();
 
     let monitor = OnDiskTomlMonitor::with_update_interval(
         "./monitor.toml",
@@ -179,7 +188,7 @@ pub fn fuzz() {
         .overcommit(overcommit)
         .stdout_file(opt.stdout().and_then(|e| e.as_os_str().to_str()))
         .stderr_file(opt.stderr().and_then(|e| e.as_os_str().to_str()))
-        .launch_delay(80)
+        .launch_delay(50)
         .build()
         .launch()
     {

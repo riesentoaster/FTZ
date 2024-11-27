@@ -1,0 +1,13 @@
+[package]
+name = "test-shmem"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libafl = { path = "../LibAFL/libafl", features = ["multipart_inputs"] }
+libafl_bolts = { path = "../LibAFL/libafl_bolts", features = [
+    "errors_backtrace",
+] }
+
+[features]
+mmap = []

@@ -30,7 +30,10 @@ base64 = "0.22.1"
 hex = "0.4.3"
 
 [features]
-default = ["ondisk_corpus"]
-tui = ["libafl/tui_monitor"]
+default = ["hashes", "monitor_none"]
+monitor_tui = ["libafl/tui_monitor"]
+monitor_log = []
+monitor_none = []
 ondisk_corpus = []
-hashes = []
+stability = []
+hashes = ["stability"]

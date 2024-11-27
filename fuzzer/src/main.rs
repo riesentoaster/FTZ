@@ -2,13 +2,13 @@ use std::io::{self, Write};
 
 use runner::fuzz;
 
-mod direction;
-
 mod cli;
+mod direction;
 mod layers;
 mod packets;
 mod pcap;
 mod runner;
+mod shmem;
 mod smoltcp;
 
 pub const NETWORK_SHMEM_SIZE: usize = 1 << 16;

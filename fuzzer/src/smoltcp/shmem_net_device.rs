@@ -6,7 +6,10 @@ use std::{
 };
 
 use libafl::Error;
-use libafl_bolts::shmem::{MmapShMem, MmapShMemProvider, ShMemDescription, ShMemProvider as _};
+use libafl_bolts::{
+    rands::Rand,
+    shmem::{MmapShMem, ShMemDescription},
+};
 
 use pnet::packet::icmpv6::Icmpv6Types;
 use smoltcp::phy::{self, Device, DeviceCapabilities};
@@ -22,6 +25,7 @@ use crate::{
         upper::UpperLayerPacket,
     },
     runner::{CLIENT_MAC_ADDR, IPV6_LINK_LOCAL_ADDR, SETUP_TIMEOUT},
+    shmem::get_shmem,
 };
 
 use super::shmem_net_device_buffers::ShmemNetDeviceBuffer;
@@ -83,8 +87,8 @@ pub struct ShmemNetworkDevice {
 }
 
 impl ShmemNetworkDevice {
-    pub fn new(buf_size: usize) -> Result<Self, Error> {
-        let shmem = MmapShMemProvider::new()?.new_shmem_persistent(buf_size * 2 + 8)?; // two buffers plus two lengths
+    pub fn new<R: Rand>(buf_size: usize, rand: &mut R) -> Result<Self, Error> {
+        let shmem = get_shmem(buf_size * 2 + 8, rand)?;
 
         log::debug!("Created ShmemNetworkDevice");
         let (tx_shmem, rx_shmem) = ShmemNetDeviceBuffer::new(Rc::new(RefCell::new(shmem)));
@@ -153,6 +157,7 @@ impl ShmemNetworkDevice {
                 }
                 package_logger(Direction::Incoming(p));
             }
+            sleep(Duration::from_millis(5));
         }
         Ok(())
     }

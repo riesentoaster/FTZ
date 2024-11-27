@@ -5,4 +5,5 @@ monitor.toml
 solutions
 corpus*
 *.tmp
-hashes.txt
+hashes*.txt
+profile.json

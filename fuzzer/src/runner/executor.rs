@@ -23,6 +23,7 @@ use libafl::{
     Error,
 };
 use libafl_bolts::{
+    rands::Rand,
     shmem::ShMemDescription,
     tuples::{Handle, MatchName, MatchNameRef, RefIndexable},
 };
@@ -44,15 +45,16 @@ pub struct ZepyhrExecutor<'a, S, OT> {
 }
 
 impl<'a, S, OT> ZepyhrExecutor<'a, S, OT> {
-    pub fn new(
+    pub fn new<R: Rand>(
         observers: &'a mut OT,
         packet_observer: Handle<PacketObserver>,
         cov_shmem_desc: &ShMemDescription,
         zephyr_exec_path: PathBuf,
         zephyr_out_path: Option<PathBuf>,
         network_buf_size: usize,
+        rand: &mut R,
     ) -> Result<Self, Error> {
-        let device = ShmemNetworkDevice::new(network_buf_size)?;
+        let device = ShmemNetworkDevice::new(network_buf_size, rand)?;
         let net_shmem_desc = device.get_shmem_description();
 
         let envs = ([
