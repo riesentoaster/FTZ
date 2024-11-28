@@ -1,0 +1,90 @@
+@unpublished{EVA,
+  author = {Valentin Huber},
+  title  = {{Challenges and Mitigation Strategies in Symbolic Execution Based Fuzzing Through the Lens of Survey Papers}},
+  year   = {2023},
+  month  = {12},
+  day    = {15},
+  url    = {https://github.com/riesentoaster/review-symbolic-execution-in-fuzzing/releases/download/v1.0/Huber-Valentin-Challenges-and-Mitigation-Strategies-in-Symbolic-Execution-Based-Fuzzing-Through-the-Lens-of-Survey-Papers.pdf}
+}
+
+@unpublished{VT1,
+  author = {Valentin Huber},
+  title  = {{Running KLEE on GNU coreutils}},
+  year   = {2024},
+  month  = {02},
+  day    = {13},
+  url    = {https://github.com/riesentoaster/klee-coreutils-experiments/releases/download/v1.0/Huber-Valentin-running-KLEE-on-coreutils-report.pdf}
+}
+@unpublished{VT2,
+  author = {Valentin Huber},
+  title  = {{Differential Fuzzing on coreutils Using LibAFL}},
+  year   = {2024},
+  month  = {06},
+  day    = {25},
+  url    = {https://github.com/riesentoaster/coreutils-differential-fuzzing/blob/main/report/out/index.pdf}
+}
+
+@inproceedings{StatefulGreybox,
+  author    = {Jinsheng Ba and Marcel B{\"o}hme and Zahra Mirzamomen and Abhik Roychoudhury},
+  title     = {Stateful Greybox Fuzzing},
+  booktitle = {31st USENIX Security Symposium (USENIX Security 22)},
+  year      = {2022},
+  isbn      = {978-1-939133-31-1},
+  address   = {Boston, MA},
+  pages     = {3255--3272},
+  url       = {https://www.usenix.org/conference/usenixsecurity22/presentation/ba},
+  publisher = {USENIX Association},
+  month     = aug
+}
+
+
+@article{StateAFL,
+  author   = {Natella, Roberto},
+  title    = {StateAFL: Greybox fuzzing for stateful network servers},
+  journal  = {Empirical Software Engineering},
+  year     = {2022},
+  month    = {10},
+  day      = {04},
+  volume   = {27},
+  number   = {7},
+  pages    = {191},
+  abstract = {Fuzzing network servers is a technical challenge, since the behavior of the target server depends on its state over a sequence of multiple messages. Existing solutions are costly and difficult to use, as they rely on manually-customized artifacts such as protocol models, protocol parsers, and learning frameworks. The aim of this work is to develop a greybox fuzzer (StateAFL) for network servers that only relies on lightweight analysis of the target program, with no manual customization, in a similar way to what the AFL fuzzer achieved for stateless programs. The proposed fuzzer instruments the target server at compile-time, to insert probes on memory allocations and network I/O operations. At run-time, it infers the current protocol state of the target server by taking snapshots of long-lived memory areas, and by applying a fuzzy hashing algorithm (Locality-Sensitive Hashing) to map memory contents to a unique state identifier. The fuzzer incrementally builds a protocol state machine for guiding fuzzing. We implemented and released StateAFL as open-source software. As a basis for reproducible experimentation, we integrated StateAFL with a large set of network servers for popular protocols, with no manual customization to accomodate for the protocol. The experimental results show that the fuzzer can be applied with no manual customization on a large set of network servers for popular protocols, and that it can achieve comparable, or even better code coverage and bug detection than customized fuzzing. Moreover, our qualitative analysis shows that states inferred from memory better reflect the server behavior than only using response codes from messages.},
+  issn     = {1573-7616},
+  doi      = {10.1007/s10664-022-10233-3},
+  url      = {https://doi.org/10.1007/s10664-022-10233-3}
+}
+
+
+@inproceedings{SandPuppy,
+  author    = {Paliath, Vivin
+               and Trickel, Erik
+               and Bao, Tiffany
+               and Wang, Ruoyu
+               and Doup{\'e}, Adam
+               and Shoshitaishvili, Yan},
+  editor    = {Maggi, Federico
+               and Egele, Manuel
+               and Payer, Mathias
+               and Carminati, Michele},
+  title     = {SandPuppy: Deep-State Fuzzing Guided by Automatic Detection of State-Representative Variables},
+  booktitle = {Detection of Intrusions and Malware, and Vulnerability Assessment},
+  year      = {2024},
+  publisher = {Springer Nature Switzerland},
+  address   = {Cham},
+  pages     = {227--250},
+  abstract  = {Current state-of-the-art automated fuzzing approaches cannot explore deep program-states without human assistance. Recently, Ijon allowed humans to provide code-annotations on the target to expose program state to the fuzzer. However, this requires a human to read, understand, and annotate the program source, which limits scalability and applicability.},
+  isbn      = {978-3-031-64171-8}
+}
+
+
+@inproceedings{Ijon,
+  author    = {Aschermann, Cornelius and Schumilo, Sergej and Abbasi, Ali and Holz, Thorsten},
+  booktitle = {2020 IEEE Symposium on Security and Privacy (SP)},
+  title     = {Ijon: Exploring Deep State Spaces via Fuzzing},
+  year      = {2020},
+  volume    = {},
+  number    = {},
+  pages     = {1597-1612},
+  keywords  = {Fuzzing;Computer bugs;Space exploration;Software;Tools;Games;Instruments},
+  doi       = {10.1109/SP40000.2020.00117}
+}

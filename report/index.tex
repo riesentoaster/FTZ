@@ -1,0 +1,139 @@
+\documentclass{article}
+\usepackage[hidelinks]{hyperref}
+\usepackage{csquotes}
+\usepackage[vmargin=25mm, hmargin=20mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{pgfplots}
+\usepgfplotslibrary{colorbrewer}
+\pgfplotsset{compat = 1.18} 
+\usetikzlibrary{pgfplots.statistics, pgfplots.colorbrewer} 
+\usepackage{pgfplotstable}
+\usepackage{listings}
+\lstset{
+    backgroundcolor=\color[RGB]{240, 240, 240},   
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+    aboveskip=10pt
+}
+\usepackage[
+    backend=biber,
+    sorting=none,
+    style=ieee,
+    urldate=long,
+    maxcitenames=2,
+    mincitenames=1
+]{biblatex}
+\addbibresource{sources.bib}
+\renewcommand*{\bibfont}{\footnotesize}
+\usepackage{multicol}
+\setlength{\columnsep}{13mm}
+\usepackage{hypcap}
+\usepackage{caption}
+\captionsetup{
+    justification=centerlast,
+    font=small,
+    labelfont=sc,
+    margin=5pt,
+    belowskip=15pt
+}
+\DeclareCaptionType{listing}[Listing][List of Listings]
+\renewcommand{\arraystretch}{1.5} % Increase table padding
+
+
+\title{%
+\vspace{50px}%
+    \Huge A Stateful Fuzzer for the TCP/IP Stack of the Real-Time Operating System Zephyr\break%
+    —\break%
+    Report%
+    \vspace{250px}%
+}
+
+\author{%
+  Valentin Huber\vspace{5px}\\%
+  \small \href{https://www.zhaw.ch/en/engineering/institutes-centres/init/}{Institute of Applied Information Technology}\\%
+  \small \href{https://www.zhaw.ch/en}{Zürich University of Applied Sciences ZHAW}\\%
+  \small \href{mailto://contact@valentinhuber.me}{contact@valentinhuber.me}%
+  \vspace{10px}
+}
+\date{\today\vspace{5px}}
+
+\DeclareFieldFormat*{citetitle}{\textit{#1}}
+\hfuzz=50px
+\hbadness=10000
+\newcommand{\code}[2][]{\lstinline[language=#1, breaklines=false, basicstyle=\ttfamily\normalsize]{#2}}
+\let\savedCite=\cite
+\renewcommand{\cite}{\unskip~\savedCite}
+
+\begin{document}
+\pagenumbering{gobble}
+\maketitle
+
+% \clearpage\newpage
+% \begin{center}
+%     \begin{minipage}{0.8\textwidth}
+
+%         \vspace{70px}
+
+%         \begin{abstract}
+%             abstract
+%         \end{abstract}
+%     \end{minipage}
+
+%     \vspace{70px}
+
+%     \begin{minipage}{0.7\textwidth}
+%         \textbf{Keywords}: Software Testing, Fuzzing, Stateful Fuzzing, Zephyr, LibAFL.
+%     \end{minipage}
+% \end{center}
+
+\clearpage\newpage
+
+\pagenumbering{arabic}
+% \begin{multicols}{2}
+\tableofcontents
+
+\section{Introduction}
+
+\section{Related Works}
+
+\begin{itemize}
+    \item \citetitle{StatefulGreybox}\cite{StatefulGreybox}: \begin{quote}
+              In this paper, we argue that protocols are often explicitly encoded using state variables that are assigned and compared to named constants […] More
+              specifically, using pattern matching, we identify state variables using enumerated types (enums). An enumerated type is a group of named constants that specifies all possible values for a variable of that type. Our instrumentation injects a call to our runtime at every program location where a state variable is assigned to a new value. Our runtime efficiently constructs the state transition tree (STT). The STT captures the sequence of values assigned to state variables across all fuzzer-generated input sequences, and as a global data structure, it is shared with the fuzzer.
+          \end{quote}
+          Built on LibFuzzer
+    \item \citetitle{StateAFL}\cite{StateAFL}: compile-time probes observing memory allocation and I/O opersations; state inference based on fuzzy hashing of long-lived memory areas.
+    \item \citetitle{Ijon}\cite{Ijon}: Manual annotations of code, to manually add entries to an AFL-style map (set/inc at calculated offset), include state information (variable values) in how edge coverage is calculated, and store the max value a certain variable reaches during execution for the fuzzer to then maximize.
+    \item \citetitle{SandPuppy}\cite{SandPuppy}: Ijon\cite{Ijon}, but automatic (initial run capturing variable-value traces, analyze along with source code, add Ijon-style instrumentation, repeat during fuzzing)
+\end{itemize}
+
+
+% \end{multicols}
+% \vspace{70px}
+% \begin{center}
+%     \begin{minipage}{0.7\textwidth}
+%         \centering
+%         In the interest of open science, this project is released under an open-source license. During development, thousands of lines of code have been introduced to the upstream project, with further major changes already in discussion.\\The source code of the project is publicly available at\\\vspace{8px}\href{https://github.com/riesentoaster/fuzzing-zephyr-network-stack}{github.com/riesentoaster/fuzzing-zephyr-network-stack}.
+%     \end{minipage}
+% \end{center}
+
+\pagebreak
+
+% \begin{multicols}{2}
+\defbibheading{bibliography}[\bibname]{\section*{#1}}
+\addcontentsline{toc}{section}{\bibname}
+\printbibliography
+% \end{multicols}
+
+\end{document}

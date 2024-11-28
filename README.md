@@ -2,6 +2,10 @@
 
 Using LibAFL, I want to fuzz the TCP/IP stack of Zephyr.
 
+## Report
+
+Read the report [here](./report/out/index.pdf). Its artifacts are in the `report` subdirectory. The report is licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
+
 ## Environment
 
 This project relies on a default installation of Zephyr relative to this folder at `../zephyrproject/zephyr`. The Python virtual environment should be placed at `../zephyrproject/.venv`.
