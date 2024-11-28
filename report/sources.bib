@@ -88,3 +88,75 @@
   keywords  = {Fuzzing;Computer bugs;Space exploration;Software;Tools;Games;Instruments},
   doi       = {10.1109/SP40000.2020.00117}
 }
+
+@inproceedings{INVSCOV,
+  author    = {Andrea Fioraldi and Daniele Cono D{\textquoteright}Elia and Davide Balzarotti},
+  title     = {The Use of Likely Invariants as Feedback for Fuzzers},
+  booktitle = {30th USENIX Security Symposium (USENIX Security 21)},
+  year      = {2021},
+  isbn      = {978-1-939133-24-3},
+  pages     = {2829--2846},
+  url       = {https://www.usenix.org/conference/usenixsecurity21/presentation/fioraldi},
+  publisher = {USENIX Association},
+  month     = aug
+}
+
+@inproceedings{Ankou,
+  author    = {Man\`{e}s, Valentin J. M. and Kim, Soomin and Cha, Sang Kil},
+  title     = {Ankou: guiding grey-box fuzzing towards combinatorial difference},
+  year      = {2020},
+  isbn      = {9781450371216},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3377811.3380421},
+  doi       = {10.1145/3377811.3380421},
+  abstract  = {Grey-box fuzzing is an evolutionary process, which maintains and evolves a population of test cases with the help of a fitness function. Fitness functions used by current grey-box fuzzers are not informative in that they cannot distinguish different program executions as long as those executions achieve the same coverage. The problem is that current fitness functions only consider a union of data, but not their combination. As such, fuzzers often get stuck in a local optimum during their search. In this paper, we introduce Ankou, the first grey-box fuzzer that recognizes different combinations of execution information, and present several scalability challenges encountered while designing and implementing Ankou. Our experimental results show that Ankou is 1.94\texttimes{} and 8.0\texttimes{} more effective in finding bugs than AFL and Angora, respectively.},
+  booktitle = {Proceedings of the ACM/IEEE 42nd International Conference on Software Engineering},
+  pages     = {1024–1036},
+  numpages  = {13},
+  keywords  = {fuzz testing, grey-box fuzzing, guided fuzzing, principal component analysis, software testing},
+  location  = {Seoul, South Korea},
+  series    = {ICSE '20}
+}
+@article{FuzzFactory,
+  author     = {Padhye, Rohan and Lemieux, Caroline and Sen, Koushik and Simon, Laurent and Vijayakumar, Hayawardh},
+  title      = {FuzzFactory: domain-specific fuzzing with waypoints},
+  year       = {2019},
+  issue_date = {October 2019},
+  publisher  = {Association for Computing Machinery},
+  address    = {New York, NY, USA},
+  volume     = {3},
+  number     = {OOPSLA},
+  url        = {https://doi.org/10.1145/3360600},
+  doi        = {10.1145/3360600},
+  abstract   = {Coverage-guided fuzz testing has gained prominence as a highly effective method of finding security vulnerabilities such as buffer overflows in programs that parse binary data. Recently, researchers have introduced various specializations to the coverage-guided fuzzing algorithm for different domain-specific testing goals, such as finding performance bottlenecks, generating valid inputs, handling magic-byte comparisons, etc. Each such solution can require non-trivial implementation effort and produces a distinct variant of a fuzzing tool. We observe that many of these domain-specific solutions follow a common solution pattern.  In this paper, we present FuzzFactory, a framework for developing domain-specific fuzzing applications without requiring changes to mutation and search heuristics. FuzzFactory allows users to specify the collection of dynamic domain-specific feedback during test execution, as well as how such feedback should be aggregated. FuzzFactory uses this information to selectively save intermediate inputs, called waypoints, to augment coverage-guided fuzzing. Such waypoints always make progress towards domain-specific multi-dimensional objectives. We instantiate six domain-specific fuzzing applications using FuzzFactory: three re-implementations of prior work and three novel solutions, and evaluate their effectiveness on benchmarks from Google's fuzzer test suite. We also show how multiple domains can be composed to perform better than the sum of their parts. For example, we combine domain-specific feedback about strict equality comparisons and dynamic memory allocations, to enable the automatic generation of LZ4 bombs and PNG bombs.},
+  journal    = {Proc. ACM Program. Lang.},
+  month      = oct,
+  articleno  = {174},
+  numpages   = {29},
+  keywords   = {waypoints, fuzz testing, frameworks, domain-specific fuzzing}
+}
+
+@inproceedings{ParmeSan,
+  author    = {Sebastian {\"O}sterlund and Kaveh Razavi and Herbert Bos and Cristiano Giuffrida},
+  title     = {{ParmeSan}: Sanitizer-guided Greybox Fuzzing},
+  booktitle = {29th USENIX Security Symposium (USENIX Security 20)},
+  year      = {2020},
+  isbn      = {978-1-939133-17-5},
+  pages     = {2289--2306},
+  url       = {https://www.usenix.org/conference/usenixsecurity20/presentation/osterlund},
+  publisher = {USENIX Association},
+  month     = aug
+}
+
+@inproceedings{DDFuzz,
+  author    = {Mantovani, Alessandro and Fioraldi, Andrea and Balzarotti, Davide},
+  booktitle = {2022 IEEE 7th European Symposium on Security and Privacy (EuroS\&P)},
+  title     = {Fuzzing with Data Dependency Information},
+  year      = {2022},
+  volume    = {},
+  number    = {},
+  pages     = {286-302},
+  keywords  = {Codes;Instruments;Computer bugs;Fuzzing;Data structures;Libraries;Task analysis;fuzzing;data dependency;vulnerability;LLVM;instrumentation},
+  doi       = {10.1109/EuroSP53844.2022.00026}
+}

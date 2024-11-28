@@ -116,6 +116,11 @@
     \item \citetitle{StateAFL}\cite{StateAFL}: compile-time probes observing memory allocation and I/O opersations; state inference based on fuzzy hashing of long-lived memory areas.
     \item \citetitle{Ijon}\cite{Ijon}: Manual annotations of code, to manually add entries to an AFL-style map (set/inc at calculated offset), include state information (variable values) in how edge coverage is calculated, and store the max value a certain variable reaches during execution for the fuzzer to then maximize.
     \item \citetitle{SandPuppy}\cite{SandPuppy}: Ijon\cite{Ijon}, but automatic (initial run capturing variable-value traces, analyze along with source code, add Ijon-style instrumentation, repeat during fuzzing)
+    \item \citetitle{INVSCOV}\cite{INVSCOV}: run for 24 hours, record variable values and relationships between them, then add a feedback that rewards when the generated assertions are violated
+    \item \citetitle{Ankou}\cite{Ankou}: take combination of executed branches into consideration, reduce to manageable adaptive fitness function
+    \item \citetitle{FuzzFactory}\cite{FuzzFactory}: framework to add custom feedbacks like number of basic blocks executed, amount of memory allocated, etc.
+    \item \citetitle{ParmeSan}\cite{ParmeSan}: Use sanitizers checks as fuzzing targets
+    \item \citetitle{DDFuzz}\cite{DDFuzz}: Use execution of new data dependencies as feedback
 \end{itemize}
 
 
