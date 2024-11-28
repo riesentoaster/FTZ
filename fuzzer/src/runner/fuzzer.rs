@@ -10,11 +10,11 @@ use crate::{
 use clap::Parser as _;
 use libafl::{
     corpus::{Corpus, OnDiskCorpus},
-    events::{EventConfig, EventRestarter, Launcher, LlmpRestartingEventManager},
+    events::{CentralizedEventManager, CentralizedLauncher, EventConfig, EventRestarter},
     feedback_or_fast,
     feedbacks::{MaxMapFeedback, TimeFeedback},
     monitors::OnDiskTomlMonitor,
-    mutators::{MutationResult, NopMutator, StdMOptMutator},
+    mutators::{havoc_mutations, StdMOptMutator},
     observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, TimeObserver},
     schedulers::StdScheduler,
     stages::StdMutationalStage,
@@ -31,7 +31,7 @@ use std::{path::PathBuf, ptr::NonNull, time::Duration};
 
 #[cfg(feature = "monitor_tui")]
 use libafl::monitors::tui::TuiMonitor;
-#[cfg(feature = "monitor_log")]
+#[cfg(feature = "monitor_stdout")]
 use libafl::monitors::MultiMonitor;
 #[cfg(feature = "monitor_none")]
 use libafl::monitors::NopMonitor;
@@ -49,7 +49,7 @@ pub fn fuzz() {
     let zephyr_exec_path = opt.zephyr_exec_dir();
 
     let mut run_client = |state: Option<_>,
-                          mut manager: LlmpRestartingEventManager<_, _, _>,
+                          mut manager: CentralizedEventManager<_, _, _, _>,
                           _core_id| {
         log::info!("Initializing fuzzing client");
         let mut rand = StdRand::new();
@@ -100,7 +100,7 @@ pub fn fuzz() {
                 .expect("Could not create state")
         });
 
-        let mutations = tuple_list!(NopMutator::new(MutationResult::Mutated));
+        let mutations = havoc_mutations();
         let mutator = StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);
 
         #[cfg(not(feature = "stability"))]
@@ -160,8 +160,8 @@ pub fn fuzz() {
             .build()
     };
 
-    #[cfg(feature = "monitor_log")]
-    let base_monitor = MultiMonitor::new(|m| log::info!("{m}"));
+    #[cfg(feature = "monitor_stdout")]
+    let base_monitor = MultiMonitor::new(|m| println!("{m}"));
     #[cfg(feature = "monitor_none")]
     let base_monitor = NopMonitor::new();
 
@@ -179,16 +179,17 @@ pub fn fuzz() {
 
     let overcommit = if opt.fuzz_one() { 1 } else { opt.overcommit() };
 
-    match Launcher::builder()
+    match CentralizedLauncher::builder()
         .shmem_provider(StdShMemProvider::new().expect("Failed to init shared memory"))
         .configuration(EventConfig::from_name("default"))
         .monitor(monitor)
-        .run_client(&mut run_client)
+        .main_run_client(&mut run_client.clone())
+        .secondary_run_client(&mut run_client)
         .cores(&cores)
         .overcommit(overcommit)
         .stdout_file(opt.stdout().and_then(|e| e.as_os_str().to_str()))
         .stderr_file(opt.stderr().and_then(|e| e.as_os_str().to_str()))
-        .launch_delay(50)
+        .launch_delay(200)
         .build()
         .launch()
     {

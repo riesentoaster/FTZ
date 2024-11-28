@@ -7,3 +7,4 @@ corpus*
 *.tmp
 hashes*.txt
 profile.json
+!log/*

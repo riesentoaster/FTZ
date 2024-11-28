@@ -1,0 +1,4495 @@
+# This Toml is generated using the OnDiskMonitor component of LibAFL
+
+[global]
+run_time = "20h-28m-54s"
+clients = 641
+corpus = 90360
+objectives = 0
+executions = 54018245
+exec_sec = 733.2558662769189
+
+[client_0]
+corpus = 0
+objectives = 0
+executions = 0
+exec_sec = 0
+
+[client_1]
+corpus = 28
+objectives = 0
+executions = 84144
+exec_sec = 1.1411961517124043
+coverage_observer = "1576/25632 (6%)"
+
+[client_2]
+corpus = 1
+objectives = 0
+executions = 84558
+exec_sec = 1.14681647720298
+coverage_observer = "1578/25632 (6%)"
+
+[client_3]
+corpus = 486
+objectives = 0
+executions = 84594
+exec_sec = 1.147309006310712
+coverage_observer = "1577/25632 (6%)"
+
+[client_4]
+corpus = 5
+objectives = 0
+executions = 84494
+exec_sec = 1.1459577527081821
+coverage_observer = "1577/25632 (6%)"
+
+[client_5]
+corpus = 424
+objectives = 0
+executions = 84514
+exec_sec = 1.1462337542653835
+coverage_observer = "1575/25632 (6%)"
+
+[client_6]
+corpus = 8
+objectives = 0
+executions = 84526
+exec_sec = 1.146401248995293
+coverage_observer = "1549/25632 (6%)"
+
+[client_7]
+corpus = 28
+objectives = 0
+executions = 84582
+exec_sec = 1.1471643917360415
+coverage_observer = "1578/25632 (6%)"
+
+[client_8]
+corpus = 27
+objectives = 0
+executions = 84626
+exec_sec = 1.1477638101553742
+coverage_observer = "1578/25632 (6%)"
+
+[client_9]
+corpus = 212
+objectives = 0
+executions = 35969
+exec_sec = 0.48784031376736464
+coverage_observer = "1287/25632 (5%)"
+
+[client_10]
+corpus = 0
+objectives = 0
+executions = 84590
+exec_sec = 1.1472792527167281
+coverage_observer = "1576/25632 (6%)"
+
+[client_11]
+corpus = 466
+objectives = 0
+executions = 84554
+exec_sec = 1.1467922800111547
+coverage_observer = "1578/25632 (6%)"
+
+[client_12]
+corpus = 15
+objectives = 0
+executions = 84584
+exec_sec = 1.1472011810821428
+coverage_observer = "1579/25632 (6%)"
+
+[client_13]
+corpus = 500
+objectives = 0
+executions = 84587
+exec_sec = 1.1472428392114737
+coverage_observer = "1577/25632 (6%)"
+
+[client_14]
+corpus = 9
+objectives = 0
+executions = 84543
+exec_sec = 1.1466476979233562
+coverage_observer = "1579/25632 (6%)"
+
+[client_15]
+corpus = 158
+objectives = 0
+executions = 84645
+exec_sec = 1.1480324836037836
+coverage_observer = "1552/25632 (6%)"
+
+[client_16]
+corpus = 437
+objectives = 0
+executions = 84594
+exec_sec = 1.147342872605577
+coverage_observer = "1576/25632 (6%)"
+
+[client_17]
+corpus = 3
+objectives = 0
+executions = 84557
+exec_sec = 1.146844195011063
+coverage_observer = "1551/25632 (6%)"
+
+[client_18]
+corpus = 112
+objectives = 0
+executions = 84593
+exec_sec = 1.1473353630495517
+coverage_observer = "1573/25632 (6%)"
+
+[client_19]
+corpus = 0
+objectives = 0
+executions = 84593
+exec_sec = 1.1473386946666915
+coverage_observer = "1578/25632 (6%)"
+
+[client_20]
+corpus = 16
+objectives = 0
+executions = 84559
+exec_sec = 1.1468807042739768
+coverage_observer = "1578/25632 (6%)"
+
+[client_21]
+corpus = 2
+objectives = 0
+executions = 84524
+exec_sec = 1.1464111638477879
+coverage_observer = "1575/25632 (6%)"
+
+[client_22]
+corpus = 183
+objectives = 0
+executions = 84600
+exec_sec = 1.1474468082729414
+coverage_observer = "1575/25632 (6%)"
+
+[client_23]
+corpus = 34
+objectives = 0
+executions = 84610
+exec_sec = 1.1475876114925885
+coverage_observer = "1580/25632 (6%)"
+
+[client_24]
+corpus = 81
+objectives = 0
+executions = 84588
+exec_sec = 1.1472937585922407
+coverage_observer = "1552/25632 (6%)"
+
+[client_25]
+corpus = 513
+objectives = 0
+executions = 84535
+exec_sec = 1.1465802238999165
+coverage_observer = "1577/25632 (6%)"
+
+[client_26]
+corpus = 37
+objectives = 0
+executions = 84453
+exec_sec = 1.1454731223451915
+coverage_observer = "1551/25632 (6%)"
+
+[client_27]
+corpus = 37
+objectives = 0
+executions = 84606
+exec_sec = 1.1475515583082667
+coverage_observer = "1575/25632 (6%)"
+
+[client_28]
+corpus = 1
+objectives = 0
+executions = 84554
+exec_sec = 1.1468496544036133
+coverage_observer = "1573/25632 (6%)"
+
+[client_29]
+corpus = 498
+objectives = 0
+executions = 84541
+exec_sec = 1.1466759198062804
+coverage_observer = "1576/25632 (6%)"
+
+[client_30]
+corpus = 0
+objectives = 0
+executions = 84423
+exec_sec = 1.1450780903262192
+coverage_observer = "1576/25632 (6%)"
+
+[client_31]
+corpus = 0
+objectives = 0
+executions = 84599
+exec_sec = 1.1474693620542677
+coverage_observer = "1578/25632 (6%)"
+
+[client_32]
+corpus = 0
+objectives = 0
+executions = 84600
+exec_sec = 1.147486342873685
+coverage_observer = "1575/25632 (6%)"
+
+[client_33]
+corpus = 511
+objectives = 0
+executions = 84539
+exec_sec = 1.1466636463792481
+coverage_observer = "1574/25632 (6%)"
+
+[client_34]
+corpus = 0
+objectives = 0
+executions = 84542
+exec_sec = 1.146707424779003
+coverage_observer = "1575/25632 (6%)"
+
+[client_35]
+corpus = 0
+objectives = 0
+executions = 84548
+exec_sec = 1.146793888595744
+coverage_observer = "1575/25632 (6%)"
+
+[client_36]
+corpus = 0
+objectives = 0
+executions = 84558
+exec_sec = 1.1469326897753156
+coverage_observer = "1577/25632 (6%)"
+
+[client_37]
+corpus = 34
+objectives = 0
+executions = 84579
+exec_sec = 1.1472203230566025
+coverage_observer = "1572/25632 (6%)"
+
+[client_38]
+corpus = 116
+objectives = 0
+executions = 84619
+exec_sec = 1.1477646569262672
+coverage_observer = "1576/25632 (6%)"
+
+[client_39]
+corpus = 468
+objectives = 0
+executions = 84585
+exec_sec = 1.1473047799155285
+coverage_observer = "1575/25632 (6%)"
+
+[client_40]
+corpus = 535
+objectives = 0
+executions = 84506
+exec_sec = 1.1462337945758336
+coverage_observer = "1581/25632 (6%)"
+
+[client_41]
+corpus = 25
+objectives = 0
+executions = 84501
+exec_sec = 1.1461619339471463
+coverage_observer = "1552/25632 (6%)"
+
+[client_42]
+corpus = 0
+objectives = 0
+executions = 84502
+exec_sec = 1.1461807459061377
+coverage_observer = "1579/25632 (6%)"
+
+[client_43]
+corpus = 0
+objectives = 0
+executions = 84571
+exec_sec = 1.1471217267869587
+coverage_observer = "1549/25632 (6%)"
+
+[client_44]
+corpus = 0
+objectives = 0
+executions = 84543
+exec_sec = 1.1467467190371732
+coverage_observer = "1551/25632 (6%)"
+
+[client_45]
+corpus = 469
+objectives = 0
+executions = 84482
+exec_sec = 1.1459248024995314
+coverage_observer = "1575/25632 (6%)"
+
+[client_46]
+corpus = 0
+objectives = 0
+executions = 84597
+exec_sec = 1.1474885892098599
+coverage_observer = "1551/25632 (6%)"
+
+[client_47]
+corpus = 0
+objectives = 0
+executions = 84537
+exec_sec = 1.1466782444833092
+coverage_observer = "1588/25632 (6%)"
+
+[client_48]
+corpus = 483
+objectives = 0
+executions = 84496
+exec_sec = 1.1461246627989354
+coverage_observer = "1575/25632 (6%)"
+
+[client_49]
+corpus = 88
+objectives = 0
+executions = 84542
+exec_sec = 1.1467503698911163
+coverage_observer = "1551/25632 (6%)"
+
+[client_50]
+corpus = 123
+objectives = 0
+executions = 84511
+exec_sec = 1.1463317891902123
+coverage_observer = "1575/25632 (6%)"
+
+[client_51]
+corpus = 3
+objectives = 0
+executions = 84573
+exec_sec = 1.147174718790522
+coverage_observer = "1574/25632 (6%)"
+
+[client_52]
+corpus = 240
+objectives = 0
+executions = 84448
+exec_sec = 1.1454821466803016
+coverage_observer = "1575/25632 (6%)"
+
+[client_53]
+corpus = 0
+objectives = 0
+executions = 84421
+exec_sec = 1.1451176142142296
+coverage_observer = "1576/25632 (6%)"
+
+[client_54]
+corpus = 409
+objectives = 0
+executions = 84558
+exec_sec = 1.1469772992475893
+coverage_observer = "1576/25632 (6%)"
+
+[client_55]
+corpus = 15
+objectives = 0
+executions = 84530
+exec_sec = 1.1466000972876682
+coverage_observer = "1580/25632 (6%)"
+
+[client_56]
+corpus = 487
+objectives = 0
+executions = 84573
+exec_sec = 1.1471851761862075
+coverage_observer = "1552/25632 (6%)"
+
+[client_57]
+corpus = 0
+objectives = 0
+executions = 84540
+exec_sec = 1.1467399005666243
+coverage_observer = "1574/25632 (6%)"
+
+[client_58]
+corpus = 140
+objectives = 0
+executions = 84520
+exec_sec = 1.146471264931122
+coverage_observer = "1552/25632 (6%)"
+
+[client_59]
+corpus = 0
+objectives = 0
+executions = 84594
+exec_sec = 1.147478825063521
+coverage_observer = "1572/25632 (6%)"
+
+[client_60]
+corpus = 0
+objectives = 0
+executions = 84578
+exec_sec = 1.1472641845763059
+coverage_observer = "1552/25632 (6%)"
+
+[client_61]
+corpus = 0
+objectives = 0
+executions = 84476
+exec_sec = 1.1458848247198388
+coverage_observer = "1574/25632 (6%)"
+
+[client_62]
+corpus = 501
+objectives = 0
+executions = 84495
+exec_sec = 1.1461471726789907
+coverage_observer = "1578/25632 (6%)"
+
+[client_63]
+corpus = 296
+objectives = 0
+executions = 84661
+exec_sec = 1.1484040261569988
+coverage_observer = "1574/25632 (6%)"
+
+[client_64]
+corpus = 0
+objectives = 0
+executions = 84470
+exec_sec = 1.145816347814084
+coverage_observer = "1574/25632 (6%)"
+
+[client_65]
+corpus = 0
+objectives = 0
+executions = 84558
+exec_sec = 1.1470137910947973
+coverage_observer = "1576/25632 (6%)"
+
+[client_66]
+corpus = 161
+objectives = 0
+executions = 84513
+exec_sec = 1.1464060886087823
+coverage_observer = "1579/25632 (6%)"
+
+[client_67]
+corpus = 473
+objectives = 0
+executions = 84547
+exec_sec = 1.146870643007556
+coverage_observer = "1585/25632 (6%)"
+
+[client_68]
+corpus = 455
+objectives = 0
+executions = 84587
+exec_sec = 1.1474162693514365
+coverage_observer = "1575/25632 (6%)"
+
+[client_69]
+corpus = 66
+objectives = 0
+executions = 84529
+exec_sec = 1.146632694729303
+coverage_observer = "1549/25632 (6%)"
+
+[client_70]
+corpus = 0
+objectives = 0
+executions = 84560
+exec_sec = 1.147056639223051
+coverage_observer = "1575/25632 (6%)"
+
+[client_71]
+corpus = 175
+objectives = 0
+executions = 84546
+exec_sec = 1.1468709638169012
+coverage_observer = "1577/25632 (6%)"
+
+[client_72]
+corpus = 0
+objectives = 0
+executions = 84505
+exec_sec = 1.1463187811606939
+coverage_observer = "1578/25632 (6%)"
+
+[client_73]
+corpus = 108
+objectives = 0
+executions = 84643
+exec_sec = 1.1481941174013115
+coverage_observer = "1577/25632 (6%)"
+
+[client_74]
+corpus = 150
+objectives = 0
+executions = 84504
+exec_sec = 1.1463113497589998
+coverage_observer = "1578/25632 (6%)"
+
+[client_75]
+corpus = 0
+objectives = 0
+executions = 84525
+exec_sec = 1.1465986148310225
+coverage_observer = "1578/25632 (6%)"
+
+[client_76]
+corpus = 0
+objectives = 0
+executions = 84455
+exec_sec = 1.1456515199513697
+coverage_observer = "1573/25632 (6%)"
+
+[client_77]
+corpus = 108
+objectives = 0
+executions = 84509
+exec_sec = 1.146386515857794
+coverage_observer = "1577/25632 (6%)"
+
+[client_78]
+corpus = 70
+objectives = 0
+executions = 84609
+exec_sec = 1.1477453551752848
+coverage_observer = "1580/25632 (6%)"
+
+[client_79]
+corpus = 52
+objectives = 0
+executions = 84504
+exec_sec = 1.1463231531177813
+coverage_observer = "1572/25632 (6%)"
+
+[client_80]
+corpus = 82
+objectives = 0
+executions = 84555
+exec_sec = 1.1470160999365018
+coverage_observer = "1574/25632 (6%)"
+
+[client_81]
+corpus = 222
+objectives = 0
+executions = 84575
+exec_sec = 1.147289485458131
+coverage_observer = "1578/25632 (6%)"
+
+[client_82]
+corpus = 0
+objectives = 0
+executions = 84577
+exec_sec = 1.1473210086513144
+coverage_observer = "1580/25632 (6%)"
+
+[client_83]
+corpus = 500
+objectives = 0
+executions = 84547
+exec_sec = 1.1469193837032772
+coverage_observer = "1584/25632 (6%)"
+
+[client_84]
+corpus = 5
+objectives = 0
+executions = 84390
+exec_sec = 1.1447943071961943
+coverage_observer = "1578/25632 (6%)"
+
+[client_85]
+corpus = 0
+objectives = 0
+executions = 84446
+exec_sec = 1.145559231228341
+coverage_observer = "1584/25632 (6%)"
+
+[client_86]
+corpus = 522
+objectives = 0
+executions = 84551
+exec_sec = 1.1469886527836137
+coverage_observer = "1582/25632 (6%)"
+
+[client_87]
+corpus = 398
+objectives = 0
+executions = 84563
+exec_sec = 1.1471547162254347
+coverage_observer = "1575/25632 (6%)"
+
+[client_88]
+corpus = 175
+objectives = 0
+executions = 84525
+exec_sec = 1.146642809966478
+coverage_observer = "1583/25632 (6%)"
+
+[client_89]
+corpus = 297
+objectives = 0
+executions = 84540
+exec_sec = 1.14684925322029
+coverage_observer = "1551/25632 (6%)"
+
+[client_90]
+corpus = 0
+objectives = 0
+executions = 84537
+exec_sec = 1.1468114378207526
+coverage_observer = "1574/25632 (6%)"
+
+[client_91]
+corpus = 33
+objectives = 0
+executions = 84588
+exec_sec = 1.147506820711493
+coverage_observer = "1585/25632 (6%)"
+
+[client_92]
+corpus = 0
+objectives = 0
+executions = 84622
+exec_sec = 1.1479711810898974
+coverage_observer = "1579/25632 (6%)"
+
+[client_93]
+corpus = 0
+objectives = 0
+executions = 84514
+exec_sec = 1.146509498735049
+coverage_observer = "1577/25632 (6%)"
+
+[client_94]
+corpus = 0
+objectives = 0
+executions = 84564
+exec_sec = 1.1471914050056748
+coverage_observer = "1576/25632 (6%)"
+
+[client_95]
+corpus = 0
+objectives = 0
+executions = 84602
+exec_sec = 1.1477107593552458
+coverage_observer = "1585/25632 (6%)"
+
+[client_96]
+corpus = 173
+objectives = 0
+executions = 84523
+exec_sec = 1.146642629559032
+coverage_observer = "1585/25632 (6%)"
+
+[client_97]
+corpus = 295
+objectives = 0
+executions = 84556
+exec_sec = 1.1470923795419683
+coverage_observer = "1574/25632 (6%)"
+
+[client_98]
+corpus = 217
+objectives = 0
+executions = 84537
+exec_sec = 1.1468362173104074
+coverage_observer = "1575/25632 (6%)"
+
+[client_99]
+corpus = 0
+objectives = 0
+executions = 84500
+exec_sec = 1.1463357719323408
+coverage_observer = "1581/25632 (6%)"
+
+[client_100]
+corpus = 541
+objectives = 0
+executions = 84515
+exec_sec = 1.1465392642148995
+coverage_observer = "1578/25632 (6%)"
+
+[client_101]
+corpus = 0
+objectives = 0
+executions = 84516
+exec_sec = 1.1465515688398407
+coverage_observer = "1578/25632 (6%)"
+
+[client_102]
+corpus = 0
+objectives = 0
+executions = 84557
+exec_sec = 1.147111779278061
+coverage_observer = "1574/25632 (6%)"
+
+[client_103]
+corpus = 15
+objectives = 0
+executions = 84543
+exec_sec = 1.1469259302024846
+coverage_observer = "1550/25632 (6%)"
+
+[client_104]
+corpus = 15
+objectives = 0
+executions = 84472
+exec_sec = 1.1459682456974944
+coverage_observer = "1550/25632 (6%)"
+
+[client_105]
+corpus = 448
+objectives = 0
+executions = 84496
+exec_sec = 1.1462980610452949
+coverage_observer = "1579/25632 (6%)"
+
+[client_106]
+corpus = 4
+objectives = 0
+executions = 84560
+exec_sec = 1.1471721422491572
+coverage_observer = "1575/25632 (6%)"
+
+[client_107]
+corpus = 0
+objectives = 0
+executions = 84568
+exec_sec = 1.1472839656628981
+coverage_observer = "1576/25632 (6%)"
+
+[client_108]
+corpus = 10
+objectives = 0
+executions = 84553
+exec_sec = 1.1470836902486277
+coverage_observer = "1575/25632 (6%)"
+
+[client_109]
+corpus = 507
+objectives = 0
+executions = 84535
+exec_sec = 1.1468423652087634
+coverage_observer = "1574/25632 (6%)"
+
+[client_110]
+corpus = 440
+objectives = 0
+executions = 84560
+exec_sec = 1.1471832966511668
+coverage_observer = "1578/25632 (6%)"
+
+[client_111]
+corpus = 47
+objectives = 0
+executions = 84505
+exec_sec = 1.1464390723309614
+coverage_observer = "1604/25632 (6%)"
+
+[client_112]
+corpus = 99
+objectives = 0
+executions = 84509
+exec_sec = 1.1464954499803224
+coverage_observer = "1578/25632 (6%)"
+
+[client_113]
+corpus = 0
+objectives = 0
+executions = 84430
+exec_sec = 1.1454262554158754
+coverage_observer = "1584/25632 (6%)"
+
+[client_114]
+corpus = 0
+objectives = 0
+executions = 84628
+exec_sec = 1.148114622845887
+coverage_observer = "1586/25632 (6%)"
+
+[client_115]
+corpus = 0
+objectives = 0
+executions = 84552
+exec_sec = 1.1470857945344197
+coverage_observer = "1575/25632 (6%)"
+
+[client_116]
+corpus = 533
+objectives = 0
+executions = 84567
+exec_sec = 1.147291848343072
+coverage_observer = "1578/25632 (6%)"
+
+[client_117]
+corpus = 504
+objectives = 0
+executions = 84454
+exec_sec = 1.1457615251741489
+coverage_observer = "1578/25632 (6%)"
+
+[client_118]
+corpus = 0
+objectives = 0
+executions = 84591
+exec_sec = 1.1476227953565665
+coverage_observer = "1554/25632 (6%)"
+
+[client_119]
+corpus = 0
+objectives = 0
+executions = 84580
+exec_sec = 1.147476115860494
+coverage_observer = "1577/25632 (6%)"
+
+[client_120]
+corpus = 3
+objectives = 0
+executions = 84534
+exec_sec = 1.1468543661064412
+coverage_observer = "1553/25632 (6%)"
+
+[client_121]
+corpus = 0
+objectives = 0
+executions = 84504
+exec_sec = 1.1464496758878926
+coverage_observer = "1553/25632 (6%)"
+
+[client_122]
+corpus = 0
+objectives = 0
+executions = 84511
+exec_sec = 1.1465474301565741
+coverage_observer = "1577/25632 (6%)"
+
+[client_123]
+corpus = 108
+objectives = 0
+executions = 84701
+exec_sec = 1.1491284137122153
+coverage_observer = "1581/25632 (6%)"
+
+[client_124]
+corpus = 2
+objectives = 0
+executions = 84580
+exec_sec = 1.147489862596281
+coverage_observer = "1578/25632 (6%)"
+
+[client_125]
+corpus = 103
+objectives = 0
+executions = 84629
+exec_sec = 1.148157910956235
+coverage_observer = "1582/25632 (6%)"
+
+[client_126]
+corpus = 0
+objectives = 0
+executions = 84549
+exec_sec = 1.1470756664209871
+coverage_observer = "1551/25632 (6%)"
+
+[client_127]
+corpus = 0
+objectives = 0
+executions = 84476
+exec_sec = 1.1460883830647761
+coverage_observer = "1574/25632 (6%)"
+
+[client_128]
+corpus = 127
+objectives = 0
+executions = 84653
+exec_sec = 1.1484929373063084
+coverage_observer = "1585/25632 (6%)"
+
+[client_129]
+corpus = 122
+objectives = 0
+executions = 84534
+exec_sec = 1.1468816423405122
+coverage_observer = "1575/25632 (6%)"
+
+[client_130]
+corpus = 0
+objectives = 0
+executions = 84506
+exec_sec = 1.146504861435905
+coverage_observer = "1575/25632 (6%)"
+
+[client_131]
+corpus = 0
+objectives = 0
+executions = 84501
+exec_sec = 1.1464403681356943
+coverage_observer = "1579/25632 (6%)"
+
+[client_132]
+corpus = 45
+objectives = 0
+executions = 84544
+exec_sec = 1.147026464431886
+coverage_observer = "1583/25632 (6%)"
+
+[client_133]
+corpus = 520
+objectives = 0
+executions = 84504
+exec_sec = 1.1464865614994975
+coverage_observer = "1574/25632 (6%)"
+
+[client_134]
+corpus = 0
+objectives = 0
+executions = 84554
+exec_sec = 1.1471680256494845
+coverage_observer = "1584/25632 (6%)"
+
+[client_135]
+corpus = 0
+objectives = 0
+executions = 84517
+exec_sec = 1.1466692176929325
+coverage_observer = "1577/25632 (6%)"
+
+[client_136]
+corpus = 538
+objectives = 0
+executions = 84584
+exec_sec = 1.1475814184568371
+coverage_observer = "1582/25632 (6%)"
+
+[client_137]
+corpus = 26
+objectives = 0
+executions = 84481
+exec_sec = 1.1461869220620124
+coverage_observer = "1580/25632 (6%)"
+
+[client_138]
+corpus = 71
+objectives = 0
+executions = 84481
+exec_sec = 1.146190190264675
+coverage_observer = "1586/25632 (6%)"
+
+[client_139]
+corpus = 73
+objectives = 0
+executions = 84600
+exec_sec = 1.147807831909992
+coverage_observer = "1587/25632 (6%)"
+
+[client_140]
+corpus = 193
+objectives = 0
+executions = 84510
+exec_sec = 1.1465901102417129
+coverage_observer = "1581/25632 (6%)"
+
+[client_141]
+corpus = 269
+objectives = 0
+executions = 84483
+exec_sec = 1.1462266651233275
+coverage_observer = "1578/25632 (6%)"
+
+[client_142]
+corpus = 97
+objectives = 0
+executions = 84495
+exec_sec = 1.146392828019188
+coverage_observer = "1577/25632 (6%)"
+
+[client_143]
+corpus = 470
+objectives = 0
+executions = 84532
+exec_sec = 1.146898662608608
+coverage_observer = "1582/25632 (6%)"
+
+[client_144]
+corpus = 0
+objectives = 0
+executions = 84498
+exec_sec = 1.1464417074525197
+coverage_observer = "1552/25632 (6%)"
+
+[client_145]
+corpus = 0
+objectives = 0
+executions = 84471
+exec_sec = 1.146079933634703
+coverage_observer = "1577/25632 (6%)"
+
+[client_146]
+corpus = 413
+objectives = 0
+executions = 84457
+exec_sec = 1.145895440648599
+coverage_observer = "1553/25632 (6%)"
+
+[client_147]
+corpus = 121
+objectives = 0
+executions = 84485
+exec_sec = 1.1462805661294024
+coverage_observer = "1576/25632 (6%)"
+
+[client_148]
+corpus = 0
+objectives = 0
+executions = 84516
+exec_sec = 1.1467077370597585
+coverage_observer = "1572/25632 (6%)"
+
+[client_149]
+corpus = 20
+objectives = 0
+executions = 84553
+exec_sec = 1.1472152425613171
+coverage_observer = "1582/25632 (6%)"
+
+[client_150]
+corpus = 326
+objectives = 0
+executions = 84521
+exec_sec = 1.1467839423320967
+coverage_observer = "1577/25632 (6%)"
+
+[client_151]
+corpus = 158
+objectives = 0
+executions = 84420
+exec_sec = 1.1454167777946698
+coverage_observer = "1551/25632 (6%)"
+
+[client_152]
+corpus = 6
+objectives = 0
+executions = 84496
+exec_sec = 1.146450197842432
+coverage_observer = "1583/25632 (6%)"
+
+[client_153]
+corpus = 0
+objectives = 0
+executions = 84466
+exec_sec = 1.1460456309327114
+coverage_observer = "1576/25632 (6%)"
+
+[client_154]
+corpus = 392
+objectives = 0
+executions = 84498
+exec_sec = 1.1464812491491232
+coverage_observer = "1576/25632 (6%)"
+
+[client_155]
+corpus = 0
+objectives = 0
+executions = 84535
+exec_sec = 1.146985622570362
+coverage_observer = "1581/25632 (6%)"
+
+[client_156]
+corpus = 423
+objectives = 0
+executions = 84589
+exec_sec = 1.1477210040597388
+coverage_observer = "1622/25632 (6%)"
+
+[client_157]
+corpus = 229
+objectives = 0
+executions = 84513
+exec_sec = 1.1466921550241604
+coverage_observer = "1575/25632 (6%)"
+
+[client_158]
+corpus = 58
+objectives = 0
+executions = 84487
+exec_sec = 1.146340843739194
+coverage_observer = "1578/25632 (6%)"
+
+[client_159]
+corpus = 0
+objectives = 0
+executions = 84516
+exec_sec = 1.1467366008484083
+coverage_observer = "1586/25632 (6%)"
+
+[client_160]
+corpus = 390
+objectives = 0
+executions = 84491
+exec_sec = 1.1463980666220615
+coverage_observer = "1552/25632 (6%)"
+
+[client_161]
+corpus = 11
+objectives = 0
+executions = 84556
+exec_sec = 1.1472808401591919
+coverage_observer = "1585/25632 (6%)"
+
+[client_162]
+corpus = 494
+objectives = 0
+executions = 84471
+exec_sec = 1.1461311065807853
+coverage_observer = "1580/25632 (6%)"
+
+[client_163]
+corpus = 152
+objectives = 0
+executions = 84562
+exec_sec = 1.1473699733311704
+coverage_observer = "1578/25632 (6%)"
+
+[client_164]
+corpus = 0
+objectives = 0
+executions = 84484
+exec_sec = 1.14631622002384
+coverage_observer = "1579/25632 (6%)"
+
+[client_165]
+corpus = 495
+objectives = 0
+executions = 84475
+exec_sec = 1.146198840031989
+coverage_observer = "1587/25632 (6%)"
+
+[client_166]
+corpus = 0
+objectives = 0
+executions = 84596
+exec_sec = 1.147844329855096
+coverage_observer = "1551/25632 (6%)"
+
+[client_167]
+corpus = 0
+objectives = 0
+executions = 84560
+exec_sec = 1.1473592470232477
+coverage_observer = "1552/25632 (6%)"
+
+[client_168]
+corpus = 90
+objectives = 0
+executions = 84554
+exec_sec = 1.1472799182036992
+coverage_observer = "1577/25632 (6%)"
+
+[client_169]
+corpus = 0
+objectives = 0
+executions = 84566
+exec_sec = 1.1474449396768083
+coverage_observer = "1588/25632 (6%)"
+
+[client_170]
+corpus = 63
+objectives = 0
+executions = 84517
+exec_sec = 1.1467819157210124
+coverage_observer = "1582/25632 (6%)"
+
+[client_171]
+corpus = 0
+objectives = 0
+executions = 84552
+exec_sec = 1.1472588336818625
+coverage_observer = "1591/25632 (6%)"
+
+[client_172]
+corpus = 0
+objectives = 0
+executions = 84584
+exec_sec = 1.147695115065531
+coverage_observer = "1585/25632 (6%)"
+
+[client_173]
+corpus = 72
+objectives = 0
+executions = 84520
+exec_sec = 1.1468287087768114
+coverage_observer = "1578/25632 (6%)"
+
+[client_174]
+corpus = 25
+objectives = 0
+executions = 84650
+exec_sec = 1.1485952786016957
+coverage_observer = "1587/25632 (6%)"
+
+[client_175]
+corpus = 0
+objectives = 0
+executions = 84480
+exec_sec = 1.1462919461319896
+coverage_observer = "1583/25632 (6%)"
+
+[client_176]
+corpus = 488
+objectives = 0
+executions = 84576
+exec_sec = 1.1475975322836696
+coverage_observer = "1579/25632 (6%)"
+
+[client_177]
+corpus = 476
+objectives = 0
+executions = 84535
+exec_sec = 1.1470443220143356
+coverage_observer = "1553/25632 (6%)"
+
+[client_178]
+corpus = 0
+objectives = 0
+executions = 84497
+exec_sec = 1.146531897663759
+coverage_observer = "1588/25632 (6%)"
+
+[client_179]
+corpus = 0
+objectives = 0
+executions = 84531
+exec_sec = 1.1469964351801132
+coverage_observer = "1578/25632 (6%)"
+
+[client_180]
+corpus = 0
+objectives = 0
+executions = 84521
+exec_sec = 1.1468636223897197
+coverage_observer = "1551/25632 (6%)"
+
+[client_181]
+corpus = 398
+objectives = 0
+executions = 84542
+exec_sec = 1.1471519305669178
+coverage_observer = "1616/25632 (6%)"
+
+[client_182]
+corpus = 0
+objectives = 0
+executions = 84469
+exec_sec = 1.1461646136736214
+coverage_observer = "1582/25632 (6%)"
+
+[client_183]
+corpus = 0
+objectives = 0
+executions = 84539
+exec_sec = 1.1471179909203268
+coverage_observer = "1584/25632 (6%)"
+
+[client_184]
+corpus = 250
+objectives = 0
+executions = 84553
+exec_sec = 1.1473111874310857
+coverage_observer = "1552/25632 (6%)"
+
+[client_185]
+corpus = 0
+objectives = 0
+executions = 84433
+exec_sec = 1.1456856137850693
+coverage_observer = "1578/25632 (6%)"
+
+[client_186]
+corpus = 0
+objectives = 0
+executions = 84557
+exec_sec = 1.1473714097950969
+coverage_observer = "1578/25632 (6%)"
+
+[client_187]
+corpus = 469
+objectives = 0
+executions = 84500
+exec_sec = 1.1466013310411711
+coverage_observer = "1582/25632 (6%)"
+
+[client_188]
+corpus = 499
+objectives = 0
+executions = 84531
+exec_sec = 1.1470250186391526
+coverage_observer = "1581/25632 (6%)"
+
+[client_189]
+corpus = 16
+objectives = 0
+executions = 84456
+exec_sec = 1.1460104437309266
+coverage_observer = "1578/25632 (6%)"
+
+[client_190]
+corpus = 0
+objectives = 0
+executions = 84539
+exec_sec = 1.1471395844989087
+coverage_observer = "1584/25632 (6%)"
+
+[client_191]
+corpus = 0
+objectives = 0
+executions = 84525
+exec_sec = 1.1469527464911704
+coverage_observer = "1575/25632 (6%)"
+
+[client_192]
+corpus = 58
+objectives = 0
+executions = 84546
+exec_sec = 1.1472403004995173
+coverage_observer = "1583/25632 (6%)"
+
+[client_193]
+corpus = 0
+objectives = 0
+executions = 84431
+exec_sec = 1.1456828880685592
+coverage_observer = "1586/25632 (6%)"
+
+[client_194]
+corpus = 513
+objectives = 0
+executions = 84555
+exec_sec = 1.1473685626157442
+coverage_observer = "1578/25632 (6%)"
+
+[client_195]
+corpus = 0
+objectives = 0
+executions = 84519
+exec_sec = 1.1468832007099048
+coverage_observer = "1578/25632 (6%)"
+
+[client_196]
+corpus = 441
+objectives = 0
+executions = 84532
+exec_sec = 1.1470628202128679
+coverage_observer = "1575/25632 (6%)"
+
+[client_197]
+corpus = 0
+objectives = 0
+executions = 84470
+exec_sec = 1.1462247080217463
+coverage_observer = "1582/25632 (6%)"
+
+[client_198]
+corpus = 0
+objectives = 0
+executions = 84456
+exec_sec = 1.1460375304546957
+coverage_observer = "1577/25632 (6%)"
+
+[client_199]
+corpus = 0
+objectives = 0
+executions = 84601
+exec_sec = 1.148008579240785
+coverage_observer = "1584/25632 (6%)"
+
+[client_200]
+corpus = 528
+objectives = 0
+executions = 84518
+exec_sec = 1.14688585691792
+coverage_observer = "1574/25632 (6%)"
+
+[client_201]
+corpus = 26
+objectives = 0
+executions = 84556
+exec_sec = 1.1474053130554756
+coverage_observer = "1591/25632 (6%)"
+
+[client_202]
+corpus = 499
+objectives = 0
+executions = 84553
+exec_sec = 1.1473683340425676
+coverage_observer = "1577/25632 (6%)"
+
+[client_203]
+corpus = 0
+objectives = 0
+executions = 84545
+exec_sec = 1.147263814072997
+coverage_observer = "1551/25632 (6%)"
+
+[client_204]
+corpus = 508
+objectives = 0
+executions = 84514
+exec_sec = 1.1468469920800735
+coverage_observer = "1592/25632 (6%)"
+
+[client_205]
+corpus = 14
+objectives = 0
+executions = 84429
+exec_sec = 1.1456982933560012
+coverage_observer = "1580/25632 (6%)"
+
+[client_206]
+corpus = 0
+objectives = 0
+executions = 84413
+exec_sec = 1.1454858243428951
+coverage_observer = "1576/25632 (6%)"
+
+[client_207]
+corpus = 94
+objectives = 0
+executions = 84438
+exec_sec = 1.1458302004460894
+coverage_observer = "1628/25632 (6%)"
+
+[client_208]
+corpus = 67
+objectives = 0
+executions = 84485
+exec_sec = 1.1464716014341696
+coverage_observer = "1576/25632 (6%)"
+
+[client_209]
+corpus = 535
+objectives = 0
+executions = 84516
+exec_sec = 1.1468946886770581
+coverage_observer = "1578/25632 (6%)"
+
+[client_210]
+corpus = 436
+objectives = 0
+executions = 84545
+exec_sec = 1.1472903112909485
+coverage_observer = "1576/25632 (6%)"
+
+[client_211]
+corpus = 167
+objectives = 0
+executions = 84561
+exec_sec = 1.147509605455874
+coverage_observer = "1578/25632 (6%)"
+
+[client_212]
+corpus = 287
+objectives = 0
+executions = 84464
+exec_sec = 1.1461952993175741
+coverage_observer = "1575/25632 (6%)"
+
+[client_213]
+corpus = 0
+objectives = 0
+executions = 84525
+exec_sec = 1.1470253265550279
+coverage_observer = "1577/25632 (6%)"
+
+[client_214]
+corpus = 406
+objectives = 0
+executions = 84540
+exec_sec = 1.1472310414183997
+coverage_observer = "1577/25632 (6%)"
+
+[client_215]
+corpus = 0
+objectives = 0
+executions = 84520
+exec_sec = 1.146962205491078
+coverage_observer = "1578/25632 (6%)"
+
+[client_216]
+corpus = 0
+objectives = 0
+executions = 84484
+exec_sec = 1.146475775460772
+coverage_observer = "1575/25632 (6%)"
+
+[client_217]
+corpus = 0
+objectives = 0
+executions = 84395
+exec_sec = 1.145270513131555
+coverage_observer = "1574/25632 (6%)"
+
+[client_218]
+corpus = 187
+objectives = 0
+executions = 84538
+exec_sec = 1.1472138231473357
+coverage_observer = "1574/25632 (6%)"
+
+[client_219]
+corpus = 21
+objectives = 0
+executions = 84537
+exec_sec = 1.1472028276164894
+coverage_observer = "1572/25632 (6%)"
+
+[client_220]
+corpus = 410
+objectives = 0
+executions = 84424
+exec_sec = 1.1456722877708487
+coverage_observer = "1576/25632 (6%)"
+
+[client_221]
+corpus = 0
+objectives = 0
+executions = 84548
+exec_sec = 1.1473590045748898
+coverage_observer = "1550/25632 (6%)"
+
+[client_222]
+corpus = 110
+objectives = 0
+executions = 84471
+exec_sec = 1.1463176371438442
+coverage_observer = "1551/25632 (6%)"
+
+[client_223]
+corpus = 0
+objectives = 0
+executions = 84479
+exec_sec = 1.146430489046172
+coverage_observer = "1577/25632 (6%)"
+
+[client_224]
+corpus = 0
+objectives = 0
+executions = 84553
+exec_sec = 1.1474393812958865
+coverage_observer = "1576/25632 (6%)"
+
+[client_225]
+corpus = 397
+objectives = 0
+executions = 84465
+exec_sec = 1.1462506863013018
+coverage_observer = "1578/25632 (6%)"
+
+[client_226]
+corpus = 109
+objectives = 0
+executions = 84477
+exec_sec = 1.146419025774129
+coverage_observer = "1598/25632 (6%)"
+
+[client_227]
+corpus = 460
+objectives = 0
+executions = 84477
+exec_sec = 1.1464241775550938
+coverage_observer = "1624/25632 (6%)"
+
+[client_228]
+corpus = 87
+objectives = 0
+executions = 84602
+exec_sec = 1.1481240667422472
+coverage_observer = "1578/25632 (6%)"
+
+[client_229]
+corpus = 0
+objectives = 0
+executions = 84448
+exec_sec = 1.1460371958955538
+coverage_observer = "1603/25632 (6%)"
+
+[client_230]
+corpus = 526
+objectives = 0
+executions = 84434
+exec_sec = 1.1458492981671657
+coverage_observer = "1576/25632 (6%)"
+
+[client_231]
+corpus = 0
+objectives = 0
+executions = 84482
+exec_sec = 1.1465032766689278
+coverage_observer = "1578/25632 (6%)"
+
+[client_232]
+corpus = 0
+objectives = 0
+executions = 84509
+exec_sec = 1.1468728033628959
+coverage_observer = "1579/25632 (6%)"
+
+[client_233]
+corpus = 103
+objectives = 0
+executions = 84517
+exec_sec = 1.1469838532121188
+coverage_observer = "1577/25632 (6%)"
+
+[client_234]
+corpus = 438
+objectives = 0
+executions = 84471
+exec_sec = 1.1463631839367667
+coverage_observer = "1552/25632 (6%)"
+
+[client_235]
+corpus = 454
+objectives = 0
+executions = 84478
+exec_sec = 1.146460659922879
+coverage_observer = "1578/25632 (6%)"
+
+[client_236]
+corpus = 423
+objectives = 0
+executions = 84568
+exec_sec = 1.1476847065266054
+coverage_observer = "1578/25632 (6%)"
+
+[client_237]
+corpus = 59
+objectives = 0
+executions = 84569
+exec_sec = 1.1477022103049377
+coverage_observer = "1577/25632 (6%)"
+
+[client_238]
+corpus = 78
+objectives = 0
+executions = 84543
+exec_sec = 1.1473520774593222
+coverage_observer = "1551/25632 (6%)"
+
+[client_239]
+corpus = 0
+objectives = 0
+executions = 84487
+exec_sec = 1.1465937678785243
+coverage_observer = "1578/25632 (6%)"
+
+[client_240]
+corpus = 0
+objectives = 0
+executions = 84439
+exec_sec = 1.1459431472200743
+coverage_observer = "1577/25632 (6%)"
+
+[client_241]
+corpus = 0
+objectives = 0
+executions = 84477
+exec_sec = 1.1464571773173562
+coverage_observer = "1574/25632 (6%)"
+
+[client_242]
+corpus = 466
+objectives = 0
+executions = 84466
+exec_sec = 1.1463120078267137
+coverage_observer = "1574/25632 (6%)"
+
+[client_243]
+corpus = 0
+objectives = 0
+executions = 84539
+exec_sec = 1.1473066143965645
+coverage_observer = "1574/25632 (6%)"
+
+[client_244]
+corpus = 65
+objectives = 0
+executions = 84498
+exec_sec = 1.1467544305302426
+coverage_observer = "1578/25632 (6%)"
+
+[client_245]
+corpus = 409
+objectives = 0
+executions = 84469
+exec_sec = 1.1463664475302022
+coverage_observer = "1579/25632 (6%)"
+
+[client_246]
+corpus = 0
+objectives = 0
+executions = 84540
+exec_sec = 1.1473345253030232
+coverage_observer = "1576/25632 (6%)"
+
+[client_247]
+corpus = 500
+objectives = 0
+executions = 84378
+exec_sec = 1.145140769231511
+coverage_observer = "1578/25632 (6%)"
+
+[client_248]
+corpus = 0
+objectives = 0
+executions = 84422
+exec_sec = 1.1457407272495657
+coverage_observer = "1575/25632 (6%)"
+
+[client_249]
+corpus = 0
+objectives = 0
+executions = 84547
+exec_sec = 1.147440067922701
+coverage_observer = "1586/25632 (6%)"
+
+[client_250]
+corpus = 0
+objectives = 0
+executions = 84578
+exec_sec = 1.1478626693445733
+coverage_observer = "1577/25632 (6%)"
+
+[client_251]
+corpus = 499
+objectives = 0
+executions = 84479
+exec_sec = 1.1465207709013843
+coverage_observer = "1574/25632 (6%)"
+
+[client_252]
+corpus = 0
+objectives = 0
+executions = 84548
+exec_sec = 1.1474589888088376
+coverage_observer = "1573/25632 (6%)"
+
+[client_253]
+corpus = 0
+objectives = 0
+executions = 84426
+exec_sec = 1.1458049012553653
+coverage_observer = "1577/25632 (6%)"
+
+[client_254]
+corpus = 0
+objectives = 0
+executions = 84507
+exec_sec = 1.146905834478257
+coverage_observer = "1575/25632 (6%)"
+
+[client_255]
+corpus = 268
+objectives = 0
+executions = 84425
+exec_sec = 1.1457946423319831
+coverage_observer = "1552/25632 (6%)"
+
+[client_256]
+corpus = 0
+objectives = 0
+executions = 84480
+exec_sec = 1.1465435265755954
+coverage_observer = "1578/25632 (6%)"
+
+[client_257]
+corpus = 26
+objectives = 0
+executions = 84514
+exec_sec = 1.1470082028756694
+coverage_observer = "1573/25632 (6%)"
+
+[client_258]
+corpus = 0
+objectives = 0
+executions = 84569
+exec_sec = 1.147757894331143
+coverage_observer = "1577/25632 (6%)"
+
+[client_259]
+corpus = 88
+objectives = 0
+executions = 84471
+exec_sec = 1.1464310172189154
+coverage_observer = "1574/25632 (6%)"
+
+[client_260]
+corpus = 96
+objectives = 0
+executions = 84528
+exec_sec = 1.1472078814035505
+coverage_observer = "1573/25632 (6%)"
+
+[client_261]
+corpus = 41
+objectives = 0
+executions = 84545
+exec_sec = 1.1474413745804246
+coverage_observer = "1577/25632 (6%)"
+
+[client_262]
+corpus = 0
+objectives = 0
+executions = 84556
+exec_sec = 1.147594562275018
+coverage_observer = "1551/25632 (6%)"
+
+[client_263]
+corpus = 0
+objectives = 0
+executions = 84467
+exec_sec = 1.146391379424664
+coverage_observer = "1577/25632 (6%)"
+
+[client_264]
+corpus = 535
+objectives = 0
+executions = 84545
+exec_sec = 1.147455085236767
+coverage_observer = "1593/25632 (6%)"
+
+[client_265]
+corpus = 391
+objectives = 0
+executions = 84455
+exec_sec = 1.1462392152427425
+coverage_observer = "1578/25632 (6%)"
+
+[client_266]
+corpus = 459
+objectives = 0
+executions = 84500
+exec_sec = 1.1468557064163227
+coverage_observer = "1577/25632 (6%)"
+
+[client_267]
+corpus = 0
+objectives = 0
+executions = 84495
+exec_sec = 1.1467938011879797
+coverage_observer = "1578/25632 (6%)"
+
+[client_268]
+corpus = 65
+objectives = 0
+executions = 84544
+exec_sec = 1.1474621251240191
+coverage_observer = "1549/25632 (6%)"
+
+[client_269]
+corpus = 115
+objectives = 0
+executions = 84452
+exec_sec = 1.1462163035522692
+coverage_observer = "1579/25632 (6%)"
+
+[client_270]
+corpus = 25
+objectives = 0
+executions = 84468
+exec_sec = 1.146435430198027
+coverage_observer = "1576/25632 (6%)"
+
+[client_271]
+corpus = 76
+objectives = 0
+executions = 84543
+exec_sec = 1.1474553483534788
+coverage_observer = "1575/25632 (6%)"
+
+[client_272]
+corpus = 204
+objectives = 0
+executions = 84471
+exec_sec = 1.146480250439321
+coverage_observer = "1551/25632 (6%)"
+
+[client_273]
+corpus = 65
+objectives = 0
+executions = 84566
+exec_sec = 1.1477714386701525
+coverage_observer = "1575/25632 (6%)"
+
+[client_274]
+corpus = 15
+objectives = 0
+executions = 84443
+exec_sec = 1.1461034944293116
+coverage_observer = "1550/25632 (6%)"
+
+[client_275]
+corpus = 28
+objectives = 0
+executions = 84532
+exec_sec = 1.14731365789466
+coverage_observer = "1577/25632 (6%)"
+
+[client_276]
+corpus = 519
+objectives = 0
+executions = 84510
+exec_sec = 1.147016780652351
+coverage_observer = "1575/25632 (6%)"
+
+[client_277]
+corpus = 327
+objectives = 0
+executions = 84444
+exec_sec = 1.1461231174344633
+coverage_observer = "1578/25632 (6%)"
+
+[client_278]
+corpus = 0
+objectives = 0
+executions = 84460
+exec_sec = 1.1463415098876861
+coverage_observer = "1573/25632 (6%)"
+
+[client_279]
+corpus = 0
+objectives = 0
+executions = 84532
+exec_sec = 1.1473212947353215
+coverage_observer = "1588/25632 (6%)"
+
+[client_280]
+corpus = 495
+objectives = 0
+executions = 84533
+exec_sec = 1.147338134525426
+coverage_observer = "1577/25632 (6%)"
+
+[client_281]
+corpus = 447
+objectives = 0
+executions = 84498
+exec_sec = 1.1468663387342244
+coverage_observer = "1573/25632 (6%)"
+
+[client_282]
+corpus = 131
+objectives = 0
+executions = 84429
+exec_sec = 1.1459329661763344
+coverage_observer = "1551/25632 (6%)"
+
+[client_283]
+corpus = 103
+objectives = 0
+executions = 84557
+exec_sec = 1.1476733763755964
+coverage_observer = "1575/25632 (6%)"
+
+[client_284]
+corpus = 394
+objectives = 0
+executions = 84460
+exec_sec = 1.1463599283672372
+coverage_observer = "1574/25632 (6%)"
+
+[client_285]
+corpus = 516
+objectives = 0
+executions = 84498
+exec_sec = 1.1468788316096294
+coverage_observer = "1572/25632 (6%)"
+
+[client_286]
+corpus = 447
+objectives = 0
+executions = 84464
+exec_sec = 1.1464205691564209
+coverage_observer = "1578/25632 (6%)"
+
+[client_287]
+corpus = 0
+objectives = 0
+executions = 84552
+exec_sec = 1.1476181307420785
+coverage_observer = "1575/25632 (6%)"
+
+[client_288]
+corpus = 0
+objectives = 0
+executions = 84522
+exec_sec = 1.1472141627110746
+coverage_observer = "1573/25632 (6%)"
+
+[client_289]
+corpus = 82
+objectives = 0
+executions = 84528
+exec_sec = 1.1472987002392894
+coverage_observer = "1551/25632 (6%)"
+
+[client_290]
+corpus = 411
+objectives = 0
+executions = 84548
+exec_sec = 1.147573331352733
+coverage_observer = "1572/25632 (6%)"
+
+[client_291]
+corpus = 420
+objectives = 0
+executions = 84446
+exec_sec = 1.1461918912908546
+coverage_observer = "1575/25632 (6%)"
+
+[client_292]
+corpus = 0
+objectives = 0
+executions = 84471
+exec_sec = 1.1465339827779006
+coverage_observer = "1552/25632 (6%)"
+
+[client_293]
+corpus = 108
+objectives = 0
+executions = 84467
+exec_sec = 1.1464826021706522
+coverage_observer = "1572/25632 (6%)"
+
+[client_294]
+corpus = 38
+objectives = 0
+executions = 84503
+exec_sec = 1.1469743830350008
+coverage_observer = "1575/25632 (6%)"
+
+[client_295]
+corpus = 446
+objectives = 0
+executions = 84441
+exec_sec = 1.1461359590737572
+coverage_observer = "1574/25632 (6%)"
+
+[client_296]
+corpus = 0
+objectives = 0
+executions = 84665
+exec_sec = 1.1491795072219975
+coverage_observer = "1574/25632 (6%)"
+
+[client_297]
+corpus = 127
+objectives = 0
+executions = 84499
+exec_sec = 1.1469295621522626
+coverage_observer = "1572/25632 (6%)"
+
+[client_298]
+corpus = 0
+objectives = 0
+executions = 84591
+exec_sec = 1.148181445109921
+coverage_observer = "1575/25632 (6%)"
+
+[client_299]
+corpus = 441
+objectives = 0
+executions = 84512
+exec_sec = 1.147112377928589
+coverage_observer = "1574/25632 (6%)"
+
+[client_300]
+corpus = 0
+objectives = 0
+executions = 84533
+exec_sec = 1.1474004027180094
+coverage_observer = "1574/25632 (6%)"
+
+[client_301]
+corpus = 69
+objectives = 0
+executions = 84425
+exec_sec = 1.1459388109766642
+coverage_observer = "1550/25632 (6%)"
+
+[client_302]
+corpus = 401
+objectives = 0
+executions = 84482
+exec_sec = 1.1467160675871815
+coverage_observer = "1575/25632 (6%)"
+
+[client_303]
+corpus = 0
+objectives = 0
+executions = 84485
+exec_sec = 1.146761170110955
+coverage_observer = "1575/25632 (6%)"
+
+[client_304]
+corpus = 526
+objectives = 0
+executions = 84520
+exec_sec = 1.147240145689064
+coverage_observer = "1575/25632 (6%)"
+
+[client_305]
+corpus = 0
+objectives = 0
+executions = 84492
+exec_sec = 1.1468647146137392
+coverage_observer = "1573/25632 (6%)"
+
+[client_306]
+corpus = 0
+objectives = 0
+executions = 84403
+exec_sec = 1.1456603814931494
+coverage_observer = "1553/25632 (6%)"
+
+[client_307]
+corpus = 0
+objectives = 0
+executions = 84416
+exec_sec = 1.145841721867636
+coverage_observer = "1578/25632 (6%)"
+
+[client_308]
+corpus = 0
+objectives = 0
+executions = 84393
+exec_sec = 1.1455326272262267
+coverage_observer = "1586/25632 (6%)"
+
+[client_309]
+corpus = 124
+objectives = 0
+executions = 84557
+exec_sec = 1.1477606809181404
+coverage_observer = "1552/25632 (6%)"
+
+[client_310]
+corpus = 0
+objectives = 0
+executions = 84497
+exec_sec = 1.146949284466074
+coverage_observer = "1575/25632 (6%)"
+
+[client_311]
+corpus = 0
+objectives = 0
+executions = 84461
+exec_sec = 1.1464619340296442
+coverage_observer = "1574/25632 (6%)"
+
+[client_312]
+corpus = 213
+objectives = 0
+executions = 84407
+exec_sec = 1.1457308387012262
+coverage_observer = "1551/25632 (6%)"
+
+[client_313]
+corpus = 160
+objectives = 0
+executions = 84527
+exec_sec = 1.147361679105976
+coverage_observer = "1587/25632 (6%)"
+
+[client_314]
+corpus = 61
+objectives = 0
+executions = 84414
+exec_sec = 1.1458307419302052
+coverage_observer = "1576/25632 (6%)"
+
+[client_315]
+corpus = 200
+objectives = 0
+executions = 84448
+exec_sec = 1.1462950988523313
+coverage_observer = "1574/25632 (6%)"
+
+[client_316]
+corpus = 0
+objectives = 0
+executions = 84519
+exec_sec = 1.147261185242568
+coverage_observer = "1574/25632 (6%)"
+
+[client_317]
+corpus = 501
+objectives = 0
+executions = 84509
+exec_sec = 1.1471274606621646
+coverage_observer = "1574/25632 (6%)"
+
+[client_318]
+corpus = 136
+objectives = 0
+executions = 84527
+exec_sec = 1.1473751071820928
+coverage_observer = "1574/25632 (6%)"
+
+[client_319]
+corpus = 19
+objectives = 0
+executions = 84586
+exec_sec = 1.1481790846674118
+coverage_observer = "1588/25632 (6%)"
+
+[client_320]
+corpus = 0
+objectives = 0
+executions = 84460
+exec_sec = 1.146472148320176
+coverage_observer = "1576/25632 (6%)"
+
+[client_321]
+corpus = 465
+objectives = 0
+executions = 84499
+exec_sec = 1.14700428932741
+coverage_observer = "1583/25632 (6%)"
+
+[client_322]
+corpus = 0
+objectives = 0
+executions = 84402
+exec_sec = 1.1456904453560952
+coverage_observer = "1583/25632 (6%)"
+
+[client_323]
+corpus = 0
+objectives = 0
+executions = 84552
+exec_sec = 1.147730559266111
+coverage_observer = "1573/25632 (6%)"
+
+[client_324]
+corpus = 107
+objectives = 0
+executions = 84477
+exec_sec = 1.1467171870541522
+coverage_observer = "1574/25632 (6%)"
+
+[client_325]
+corpus = 142
+objectives = 0
+executions = 84385
+exec_sec = 1.145472859155835
+coverage_observer = "1579/25632 (6%)"
+
+[client_326]
+corpus = 490
+objectives = 0
+executions = 84482
+exec_sec = 1.1467953854945085
+coverage_observer = "1579/25632 (6%)"
+
+[client_327]
+corpus = 55
+objectives = 0
+executions = 84442
+exec_sec = 1.1462572758000034
+coverage_observer = "1574/25632 (6%)"
+
+[client_328]
+corpus = 0
+objectives = 0
+executions = 84398
+exec_sec = 1.1456657452198729
+coverage_observer = "1575/25632 (6%)"
+
+[client_329]
+corpus = 92
+objectives = 0
+executions = 84497
+exec_sec = 1.1470140649199274
+coverage_observer = "1578/25632 (6%)"
+
+[client_330]
+corpus = 466
+objectives = 0
+executions = 84363
+exec_sec = 1.1451978927378863
+coverage_observer = "1577/25632 (6%)"
+
+[client_331]
+corpus = 0
+objectives = 0
+executions = 84463
+exec_sec = 1.1465580491001943
+coverage_observer = "1577/25632 (6%)"
+
+[client_332]
+corpus = 114
+objectives = 0
+executions = 84441
+exec_sec = 1.146261221384301
+coverage_observer = "1578/25632 (6%)"
+
+[client_333]
+corpus = 0
+objectives = 0
+executions = 84472
+exec_sec = 1.1466846326419007
+coverage_observer = "1549/25632 (6%)"
+
+[client_334]
+corpus = 0
+objectives = 0
+executions = 84459
+exec_sec = 1.1465101143702348
+coverage_observer = "1579/25632 (6%)"
+
+[client_335]
+corpus = 422
+objectives = 0
+executions = 84452
+exec_sec = 1.1464171240295846
+coverage_observer = "1575/25632 (6%)"
+
+[client_336]
+corpus = 0
+objectives = 0
+executions = 84459
+exec_sec = 1.1465141001434915
+coverage_observer = "1575/25632 (6%)"
+
+[client_337]
+corpus = 0
+objectives = 0
+executions = 84549
+exec_sec = 1.147737926689908
+coverage_observer = "1577/25632 (6%)"
+
+[client_338]
+corpus = 0
+objectives = 0
+executions = 84517
+exec_sec = 1.1473056332588665
+coverage_observer = "1580/25632 (6%)"
+
+[client_339]
+corpus = 0
+objectives = 0
+executions = 84552
+exec_sec = 1.1477841648873166
+coverage_observer = "1578/25632 (6%)"
+
+[client_340]
+corpus = 140
+objectives = 0
+executions = 84502
+exec_sec = 1.1471066371245398
+coverage_observer = "1578/25632 (6%)"
+
+[client_341]
+corpus = 0
+objectives = 0
+executions = 84500
+exec_sec = 1.1470803020967768
+coverage_observer = "1574/25632 (6%)"
+
+[client_342]
+corpus = 273
+objectives = 0
+executions = 84554
+exec_sec = 1.1478164071035122
+coverage_observer = "1575/25632 (6%)"
+
+[client_343]
+corpus = 0
+objectives = 0
+executions = 84477
+exec_sec = 1.1467759110280975
+coverage_observer = "1553/25632 (6%)"
+
+[client_344]
+corpus = 0
+objectives = 0
+executions = 84469
+exec_sec = 1.1466718257661332
+coverage_observer = "1575/25632 (6%)"
+
+[client_345]
+corpus = 0
+objectives = 0
+executions = 84379
+exec_sec = 1.1454553303432582
+coverage_observer = "1553/25632 (6%)"
+
+[client_346]
+corpus = 0
+objectives = 0
+executions = 84440
+exec_sec = 1.1462885495683073
+coverage_observer = "1576/25632 (6%)"
+
+[client_347]
+corpus = 0
+objectives = 0
+executions = 84444
+exec_sec = 1.1463478040277026
+coverage_observer = "1552/25632 (6%)"
+
+[client_348]
+corpus = 526
+objectives = 0
+executions = 84521
+exec_sec = 1.1473986002409058
+coverage_observer = "1575/25632 (6%)"
+
+[client_349]
+corpus = 93
+objectives = 0
+executions = 84528
+exec_sec = 1.1474977162146451
+coverage_observer = "1551/25632 (6%)"
+
+[client_350]
+corpus = 0
+objectives = 0
+executions = 84448
+exec_sec = 1.146414523774019
+coverage_observer = "1552/25632 (6%)"
+
+[client_351]
+corpus = 0
+objectives = 0
+executions = 84553
+exec_sec = 1.1478424765456727
+coverage_observer = "1572/25632 (6%)"
+
+[client_352]
+corpus = 0
+objectives = 0
+executions = 84517
+exec_sec = 1.147355879150534
+coverage_observer = "1550/25632 (6%)"
+
+[client_353]
+corpus = 323
+objectives = 0
+executions = 84459
+exec_sec = 1.1465704626322724
+coverage_observer = "1576/25632 (6%)"
+
+[client_354]
+corpus = 0
+objectives = 0
+executions = 84513
+exec_sec = 1.1473054199462813
+coverage_observer = "1549/25632 (6%)"
+
+[client_355]
+corpus = 346
+objectives = 0
+executions = 84577
+exec_sec = 1.148176385828085
+coverage_observer = "1552/25632 (6%)"
+
+[client_356]
+corpus = 460
+objectives = 0
+executions = 84569
+exec_sec = 1.148070092576191
+coverage_observer = "1586/25632 (6%)"
+
+[client_357]
+corpus = 432
+objectives = 0
+executions = 84456
+exec_sec = 1.1465383639668625
+coverage_observer = "1551/25632 (6%)"
+
+[client_358]
+corpus = 530
+objectives = 0
+executions = 84442
+exec_sec = 1.1463508943861203
+coverage_observer = "1553/25632 (6%)"
+
+[client_359]
+corpus = 150
+objectives = 0
+executions = 84511
+exec_sec = 1.1472896981895202
+coverage_observer = "1583/25632 (6%)"
+
+[client_360]
+corpus = 426
+objectives = 0
+executions = 84417
+exec_sec = 1.1460149600409764
+coverage_observer = "1586/25632 (6%)"
+
+[client_361]
+corpus = 91
+objectives = 0
+executions = 84417
+exec_sec = 1.1460160945324123
+coverage_observer = "1575/25632 (6%)"
+
+[client_362]
+corpus = 162
+objectives = 0
+executions = 84497
+exec_sec = 1.147104979966032
+coverage_observer = "1576/25632 (6%)"
+
+[client_363]
+corpus = 233
+objectives = 0
+executions = 84452
+exec_sec = 1.1464970088079622
+coverage_observer = "1574/25632 (6%)"
+
+[client_364]
+corpus = 60
+objectives = 0
+executions = 84460
+exec_sec = 1.1466090807937763
+coverage_observer = "1577/25632 (6%)"
+
+[client_365]
+corpus = 0
+objectives = 0
+executions = 84411
+exec_sec = 1.145947251023521
+coverage_observer = "1579/25632 (6%)"
+
+[client_366]
+corpus = 0
+objectives = 0
+executions = 84488
+exec_sec = 1.1469960208131718
+coverage_observer = "1579/25632 (6%)"
+
+[client_367]
+corpus = 0
+objectives = 0
+executions = 84465
+exec_sec = 1.1466865231717591
+coverage_observer = "1578/25632 (6%)"
+
+[client_368]
+corpus = 0
+objectives = 0
+executions = 84422
+exec_sec = 1.1461062383167184
+coverage_observer = "1579/25632 (6%)"
+
+[client_369]
+corpus = 0
+objectives = 0
+executions = 84339
+exec_sec = 1.1449826435531778
+coverage_observer = "1576/25632 (6%)"
+
+[client_370]
+corpus = 0
+objectives = 0
+executions = 84484
+exec_sec = 1.1469543078776878
+coverage_observer = "1576/25632 (6%)"
+
+[client_371]
+corpus = 221
+objectives = 0
+executions = 84527
+exec_sec = 1.147541557684593
+coverage_observer = "1574/25632 (6%)"
+
+[client_372]
+corpus = 433
+objectives = 0
+executions = 84479
+exec_sec = 1.1468934734041891
+coverage_observer = "1579/25632 (6%)"
+
+[client_373]
+corpus = 66
+objectives = 0
+executions = 84498
+exec_sec = 1.1471548032943621
+coverage_observer = "1575/25632 (6%)"
+
+[client_374]
+corpus = 0
+objectives = 0
+executions = 84443
+exec_sec = 1.1464118413895998
+coverage_observer = "1574/25632 (6%)"
+
+[client_375]
+corpus = 0
+objectives = 0
+executions = 84502
+exec_sec = 1.1472164860764824
+coverage_observer = "1576/25632 (6%)"
+
+[client_376]
+corpus = 0
+objectives = 0
+executions = 84470
+exec_sec = 1.1467848622524646
+coverage_observer = "1578/25632 (6%)"
+
+[client_377]
+corpus = 454
+objectives = 0
+executions = 84446
+exec_sec = 1.1464612495812585
+coverage_observer = "1574/25632 (6%)"
+
+[client_378]
+corpus = 525
+objectives = 0
+executions = 84393
+exec_sec = 1.1457444620772286
+coverage_observer = "1574/25632 (6%)"
+
+[client_379]
+corpus = 149
+objectives = 0
+executions = 84554
+exec_sec = 1.14793305462322
+coverage_observer = "1577/25632 (6%)"
+
+[client_380]
+corpus = 223
+objectives = 0
+executions = 84410
+exec_sec = 1.1459814206621597
+coverage_observer = "1578/25632 (6%)"
+
+[client_381]
+corpus = 67
+objectives = 0
+executions = 84461
+exec_sec = 1.1466755782595484
+coverage_observer = "1575/25632 (6%)"
+
+[client_382]
+corpus = 143
+objectives = 0
+executions = 84417
+exec_sec = 1.146081477744202
+coverage_observer = "1575/25632 (6%)"
+
+[client_383]
+corpus = 0
+objectives = 0
+executions = 84391
+exec_sec = 1.1457315238329295
+coverage_observer = "1574/25632 (6%)"
+
+[client_384]
+corpus = 0
+objectives = 0
+executions = 84516
+exec_sec = 1.1474315372284642
+coverage_observer = "1552/25632 (6%)"
+
+[client_385]
+corpus = 506
+objectives = 0
+executions = 84479
+exec_sec = 1.1469324877631801
+coverage_observer = "1575/25632 (6%)"
+
+[client_386]
+corpus = 268
+objectives = 0
+executions = 84333
+exec_sec = 1.1449535518895244
+coverage_observer = "1574/25632 (6%)"
+
+[client_387]
+corpus = 0
+objectives = 0
+executions = 84441
+exec_sec = 1.1464233895666422
+coverage_observer = "1574/25632 (6%)"
+
+[client_388]
+corpus = 0
+objectives = 0
+executions = 84391
+exec_sec = 1.1457483837807454
+coverage_observer = "1574/25632 (6%)"
+
+[client_389]
+corpus = 0
+objectives = 0
+executions = 84536
+exec_sec = 1.147720054395957
+coverage_observer = "1576/25632 (6%)"
+
+[client_390]
+corpus = 0
+objectives = 0
+executions = 84516
+exec_sec = 1.1474519750522485
+coverage_observer = "1552/25632 (6%)"
+
+[client_391]
+corpus = 0
+objectives = 0
+executions = 84483
+exec_sec = 1.1470070187188848
+coverage_observer = "1572/25632 (6%)"
+
+[client_392]
+corpus = 111
+objectives = 0
+executions = 84504
+exec_sec = 1.1472949587818662
+coverage_observer = "1576/25632 (6%)"
+
+[client_393]
+corpus = 0
+objectives = 0
+executions = 84516
+exec_sec = 1.1474598509958058
+coverage_observer = "1572/25632 (6%)"
+
+[client_394]
+corpus = 0
+objectives = 0
+executions = 84471
+exec_sec = 1.1468520376392268
+coverage_observer = "1574/25632 (6%)"
+
+[client_395]
+corpus = 0
+objectives = 0
+executions = 84522
+exec_sec = 1.1475472317273367
+coverage_observer = "1551/25632 (6%)"
+
+[client_396]
+corpus = 0
+objectives = 0
+executions = 84464
+exec_sec = 1.146762925983091
+coverage_observer = "1551/25632 (6%)"
+
+[client_397]
+corpus = 0
+objectives = 0
+executions = 84502
+exec_sec = 1.147282019235942
+coverage_observer = "1574/25632 (6%)"
+
+[client_398]
+corpus = 471
+objectives = 0
+executions = 84498
+exec_sec = 1.1472309059450716
+coverage_observer = "1552/25632 (6%)"
+
+[client_399]
+corpus = 0
+objectives = 0
+executions = 84545
+exec_sec = 1.1478720867284444
+coverage_observer = "1573/25632 (6%)"
+
+[client_400]
+corpus = 298
+objectives = 0
+executions = 84460
+exec_sec = 1.146721205578797
+coverage_observer = "1576/25632 (6%)"
+
+[client_401]
+corpus = 0
+objectives = 0
+executions = 84442
+exec_sec = 1.1464811829829646
+coverage_observer = "1577/25632 (6%)"
+
+[client_402]
+corpus = 7
+objectives = 0
+executions = 84506
+exec_sec = 1.147354075577514
+coverage_observer = "1577/25632 (6%)"
+
+[client_403]
+corpus = 116
+objectives = 0
+executions = 84409
+exec_sec = 1.1460414193400665
+coverage_observer = "1582/25632 (6%)"
+
+[client_404]
+corpus = 0
+objectives = 0
+executions = 84418
+exec_sec = 1.146168962352451
+coverage_observer = "1581/25632 (6%)"
+
+[client_405]
+corpus = 465
+objectives = 0
+executions = 84412
+exec_sec = 1.1460926716160134
+coverage_observer = "1583/25632 (6%)"
+
+[client_406]
+corpus = 480
+objectives = 0
+executions = 84440
+exec_sec = 1.1464782618067293
+coverage_observer = "1579/25632 (6%)"
+
+[client_407]
+corpus = 70
+objectives = 0
+executions = 84363
+exec_sec = 1.1454372621212607
+coverage_observer = "1578/25632 (6%)"
+
+[client_408]
+corpus = 0
+objectives = 0
+executions = 84460
+exec_sec = 1.1467567943815788
+coverage_observer = "1577/25632 (6%)"
+
+[client_409]
+corpus = 0
+objectives = 0
+executions = 84397
+exec_sec = 1.1459041838399524
+coverage_observer = "1551/25632 (6%)"
+
+[client_410]
+corpus = 388
+objectives = 0
+executions = 84395
+exec_sec = 1.1458789103207563
+coverage_observer = "1574/25632 (6%)"
+
+[client_411]
+corpus = 0
+objectives = 0
+executions = 84518
+exec_sec = 1.147551145561005
+coverage_observer = "1588/25632 (6%)"
+
+[client_412]
+corpus = 0
+objectives = 0
+executions = 84535
+exec_sec = 1.1477839996031949
+coverage_observer = "1584/25632 (6%)"
+
+[client_413]
+corpus = 0
+objectives = 0
+executions = 84472
+exec_sec = 1.14693153514123
+coverage_observer = "1551/25632 (6%)"
+
+[client_414]
+corpus = 0
+objectives = 0
+executions = 84456
+exec_sec = 1.146716318294465
+coverage_observer = "1599/25632 (6%)"
+
+[client_415]
+corpus = 123
+objectives = 0
+executions = 84499
+exec_sec = 1.147302605357579
+coverage_observer = "1584/25632 (6%)"
+
+[client_416]
+corpus = 477
+objectives = 0
+executions = 84475
+exec_sec = 1.1469793940282385
+coverage_observer = "1581/25632 (6%)"
+
+[client_417]
+corpus = 0
+objectives = 0
+executions = 84510
+exec_sec = 1.147457598062949
+coverage_observer = "1552/25632 (6%)"
+
+[client_418]
+corpus = 85
+objectives = 0
+executions = 84484
+exec_sec = 1.1471067782160778
+coverage_observer = "1583/25632 (6%)"
+
+[client_419]
+corpus = 77
+objectives = 0
+executions = 84451
+exec_sec = 1.1466617305911335
+coverage_observer = "1552/25632 (6%)"
+
+[client_420]
+corpus = 22
+objectives = 0
+executions = 84476
+exec_sec = 1.1470024764839126
+coverage_observer = "1577/25632 (6%)"
+
+[client_421]
+corpus = 426
+objectives = 0
+executions = 84470
+exec_sec = 1.1469222344232515
+coverage_observer = "1579/25632 (6%)"
+
+[client_422]
+corpus = 431
+objectives = 0
+executions = 84363
+exec_sec = 1.1454726021488146
+coverage_observer = "1576/25632 (6%)"
+
+[client_423]
+corpus = 0
+objectives = 0
+executions = 84462
+exec_sec = 1.1468200526550232
+coverage_observer = "1559/25632 (6%)"
+
+[client_424]
+corpus = 0
+objectives = 0
+executions = 84515
+exec_sec = 1.1475434596162493
+coverage_observer = "1581/25632 (6%)"
+
+[client_425]
+corpus = 0
+objectives = 0
+executions = 84469
+exec_sec = 1.146923191016554
+coverage_observer = "1588/25632 (6%)"
+
+[client_426]
+corpus = 354
+objectives = 0
+executions = 84448
+exec_sec = 1.1466433065005157
+coverage_observer = "1588/25632 (6%)"
+
+[client_427]
+corpus = 0
+objectives = 0
+executions = 84527
+exec_sec = 1.1477219264168772
+coverage_observer = "1581/25632 (6%)"
+
+[client_428]
+corpus = 108
+objectives = 0
+executions = 84434
+exec_sec = 1.14646502174016
+coverage_observer = "1553/25632 (6%)"
+
+[client_429]
+corpus = 0
+objectives = 0
+executions = 84400
+exec_sec = 1.146009139154475
+coverage_observer = "1580/25632 (6%)"
+
+[client_430]
+corpus = 0
+objectives = 0
+executions = 84400
+exec_sec = 1.146013507882428
+coverage_observer = "1578/25632 (6%)"
+
+[client_431]
+corpus = 60
+objectives = 0
+executions = 84552
+exec_sec = 1.1480811602540286
+coverage_observer = "1578/25632 (6%)"
+
+[client_432]
+corpus = 0
+objectives = 0
+executions = 84421
+exec_sec = 1.1463049814381863
+coverage_observer = "1553/25632 (6%)"
+
+[client_433]
+corpus = 0
+objectives = 0
+executions = 84436
+exec_sec = 1.1465113294132392
+coverage_observer = "1551/25632 (6%)"
+
+[client_434]
+corpus = 64
+objectives = 0
+executions = 84422
+exec_sec = 1.14632390345148
+coverage_observer = "1578/25632 (6%)"
+
+[client_435]
+corpus = 0
+objectives = 0
+executions = 84454
+exec_sec = 1.1467609756783792
+coverage_observer = "1581/25632 (6%)"
+
+[client_436]
+corpus = 0
+objectives = 0
+executions = 84356
+exec_sec = 1.1454328516348322
+coverage_observer = "1579/25632 (6%)"
+
+[client_437]
+corpus = 0
+objectives = 0
+executions = 84485
+exec_sec = 1.14718770180305
+coverage_observer = "1551/25632 (6%)"
+
+[client_438]
+corpus = 0
+objectives = 0
+executions = 84455
+exec_sec = 1.146782432233564
+coverage_observer = "1578/25632 (6%)"
+
+[client_439]
+corpus = 0
+objectives = 0
+executions = 84518
+exec_sec = 1.1476398064901856
+coverage_observer = "1551/25632 (6%)"
+
+[client_440]
+corpus = 155
+objectives = 0
+executions = 84462
+exec_sec = 1.146879727463591
+coverage_observer = "1578/25632 (6%)"
+
+[client_441]
+corpus = 75
+objectives = 0
+executions = 84464
+exec_sec = 1.1469037734385323
+coverage_observer = "1581/25632 (6%)"
+
+[client_442]
+corpus = 0
+objectives = 0
+executions = 84457
+exec_sec = 1.1468115927277507
+coverage_observer = "1577/25632 (6%)"
+
+[client_443]
+corpus = 0
+objectives = 0
+executions = 84487
+exec_sec = 1.14722261432956
+coverage_observer = "1575/25632 (6%)"
+
+[client_444]
+corpus = 522
+objectives = 0
+executions = 84505
+exec_sec = 1.1474709801007552
+coverage_observer = "1553/25632 (6%)"
+
+[client_445]
+corpus = 0
+objectives = 0
+executions = 84430
+exec_sec = 1.1464556777259274
+coverage_observer = "1575/25632 (6%)"
+
+[client_446]
+corpus = 0
+objectives = 0
+executions = 84403
+exec_sec = 1.1460919783769166
+coverage_observer = "1552/25632 (6%)"
+
+[client_447]
+corpus = 0
+objectives = 0
+executions = 84359
+exec_sec = 1.1454975987832718
+coverage_observer = "1579/25632 (6%)"
+
+[client_448]
+corpus = 430
+objectives = 0
+executions = 84426
+exec_sec = 1.1464104835927391
+coverage_observer = "1576/25632 (6%)"
+
+[client_449]
+corpus = 163
+objectives = 0
+executions = 84431
+exec_sec = 1.1464813984561522
+coverage_observer = "1575/25632 (6%)"
+
+[client_450]
+corpus = 124
+objectives = 0
+executions = 84429
+exec_sec = 1.1464573495750146
+coverage_observer = "1578/25632 (6%)"
+
+[client_451]
+corpus = 0
+objectives = 0
+executions = 84480
+exec_sec = 1.1471533620852434
+coverage_observer = "1588/25632 (6%)"
+
+[client_452]
+corpus = 541
+objectives = 0
+executions = 84480
+exec_sec = 1.1471567306886616
+coverage_observer = "1579/25632 (6%)"
+
+[client_453]
+corpus = 540
+objectives = 0
+executions = 84493
+exec_sec = 1.1473366073706603
+coverage_observer = "1583/25632 (6%)"
+
+[client_454]
+corpus = 491
+objectives = 0
+executions = 84378
+exec_sec = 1.1457786342896332
+coverage_observer = "1595/25632 (6%)"
+
+[client_455]
+corpus = 0
+objectives = 0
+executions = 84472
+exec_sec = 1.1470580107289854
+coverage_observer = "1581/25632 (6%)"
+
+[client_456]
+corpus = 107
+objectives = 0
+executions = 84481
+exec_sec = 1.147182241602908
+coverage_observer = "1578/25632 (6%)"
+
+[client_457]
+corpus = 319
+objectives = 0
+executions = 84416
+exec_sec = 1.1463015307965931
+coverage_observer = "1576/25632 (6%)"
+
+[client_458]
+corpus = 0
+objectives = 0
+executions = 84391
+exec_sec = 1.1459651075258357
+coverage_observer = "1578/25632 (6%)"
+
+[client_459]
+corpus = 0
+objectives = 0
+executions = 84433
+exec_sec = 1.1465381875148668
+coverage_observer = "1552/25632 (6%)"
+
+[client_460]
+corpus = 422
+objectives = 0
+executions = 84319
+exec_sec = 1.1449932308829456
+coverage_observer = "1578/25632 (6%)"
+
+[client_461]
+corpus = 188
+objectives = 0
+executions = 84461
+exec_sec = 1.1469262550084187
+coverage_observer = "1578/25632 (6%)"
+
+[client_462]
+corpus = 336
+objectives = 0
+executions = 84386
+exec_sec = 1.1459118468460565
+coverage_observer = "1577/25632 (6%)"
+
+[client_463]
+corpus = 0
+objectives = 0
+executions = 84496
+exec_sec = 1.1474091973862046
+coverage_observer = "1574/25632 (6%)"
+
+[client_464]
+corpus = 96
+objectives = 0
+executions = 84381
+exec_sec = 1.145850425135458
+coverage_observer = "1578/25632 (6%)"
+
+[client_465]
+corpus = 73
+objectives = 0
+executions = 84542
+exec_sec = 1.1480391436182176
+coverage_observer = "1578/25632 (6%)"
+
+[client_466]
+corpus = 510
+objectives = 0
+executions = 84420
+exec_sec = 1.1463850676604483
+coverage_observer = "1577/25632 (6%)"
+
+[client_467]
+corpus = 154
+objectives = 0
+executions = 84467
+exec_sec = 1.1470263215634389
+coverage_observer = "1575/25632 (6%)"
+
+[client_468]
+corpus = 0
+objectives = 0
+executions = 84476
+exec_sec = 1.1471515871775289
+coverage_observer = "1578/25632 (6%)"
+
+[client_469]
+corpus = 428
+objectives = 0
+executions = 84366
+exec_sec = 1.145660878621003
+coverage_observer = "1578/25632 (6%)"
+
+[client_470]
+corpus = 391
+objectives = 0
+executions = 84461
+exec_sec = 1.1469544699286254
+coverage_observer = "1579/25632 (6%)"
+
+[client_471]
+corpus = 487
+objectives = 0
+executions = 84513
+exec_sec = 1.1476639584082629
+coverage_observer = "1551/25632 (6%)"
+
+[client_472]
+corpus = 450
+objectives = 0
+executions = 84459
+exec_sec = 1.146933278548114
+coverage_observer = "1576/25632 (6%)"
+
+[client_473]
+corpus = 66
+objectives = 0
+executions = 84469
+exec_sec = 1.1470712104849972
+coverage_observer = "1572/25632 (6%)"
+
+[client_474]
+corpus = 545
+objectives = 0
+executions = 84409
+exec_sec = 1.146258850803893
+coverage_observer = "1578/25632 (6%)"
+
+[client_475]
+corpus = 0
+objectives = 0
+executions = 84459
+exec_sec = 1.1469409964870352
+coverage_observer = "1574/25632 (6%)"
+
+[client_476]
+corpus = 87
+objectives = 0
+executions = 84402
+exec_sec = 1.1461700823969307
+coverage_observer = "1575/25632 (6%)"
+
+[client_477]
+corpus = 161
+objectives = 0
+executions = 84357
+exec_sec = 1.145562160433883
+coverage_observer = "1572/25632 (6%)"
+
+[client_478]
+corpus = 0
+objectives = 0
+executions = 84378
+exec_sec = 1.1458506421394836
+coverage_observer = "1578/25632 (6%)"
+
+[client_479]
+corpus = 66
+objectives = 0
+executions = 84466
+exec_sec = 1.1470493255041359
+coverage_observer = "1582/25632 (6%)"
+
+[client_480]
+corpus = 0
+objectives = 0
+executions = 84481
+exec_sec = 1.1472568494962943
+coverage_observer = "1578/25632 (6%)"
+
+[client_481]
+corpus = 193
+objectives = 0
+executions = 84479
+exec_sec = 1.147232081580992
+coverage_observer = "1552/25632 (6%)"
+
+[client_482]
+corpus = 0
+objectives = 0
+executions = 84478
+exec_sec = 1.147221721368333
+coverage_observer = "1572/25632 (6%)"
+
+[client_483]
+corpus = 156
+objectives = 0
+executions = 84386
+exec_sec = 1.1459755761861798
+coverage_observer = "1552/25632 (6%)"
+
+[client_484]
+corpus = 0
+objectives = 0
+executions = 84410
+exec_sec = 1.1463047557538346
+coverage_observer = "1550/25632 (6%)"
+
+[client_485]
+corpus = 507
+objectives = 0
+executions = 84386
+exec_sec = 1.1459825511873667
+coverage_observer = "1573/25632 (6%)"
+
+[client_486]
+corpus = 520
+objectives = 0
+executions = 84442
+exec_sec = 1.1467482632600106
+coverage_observer = "1575/25632 (6%)"
+
+[client_487]
+corpus = 0
+objectives = 0
+executions = 84411
+exec_sec = 1.1463337725989107
+coverage_observer = "1573/25632 (6%)"
+
+[client_488]
+corpus = 0
+objectives = 0
+executions = 84482
+exec_sec = 1.1473037542573867
+coverage_observer = "1577/25632 (6%)"
+
+[client_489]
+corpus = 0
+objectives = 0
+executions = 84496
+exec_sec = 1.1475005425193305
+coverage_observer = "1572/25632 (6%)"
+
+[client_490]
+corpus = 147
+objectives = 0
+executions = 84486
+exec_sec = 1.1473694097602445
+coverage_observer = "1575/25632 (6%)"
+
+[client_491]
+corpus = 0
+objectives = 0
+executions = 84353
+exec_sec = 1.1455673827403992
+coverage_observer = "1572/25632 (6%)"
+
+[client_492]
+corpus = 0
+objectives = 0
+executions = 84458
+exec_sec = 1.1469974276719788
+coverage_observer = "1576/25632 (6%)"
+
+[client_493]
+corpus = 18
+objectives = 0
+executions = 84432
+exec_sec = 1.1466478793534698
+coverage_observer = "1574/25632 (6%)"
+
+[client_494]
+corpus = 501
+objectives = 0
+executions = 84471
+exec_sec = 1.1471804272593062
+coverage_observer = "1574/25632 (6%)"
+
+[client_495]
+corpus = 0
+objectives = 0
+executions = 84369
+exec_sec = 1.1458004040269572
+coverage_observer = "1574/25632 (6%)"
+
+[client_496]
+corpus = 0
+objectives = 0
+executions = 84441
+exec_sec = 1.1467800233377274
+coverage_observer = "1575/25632 (6%)"
+
+[client_497]
+corpus = 0
+objectives = 0
+executions = 84444
+exec_sec = 1.1468234110154647
+coverage_observer = "1579/25632 (6%)"
+
+[client_498]
+corpus = 77
+objectives = 0
+executions = 84431
+exec_sec = 1.146648237523886
+coverage_observer = "1575/25632 (6%)"
+
+[client_499]
+corpus = 531
+objectives = 0
+executions = 84424
+exec_sec = 1.1465543126611404
+coverage_observer = "1552/25632 (6%)"
+
+[client_500]
+corpus = 233
+objectives = 0
+executions = 84486
+exec_sec = 1.147396826516852
+coverage_observer = "1575/25632 (6%)"
+
+[client_501]
+corpus = 0
+objectives = 0
+executions = 84423
+exec_sec = 1.1465345034952734
+coverage_observer = "1575/25632 (6%)"
+
+[client_502]
+corpus = 0
+objectives = 0
+executions = 84519
+exec_sec = 1.1478423004423641
+coverage_observer = "1590/25632 (6%)"
+
+[client_503]
+corpus = 458
+objectives = 0
+executions = 84399
+exec_sec = 1.1462167742911007
+coverage_observer = "1551/25632 (6%)"
+
+[client_504]
+corpus = 0
+objectives = 0
+executions = 84392
+exec_sec = 1.1461266255239437
+coverage_observer = "1574/25632 (6%)"
+
+[client_505]
+corpus = 0
+objectives = 0
+executions = 84560
+exec_sec = 1.148412924796704
+coverage_observer = "1578/25632 (6%)"
+
+[client_506]
+corpus = 0
+objectives = 0
+executions = 84443
+exec_sec = 1.1468282814970783
+coverage_observer = "1552/25632 (6%)"
+
+[client_507]
+corpus = 0
+objectives = 0
+executions = 84449
+exec_sec = 1.1469146743656593
+coverage_observer = "1575/25632 (6%)"
+
+[client_508]
+corpus = 0
+objectives = 0
+executions = 84428
+exec_sec = 1.1466327481092924
+coverage_observer = "1582/25632 (6%)"
+
+[client_509]
+corpus = 0
+objectives = 0
+executions = 84376
+exec_sec = 1.145929299815229
+coverage_observer = "1576/25632 (6%)"
+
+[client_510]
+corpus = 0
+objectives = 0
+executions = 84421
+exec_sec = 1.1465428745129982
+coverage_observer = "1588/25632 (6%)"
+
+[client_511]
+corpus = 0
+objectives = 0
+executions = 84425
+exec_sec = 1.1465997655166764
+coverage_observer = "1574/25632 (6%)"
+
+[client_512]
+corpus = 0
+objectives = 0
+executions = 84412
+exec_sec = 1.1464259351758583
+coverage_observer = "1574/25632 (6%)"
+
+[client_513]
+corpus = 0
+objectives = 0
+executions = 84486
+exec_sec = 1.1474330991598949
+coverage_observer = "1549/25632 (6%)"
+
+[client_514]
+corpus = 0
+objectives = 0
+executions = 84483
+exec_sec = 1.1473954441290446
+coverage_observer = "1575/25632 (6%)"
+
+[client_515]
+corpus = 314
+objectives = 0
+executions = 84399
+exec_sec = 1.1462586203150695
+coverage_observer = "1574/25632 (6%)"
+
+[client_516]
+corpus = 0
+objectives = 0
+executions = 84456
+exec_sec = 1.147036374828324
+coverage_observer = "1575/25632 (6%)"
+
+[client_517]
+corpus = 418
+objectives = 0
+executions = 84511
+exec_sec = 1.1477878106694324
+coverage_observer = "1552/25632 (6%)"
+
+[client_518]
+corpus = 149
+objectives = 0
+executions = 84473
+exec_sec = 1.1472752466688347
+coverage_observer = "1574/25632 (6%)"
+
+[client_519]
+corpus = 441
+objectives = 0
+executions = 84435
+exec_sec = 1.146761230976105
+coverage_observer = "1582/25632 (6%)"
+
+[client_520]
+corpus = 403
+objectives = 0
+executions = 84403
+exec_sec = 1.1463274588291708
+coverage_observer = "1574/25632 (6%)"
+
+[client_521]
+corpus = 4
+objectives = 0
+executions = 84453
+exec_sec = 1.1470032049306402
+coverage_observer = "1550/25632 (6%)"
+
+[client_522]
+corpus = 488
+objectives = 0
+executions = 84454
+exec_sec = 1.1470208734443106
+coverage_observer = "1578/25632 (6%)"
+
+[client_523]
+corpus = 139
+objectives = 0
+executions = 84439
+exec_sec = 1.1468199077230052
+coverage_observer = "1585/25632 (6%)"
+
+[client_524]
+corpus = 0
+objectives = 0
+executions = 84437
+exec_sec = 1.1467955447428233
+coverage_observer = "1550/25632 (6%)"
+
+[client_525]
+corpus = 427
+objectives = 0
+executions = 84419
+exec_sec = 1.1465540387739215
+coverage_observer = "1553/25632 (6%)"
+
+[client_526]
+corpus = 0
+objectives = 0
+executions = 84393
+exec_sec = 1.1462041829839686
+coverage_observer = "1587/25632 (6%)"
+
+[client_527]
+corpus = 0
+objectives = 0
+executions = 84504
+exec_sec = 1.1477151508987333
+coverage_observer = "1587/25632 (6%)"
+
+[client_528]
+corpus = 0
+objectives = 0
+executions = 84401
+exec_sec = 1.1463195192344093
+coverage_observer = "1578/25632 (6%)"
+
+[client_529]
+corpus = 479
+objectives = 0
+executions = 84421
+exec_sec = 1.146594545225012
+coverage_observer = "1582/25632 (6%)"
+
+[client_530]
+corpus = 410
+objectives = 0
+executions = 84369
+exec_sec = 1.145891219520539
+coverage_observer = "1549/25632 (6%)"
+
+[client_531]
+corpus = 430
+objectives = 0
+executions = 84350
+exec_sec = 1.145635241771889
+coverage_observer = "1585/25632 (6%)"
+
+[client_532]
+corpus = 451
+objectives = 0
+executions = 84432
+exec_sec = 1.1467519694068995
+coverage_observer = "1588/25632 (6%)"
+
+[client_533]
+corpus = 540
+objectives = 0
+executions = 84356
+exec_sec = 1.1457229628403682
+coverage_observer = "1584/25632 (6%)"
+
+[client_534]
+corpus = 323
+objectives = 0
+executions = 84456
+exec_sec = 1.1470841503110687
+coverage_observer = "1577/25632 (6%)"
+
+[client_535]
+corpus = 326
+objectives = 0
+executions = 84474
+exec_sec = 1.1473319038497163
+coverage_observer = "1574/25632 (6%)"
+
+[client_536]
+corpus = 0
+objectives = 0
+executions = 84407
+exec_sec = 1.1464250643989748
+coverage_observer = "1552/25632 (6%)"
+
+[client_537]
+corpus = 446
+objectives = 0
+executions = 84442
+exec_sec = 1.146903616756947
+coverage_observer = "1598/25632 (6%)"
+
+[client_538]
+corpus = 0
+objectives = 0
+executions = 84462
+exec_sec = 1.147178384191829
+coverage_observer = "1581/25632 (6%)"
+
+[client_539]
+corpus = 152
+objectives = 0
+executions = 84430
+exec_sec = 1.1467471619576282
+coverage_observer = "1582/25632 (6%)"
+
+[client_540]
+corpus = 66
+objectives = 0
+executions = 84421
+exec_sec = 1.1466281214677703
+coverage_observer = "1586/25632 (6%)"
+
+[client_541]
+corpus = 134
+objectives = 0
+executions = 84385
+exec_sec = 1.1461440536314782
+coverage_observer = "1578/25632 (6%)"
+
+[client_542]
+corpus = 0
+objectives = 0
+executions = 84410
+exec_sec = 1.1464863466034254
+coverage_observer = "1584/25632 (6%)"
+
+[client_543]
+corpus = 145
+objectives = 0
+executions = 84384
+exec_sec = 1.1461373086544395
+coverage_observer = "1590/25632 (6%)"
+
+[client_544]
+corpus = 147
+objectives = 0
+executions = 84420
+exec_sec = 1.1466272968358386
+coverage_observer = "1626/25632 (6%)"
+
+[client_545]
+corpus = 0
+objectives = 0
+executions = 84433
+exec_sec = 1.1468068548184573
+coverage_observer = "1578/25632 (6%)"
+
+[client_546]
+corpus = 0
+objectives = 0
+executions = 84470
+exec_sec = 1.147312454010609
+coverage_observer = "1581/25632 (6%)"
+
+[client_547]
+corpus = 0
+objectives = 0
+executions = 84390
+exec_sec = 1.1462288683205832
+coverage_observer = "1554/25632 (6%)"
+
+[client_548]
+corpus = 0
+objectives = 0
+executions = 84338
+exec_sec = 1.1455258796496086
+coverage_observer = "1585/25632 (6%)"
+
+[client_549]
+corpus = 0
+objectives = 0
+executions = 84449
+exec_sec = 1.1470404989332101
+coverage_observer = "1583/25632 (6%)"
+
+[client_550]
+corpus = 0
+objectives = 0
+executions = 84456
+exec_sec = 1.147137598834785
+coverage_observer = "1581/25632 (6%)"
+
+[client_551]
+corpus = 470
+objectives = 0
+executions = 84469
+exec_sec = 1.147316552981386
+coverage_observer = "1575/25632 (6%)"
+
+[client_552]
+corpus = 0
+objectives = 0
+executions = 84362
+exec_sec = 1.145865174214516
+coverage_observer = "1549/25632 (6%)"
+
+[client_553]
+corpus = 463
+objectives = 0
+executions = 84352
+exec_sec = 1.1457314142933523
+coverage_observer = "1578/25632 (6%)"
+
+[client_554]
+corpus = 0
+objectives = 0
+executions = 84411
+exec_sec = 1.1465355380377942
+coverage_observer = "1624/25632 (6%)"
+
+[client_555]
+corpus = 0
+objectives = 0
+executions = 84348
+exec_sec = 1.1456827402165386
+coverage_observer = "1573/25632 (6%)"
+
+[client_556]
+corpus = 538
+objectives = 0
+executions = 84424
+exec_sec = 1.146718334189398
+coverage_observer = "1585/25632 (6%)"
+
+[client_557]
+corpus = 111
+objectives = 0
+executions = 84394
+exec_sec = 1.1463139698716236
+coverage_observer = "1551/25632 (6%)"
+
+[client_558]
+corpus = 112
+objectives = 0
+executions = 84412
+exec_sec = 1.1465618989454085
+coverage_observer = "1585/25632 (6%)"
+
+[client_559]
+corpus = 0
+objectives = 0
+executions = 84451
+exec_sec = 1.147094398093797
+coverage_observer = "1584/25632 (6%)"
+
+[client_560]
+corpus = 0
+objectives = 0
+executions = 84352
+exec_sec = 1.145752845193123
+coverage_observer = "1575/25632 (6%)"
+
+[client_561]
+corpus = 0
+objectives = 0
+executions = 84430
+exec_sec = 1.1468169049180001
+coverage_observer = "1551/25632 (6%)"
+
+[client_562]
+corpus = 0
+objectives = 0
+executions = 84508
+exec_sec = 1.1478793222278512
+coverage_observer = "1575/25632 (6%)"
+
+[client_563]
+corpus = 0
+objectives = 0
+executions = 84432
+exec_sec = 1.1468505475915345
+coverage_observer = "1572/25632 (6%)"
+
+[client_564]
+corpus = 466
+objectives = 0
+executions = 84370
+exec_sec = 1.1460114601145714
+coverage_observer = "1572/25632 (6%)"
+
+[client_565]
+corpus = 86
+objectives = 0
+executions = 84434
+exec_sec = 1.1468854575483851
+coverage_observer = "1588/25632 (6%)"
+
+[client_566]
+corpus = 0
+objectives = 0
+executions = 84450
+exec_sec = 1.147109017939297
+coverage_observer = "1575/25632 (6%)"
+
+[client_567]
+corpus = 538
+objectives = 0
+executions = 84369
+exec_sec = 1.1460150456729514
+coverage_observer = "1573/25632 (6%)"
+
+[client_568]
+corpus = 48
+objectives = 0
+executions = 84355
+exec_sec = 1.1458321876313289
+coverage_observer = "1551/25632 (6%)"
+
+[client_569]
+corpus = 0
+objectives = 0
+executions = 84379
+exec_sec = 1.146163782213662
+coverage_observer = "1576/25632 (6%)"
+
+[client_570]
+corpus = 0
+objectives = 0
+executions = 84373
+exec_sec = 1.146086806964364
+coverage_observer = "1576/25632 (6%)"
+
+[client_571]
+corpus = 0
+objectives = 0
+executions = 84458
+exec_sec = 1.1472447837927633
+coverage_observer = "1574/25632 (6%)"
+
+[client_572]
+corpus = 0
+objectives = 0
+executions = 84319
+exec_sec = 1.1453594709146897
+coverage_observer = "1574/25632 (6%)"
+
+[client_573]
+corpus = 0
+objectives = 0
+executions = 84376
+exec_sec = 1.1461356796253415
+coverage_observer = "1573/25632 (6%)"
+
+[client_574]
+corpus = 0
+objectives = 0
+executions = 84393
+exec_sec = 1.1463684048004315
+coverage_observer = "1578/25632 (6%)"
+
+[client_575]
+corpus = 95
+objectives = 0
+executions = 84364
+exec_sec = 1.1459764863765973
+coverage_observer = "1574/25632 (6%)"
+
+[client_576]
+corpus = 0
+objectives = 0
+executions = 84459
+exec_sec = 1.1472702909125003
+coverage_observer = "1573/25632 (6%)"
+
+[client_577]
+corpus = 447
+objectives = 0
+executions = 84352
+exec_sec = 1.1458181788193242
+coverage_observer = "1552/25632 (6%)"
+
+[client_578]
+corpus = 432
+objectives = 0
+executions = 84442
+exec_sec = 1.1470425274126723
+coverage_observer = "1574/25632 (6%)"
+
+[client_579]
+corpus = 294
+objectives = 0
+executions = 84383
+exec_sec = 1.1462420922229772
+coverage_observer = "1573/25632 (6%)"
+
+[client_580]
+corpus = 0
+objectives = 0
+executions = 84381
+exec_sec = 1.1462153518459641
+coverage_observer = "1578/25632 (6%)"
+
+[client_581]
+corpus = 0
+objectives = 0
+executions = 84386
+exec_sec = 1.1462813413994468
+coverage_observer = "1552/25632 (6%)"
+
+[client_582]
+corpus = 82
+objectives = 0
+executions = 84504
+exec_sec = 1.147886408140924
+coverage_observer = "1551/25632 (6%)"
+
+[client_583]
+corpus = 475
+objectives = 0
+executions = 84433
+exec_sec = 1.1469249604578882
+coverage_observer = "1575/25632 (6%)"
+
+[client_584]
+corpus = 0
+objectives = 0
+executions = 84381
+exec_sec = 1.1462224820152713
+coverage_observer = "1551/25632 (6%)"
+
+[client_585]
+corpus = 0
+objectives = 0
+executions = 84362
+exec_sec = 1.1459673156256498
+coverage_observer = "1576/25632 (6%)"
+
+[client_586]
+corpus = 0
+objectives = 0
+executions = 84395
+exec_sec = 1.1464193217340333
+coverage_observer = "1553/25632 (6%)"
+
+[client_587]
+corpus = 0
+objectives = 0
+executions = 84371
+exec_sec = 1.1460963961614847
+coverage_observer = "1574/25632 (6%)"
+
+[client_588]
+corpus = 0
+objectives = 0
+executions = 84392
+exec_sec = 1.1463848295717183
+coverage_observer = "1575/25632 (6%)"
+
+[client_589]
+corpus = 0
+objectives = 0
+executions = 84429
+exec_sec = 1.1468905366445723
+coverage_observer = "1552/25632 (6%)"
+
+[client_590]
+corpus = 0
+objectives = 0
+executions = 84431
+exec_sec = 1.1469210392321303
+coverage_observer = "1551/25632 (6%)"
+
+[client_591]
+corpus = 144
+objectives = 0
+executions = 84410
+exec_sec = 1.146638322898122
+coverage_observer = "1552/25632 (6%)"
+
+[client_592]
+corpus = 0
+objectives = 0
+executions = 84442
+exec_sec = 1.147075167853917
+coverage_observer = "1573/25632 (6%)"
+
+[client_593]
+corpus = 135
+objectives = 0
+executions = 84479
+exec_sec = 1.147580790412859
+coverage_observer = "1574/25632 (6%)"
+
+[client_594]
+corpus = 522
+objectives = 0
+executions = 84394
+exec_sec = 1.1464293780538597
+coverage_observer = "1575/25632 (6%)"
+
+[client_595]
+corpus = 0
+objectives = 0
+executions = 84363
+exec_sec = 1.1460115255239447
+coverage_observer = "1550/25632 (6%)"
+
+[client_596]
+corpus = 319
+objectives = 0
+executions = 84388
+exec_sec = 1.146353998990177
+coverage_observer = "1576/25632 (6%)"
+
+[client_597]
+corpus = 0
+objectives = 0
+executions = 84385
+exec_sec = 1.1463182252803388
+coverage_observer = "1552/25632 (6%)"
+
+[client_598]
+corpus = 144
+objectives = 0
+executions = 84386
+exec_sec = 1.1463344249237528
+coverage_observer = "1551/25632 (6%)"
+
+[client_599]
+corpus = 536
+objectives = 0
+executions = 84480
+exec_sec = 1.1476144622606264
+coverage_observer = "1550/25632 (6%)"
+
+[client_600]
+corpus = 0
+objectives = 0
+executions = 84380
+exec_sec = 1.146258977825379
+coverage_observer = "1577/25632 (6%)"
+
+[client_601]
+corpus = 0
+objectives = 0
+executions = 84344
+exec_sec = 1.145773514378562
+coverage_observer = "1590/25632 (6%)"
+
+[client_602]
+corpus = 0
+objectives = 0
+executions = 84503
+exec_sec = 1.1479374471267003
+coverage_observer = "1583/25632 (6%)"
+
+[client_603]
+corpus = 104
+objectives = 0
+executions = 84411
+exec_sec = 1.1466936458437318
+coverage_observer = "1584/25632 (6%)"
+
+[client_604]
+corpus = 0
+objectives = 0
+executions = 84363
+exec_sec = 1.1460451823862066
+coverage_observer = "1575/25632 (6%)"
+
+[client_605]
+corpus = 0
+objectives = 0
+executions = 84443
+exec_sec = 1.147138054429944
+coverage_observer = "1594/25632 (6%)"
+
+[client_606]
+corpus = 0
+objectives = 0
+executions = 84475
+exec_sec = 1.1475780259442239
+coverage_observer = "1576/25632 (6%)"
+
+[client_607]
+corpus = 0
+objectives = 0
+executions = 84372
+exec_sec = 1.14618506667971
+coverage_observer = "1581/25632 (6%)"
+
+[client_608]
+corpus = 0
+objectives = 0
+executions = 84389
+exec_sec = 1.146421347298637
+coverage_observer = "1576/25632 (6%)"
+
+[client_609]
+corpus = 0
+objectives = 0
+executions = 84383
+exec_sec = 1.146344086596827
+coverage_observer = "1549/25632 (6%)"
+
+[client_610]
+corpus = 465
+objectives = 0
+executions = 84449
+exec_sec = 1.1472444542464408
+coverage_observer = "1578/25632 (6%)"
+
+[client_611]
+corpus = 115
+objectives = 0
+executions = 84402
+exec_sec = 1.1466105447936954
+coverage_observer = "1577/25632 (6%)"
+
+[client_612]
+corpus = 443
+objectives = 0
+executions = 84427
+exec_sec = 1.1469529809000065
+coverage_observer = "1577/25632 (6%)"
+
+[client_613]
+corpus = 0
+objectives = 0
+executions = 84364
+exec_sec = 1.146101797122113
+coverage_observer = "1581/25632 (6%)"
+
+[client_614]
+corpus = 407
+objectives = 0
+executions = 84404
+exec_sec = 1.1466481323678885
+coverage_observer = "1577/25632 (6%)"
+
+[client_615]
+corpus = 0
+objectives = 0
+executions = 84335
+exec_sec = 1.145714839759416
+coverage_observer = "1588/25632 (6%)"
+
+[client_616]
+corpus = 540
+objectives = 0
+executions = 84383
+exec_sec = 1.1463694347415632
+coverage_observer = "1575/25632 (6%)"
+
+[client_617]
+corpus = 0
+objectives = 0
+executions = 84337
+exec_sec = 1.1457469506799953
+coverage_observer = "1630/25632 (6%)"
+
+[client_618]
+corpus = 0
+objectives = 0
+executions = 84446
+exec_sec = 1.1472302757844137
+coverage_observer = "1584/25632 (6%)"
+
+[client_619]
+corpus = 0
+objectives = 0
+executions = 84444
+exec_sec = 1.1472031061495662
+coverage_observer = "1585/25632 (6%)"
+
+[client_620]
+corpus = 0
+objectives = 0
+executions = 84439
+exec_sec = 1.1471357563945115
+coverage_observer = "1582/25632 (6%)"
+
+[client_621]
+corpus = 125
+objectives = 0
+executions = 84389
+exec_sec = 1.1464473312903103
+coverage_observer = "1578/25632 (6%)"
+
+[client_622]
+corpus = 0
+objectives = 0
+executions = 84477
+exec_sec = 1.1476461277707077
+coverage_observer = "1579/25632 (6%)"
+
+[client_623]
+corpus = 0
+objectives = 0
+executions = 84463
+exec_sec = 1.147459113996876
+coverage_observer = "1592/25632 (6%)"
+
+[client_624]
+corpus = 0
+objectives = 0
+executions = 84429
+exec_sec = 1.1470006510865027
+coverage_observer = "1575/25632 (6%)"
+
+[client_625]
+corpus = 0
+objectives = 0
+executions = 84380
+exec_sec = 1.1463388100908003
+coverage_observer = "1577/25632 (6%)"
+
+[client_626]
+corpus = 0
+objectives = 0
+executions = 84358
+exec_sec = 1.1460432067278432
+coverage_observer = "1578/25632 (6%)"
+
+[client_627]
+corpus = 511
+objectives = 0
+executions = 84393
+exec_sec = 1.1465222126987737
+coverage_observer = "1581/25632 (6%)"
+
+[client_628]
+corpus = 0
+objectives = 0
+executions = 84459
+exec_sec = 1.1474223085560742
+coverage_observer = "1577/25632 (6%)"
+
+[client_629]
+corpus = 0
+objectives = 0
+executions = 84430
+exec_sec = 1.1470318792479968
+coverage_observer = "1581/25632 (6%)"
+
+[client_630]
+corpus = 0
+objectives = 0
+executions = 84355
+exec_sec = 1.1460149710394745
+coverage_observer = "1578/25632 (6%)"
+
+[client_631]
+corpus = 417
+objectives = 0
+executions = 84380
+exec_sec = 1.146357017616194
+coverage_observer = "1552/25632 (6%)"
+
+[client_632]
+corpus = 339
+objectives = 0
+executions = 84350
+exec_sec = 1.145951666801075
+coverage_observer = "1575/25632 (6%)"
+
+[client_633]
+corpus = 0
+objectives = 0
+executions = 84365
+exec_sec = 1.1461572651570162
+coverage_observer = "1579/25632 (6%)"
+
+[client_634]
+corpus = 99
+objectives = 0
+executions = 84406
+exec_sec = 1.1467167848293953
+coverage_observer = "1583/25632 (6%)"
+
+[client_635]
+corpus = 324
+objectives = 0
+executions = 84413
+exec_sec = 1.1468149061798583
+coverage_observer = "1578/25632 (6%)"
+
+[client_636]
+corpus = 0
+objectives = 0
+executions = 84364
+exec_sec = 1.1461538469864085
+coverage_observer = "1582/25632 (6%)"
+
+[client_637]
+corpus = 0
+objectives = 0
+executions = 84488
+exec_sec = 1.147841183118906
+coverage_observer = "1577/25632 (6%)"
+
+[client_638]
+corpus = 0
+objectives = 0
+executions = 84482
+exec_sec = 1.1477624418046648
+coverage_observer = "1577/25632 (6%)"
+
+[client_639]
+corpus = 0
+objectives = 0
+executions = 84354
+exec_sec = 1.1460263003548534
+coverage_observer = "1576/25632 (6%)"
+
+[client_640]
+corpus = 424
+objectives = 0
+executions = 84403
+exec_sec = 1.1466950224233894
+coverage_observer = "1578/25632 (6%)"
