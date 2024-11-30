@@ -2,30 +2,32 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{csquotes}
 \usepackage[vmargin=25mm, hmargin=20mm]{geometry}
-\usepackage{xcolor}
-\usepackage{graphicx}
-\usepackage{float}
-\usepackage{pgfplots}
-\usepgfplotslibrary{colorbrewer}
-\pgfplotsset{compat = 1.18} 
-\usetikzlibrary{pgfplots.statistics, pgfplots.colorbrewer} 
-\usepackage{pgfplotstable}
-\usepackage{listings}
-\lstset{
-    backgroundcolor=\color[RGB]{240, 240, 240},   
-    basicstyle=\ttfamily\footnotesize,
-    breakatwhitespace=false,
-    breaklines=true,
-    keepspaces=true,
-    numbers=left,
-    numbersep=5pt,
-    showspaces=false,
-    showstringspaces=false,
-    showtabs=false,
-    tabsize=4,
-    postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
-    aboveskip=10pt
-}
+\usepackage{lipsum}
+% \usepackage{xcolor}
+% \usepackage{graphicx}
+% \usepackage{float}
+% \usepackage{pgfplots}
+% \usepgfplotslibrary{colorbrewer}
+% \pgfplotsset{compat = 1.18} 
+% \usetikzlibrary{pgfplots.statistics, pgfplots.colorbrewer} 
+% \usepackage{pgfplotstable}
+% \usepackage{listings}
+% \lstset{
+%     backgroundcolor=\color[RGB]{240, 240, 240},   
+%     basicstyle=\ttfamily\footnotesize,
+%     breakatwhitespace=false,
+%     breaklines=true,
+%     keepspaces=true,
+%     numbers=left,
+%     numbersep=5pt,
+%     showspaces=false,
+%     showstringspaces=false,
+%     showtabs=false,
+%     tabsize=4,
+%     postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+%     aboveskip=10pt
+% }
+
 \usepackage[
     backend=biber,
     sorting=none,
@@ -36,26 +38,24 @@
 ]{biblatex}
 \addbibresource{sources.bib}
 \renewcommand*{\bibfont}{\footnotesize}
+
 \usepackage{multicol}
 \setlength{\columnsep}{13mm}
-\usepackage{hypcap}
-\usepackage{caption}
-\captionsetup{
-    justification=centerlast,
-    font=small,
-    labelfont=sc,
-    margin=5pt,
-    belowskip=15pt
-}
-\DeclareCaptionType{listing}[Listing][List of Listings]
-\renewcommand{\arraystretch}{1.5} % Increase table padding
 
+% \usepackage{hypcap}
+% \usepackage{caption}
+% \captionsetup{
+%     justification=centerlast,
+%     font=small,
+%     labelfont=sc,
+%     margin=5pt,
+%     belowskip=15pt
+% }
+% \DeclareCaptionType{listing}[Listing][List of Listings]
 
 \title{%
 \vspace{50px}%
-    \Huge A Stateful Fuzzer for the TCP/IP Stack of the Real-Time Operating System Zephyr\break%
-    —\break%
-    Report%
+    \Huge A Stateful Fuzzer for the TCP/IP Stack of the Real-Time Operating System Zephyr
     \vspace{250px}%
 }
 
@@ -74,28 +74,29 @@
 \newcommand{\code}[2][]{\lstinline[language=#1, breaklines=false, basicstyle=\ttfamily\normalsize]{#2}}
 \let\savedCite=\cite
 \renewcommand{\cite}{\unskip~\savedCite}
+\renewcommand{\arraystretch}{1.5} % Increase table padding
+
 
 \begin{document}
 \pagenumbering{gobble}
 \maketitle
 
-% \clearpage\newpage
-% \begin{center}
-%     \begin{minipage}{0.8\textwidth}
+\clearpage\newpage
+\begin{center}
+    \begin{minipage}{0.8\textwidth}
+        \vspace{70px}
 
-%         \vspace{70px}
+        \begin{abstract}
+            \lipsum[1]\lipsum[2]\lipsum[3]
+        \end{abstract}
+    \end{minipage}
 
-%         \begin{abstract}
-%             abstract
-%         \end{abstract}
-%     \end{minipage}
+    \vspace{70px}
 
-%     \vspace{70px}
-
-%     \begin{minipage}{0.7\textwidth}
-%         \textbf{Keywords}: Software Testing, Fuzzing, Stateful Fuzzing, Zephyr, LibAFL.
-%     \end{minipage}
-% \end{center}
+    \begin{minipage}{0.7\textwidth}
+        \textbf{Keywords}: Software Testing, Fuzzing, Stateful Fuzzing, Zephyr, LibAFL.
+    \end{minipage}
+\end{center}
 
 \clearpage\newpage
 \pagenumbering{arabic}
