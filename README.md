@@ -4,17 +4,21 @@ Using LibAFL, I want to fuzz the TCP/IP stack of Zephyr.
 
 ## Report
 
-Read the report [here](./report/out/index.pdf). Its artifacts are in the `report` subdirectory. The report is licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
+Read the report [here](./report/out/index.pdf). Its artifacts are in the [`report`](./report/) subdirectory. The report is licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
 
-## Environment
+## Fuzzer
+
+The code for the fuzzer can be found in the [`fuzzer`](./fuzzer/) subdirectory. The fuzzer is released under an MIT license.
+
+### Environment
 
 This project relies on a default installation of Zephyr relative to this folder at `../zephyrproject/zephyr`. The Python virtual environment should be placed at `../zephyrproject/.venv`.
 
-### Zephyr Diff
+#### Zephyr Diff
 
 Changes to Zephyr are stored in [zephyr.diff](./zephyr.diff). It is updated on each commit using [pre-commit](https://pre-commit.com). Apply it using `git apply`. It is based on commit `8fda052826d`.
 
-## Communication Protocol/Custom Layer 1
+### Communication Protocol/Custom Layer 1
 
 This project uses a custom OSI Layer 1 implementation based on shared memory to reduce performance implications on kernel interactions and make multiple parallel instances possible. Per default, the `native_sim` wrapper of Zephyr relies on a TUN interface, which only one process can use. With this custom implementation, only a single kernel interaction is necessary to setup the shared memory. Here is how the shared memory is used:
 
