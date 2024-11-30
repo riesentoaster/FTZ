@@ -54,19 +54,20 @@
 % \DeclareCaptionType{listing}[Listing][List of Listings]
 
 \title{%
-\vspace{50px}%
+    \vspace{50px}%
     \Huge A Stateful Fuzzer for the TCP/IP Stack of the Real-Time Operating System Zephyr
     \vspace{250px}%
 }
 
 \author{%
-  Valentin Huber\vspace{5px}\\%
-  \small \href{https://www.zhaw.ch/en/engineering/institutes-centres/init/}{Institute of Applied Information Technology}\\%
-  \small \href{https://www.zhaw.ch/en}{Zürich University of Applied Sciences ZHAW}\\%
-  \small \href{mailto://contact@valentinhuber.me}{contact@valentinhuber.me}%
-  \vspace{10px}
+    Valentin Huber\vspace{5px}\\%
+    \small at \href{https://www.cydcampus.admin.ch/}{Cyber Defence Campus}\\%
+    \small and \href{https://www.zhaw.ch/en/engineering/institutes-centres/init/}{Institute of Computer Science at ZHAW}\\%
+    \small \href{mailto://contact@valentinhuber.me}{contact@valentinhuber.me}%
+    \vspace{10px}
 }
-\date{\today\vspace{5px}}
+
+\date{\today}
 
 \DeclareFieldFormat*{citetitle}{\textit{#1}}
 \hfuzz=50px
@@ -136,16 +137,16 @@
 \begin{center}
     \begin{minipage}{0.68\textwidth}
         \centering
-        In the interest of open science, the source code of this project is released under an open-source license. During development, thousands of lines of code have been introduced to upstream projects across a range of pull request.\\The source code of the project is publicly available at\\\vspace{8px}\href{https://github.com/riesentoaster/fuzzing-zephyr-network-stack}{github.com/riesentoaster/fuzzing-zephyr-network-stack}.
+        In the interest of open science, the source code of this project is publicly available and released under an open-source license. During development, thousands of lines of code have been introduced to upstream projects.\\All artifacts produced for this project are available at:\\\vspace{8px}\href{https://github.com/riesentoaster/fuzzing-zephyr-network-stack}{github.com/riesentoaster/fuzzing-zephyr-network-stack}.
     \end{minipage}
 \end{center}
 
-\pagebreak
+\vspace{50px}
 
-% \begin{multicols}{2}
-\defbibheading{bibliography}[\bibname]{\section*{#1}}
-\addcontentsline{toc}{section}{\bibname}
-\printbibliography
-% \end{multicols}
+\begin{multicols}{2}
+    \defbibheading{bibliography}[\bibname]{\section*{#1}}
+    \addcontentsline{toc}{section}{\bibname}
+    \printbibliography
+\end{multicols}
 
 \end{document}
