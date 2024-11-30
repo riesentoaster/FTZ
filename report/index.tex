@@ -100,10 +100,10 @@
 \end{center}
 
 \clearpage\newpage
-\pagenumbering{arabic}
 \tableofcontents
-\clearpage\newpage
+\vspace{30px}
 
+\pagenumbering{arabic}
 \begin{multicols}{2}
 
     \section{Introduction}
@@ -131,19 +131,19 @@
         \item \citetitle{AFLNET}\cite{AFLNET}: FTP and RTSP
     \end{itemize}
 
-\end{multicols}
 
-\vspace{70px}
-\begin{center}
-    \begin{minipage}{0.68\textwidth}
-        \centering
-        In the interest of open science, the source code of this project is publicly available and released under an open-source license. During development, thousands of lines of code have been introduced to upstream projects.\\All artifacts produced for this project are available at:\\\vspace{8px}\href{https://github.com/riesentoaster/fuzzing-zephyr-network-stack}{github.com/riesentoaster/fuzzing-zephyr-network-stack}.
-    \end{minipage}
-\end{center}
+    \vspace{30px}
+    % \begin{center}
+    %     \begin{minipage}{0.68\textwidth}
+    %         \centering
+    In the interest of open science, the source code of this project is publicly available and released under an open-source license. During development, thousands of lines of code have been introduced to upstream projects. All artifacts produced for this project are available at: \href{https://github.com/riesentoaster/fuzzing-zephyr-network-stack}{github.com/riesentoaster/fuzzing-zephyr-network-stack}.
+    %     \end{minipage}
+    % \end{center}
 
-\vspace{50px}
+    % \end{multicols}
+    \vspace{50px}
 
-\begin{multicols}{2}
+    % \begin{multicols}{2}
     \defbibheading{bibliography}[\bibname]{\section*{#1}}
     \addcontentsline{toc}{section}{\bibname}
     \printbibliography
