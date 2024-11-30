@@ -123,6 +123,7 @@
         \item \citetitle{StateFuzz}\cite{StateFuzz}: Find state variables (long-lived, can be updated by users, change control flow or memory access) using static analysis, use that to guide fuzzing (new coverage, new value-range, new extreme value). (Talk: Good Example of why coverage-guided alone is insufficient). Check value ranges instead of all values (static symbex!). 4-digit number of state varia les in linux kernel and Qualcomm MSM kernel (Google Pixel).
         \item \citetitle{ProFuzzBench}\cite{ProFuzzBench}: Suite of 10 protocols and 11 open-source implementations of those to be tested. TCP is notably absent from this list. Certain protocols (like FTP) already return HTTP status codes, others are patched to do so. Dockerized. The authors note that configuration is not taken into account and multi-party ($\geq 3$) protocols can not be fuzzed right now. Non-determinism in the programs make feedback (like code coverage) less predictable and thus fuzzing less performant because it introduces non-differentiable duplicate entries into the corpus. Speed is another issue, where complex setup-processes, costly network operations (resp. synchronization for me), and long multipart-inputs contribute. Finally, state identification is only superficially handled.
     \end{itemize}
+
     \subsection{ToDo}
     \begin{itemize}
         \item \citetitle{StatefulReview}\cite{StatefulReview}: Review paper!
