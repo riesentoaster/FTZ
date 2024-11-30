@@ -103,8 +103,6 @@
 % \begin{multicols}{2}
 \tableofcontents
 
-\section{Introduction}
-
 \section{Related Works}
 
 \begin{itemize}
@@ -121,6 +119,7 @@
     \item \citetitle{FuzzFactory}\cite{FuzzFactory}: framework to add custom feedbacks like number of basic blocks executed, amount of memory allocated, etc.
     \item \citetitle{ParmeSan}\cite{ParmeSan}: Use sanitizers checks as fuzzing targets
     \item \citetitle{DDFuzz}\cite{DDFuzz}: Use execution of new data dependencies as feedback
+    \item \citetitle{StateFuzz}\cite{StateFuzz}: Find state variables (long-lived, can be updated by users, change control flow or memory access) using static analysis, use that to guide fuzzing (new coverage, new value-range, new extreme value). (Talk: Good Example of why coverage-guided alone is insufficient). Check value ranges instead of all values (static symbex!). 4-digit number of state varia les in linux kernel and Qualcomm MSM kernel (Google Pixel).
 \end{itemize}
 
 
