@@ -3,11 +3,21 @@ repos:
     hooks:
       - id: create-zephyr-diff
         name: Create Zephyr Diff
-        entry: sh
+        always_run: true # Ensures the hook runs on every commit
         language: system
-        always_run: true  # Ensures the hook runs on every commit
+        entry: sh
         args:
           - -c
           - |
-            cd fuzzer
-            cargo make zephyr_diff
+            if [ -d "../zephyrproject" ]; then
+              cd fuzzer
+              cargo make zephyr_diff
+            else
+              echo "Skipping Zephyr Diff Creation: ../zephyrproject is not present"
+            fi
+      - id: build-latex
+        name: Build LaTeX
+        entry: ./report/build.sh
+        language: script
+        # This regex matches any .tex or .bib files within the report/ subdirectory
+        files: ^report/.*\.(tex|bib)$
