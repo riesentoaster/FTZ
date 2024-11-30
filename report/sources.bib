@@ -173,3 +173,53 @@
   publisher = {USENIX Association},
   month     = aug
 }
+
+@article{StatefulReview,
+  author     = {Daniele, Cristian and Andarzian, Seyed Behnam and Poll, Erik},
+  title      = {Fuzzers for Stateful Systems: Survey and Research Directions},
+  year       = {2024},
+  issue_date = {September 2024},
+  publisher  = {Association for Computing Machinery},
+  address    = {New York, NY, USA},
+  volume     = {56},
+  number     = {9},
+  issn       = {0360-0300},
+  url        = {https://doi.org/10.1145/3648468},
+  doi        = {10.1145/3648468},
+  abstract   = {Fuzzing is a very effective testing methodology to find bugs. In a nutshell, a fuzzer sends many slightly malformed messages to the software under test, hoping for crashes or incorrect system behaviour. The methodology is relatively simple, although applications that keep internal states are challenging to fuzz. The research community has responded to this challenge by developing fuzzers tailored to stateful systems, but a clear understanding of the variety of strategies is still missing. In this paper, we present the first taxonomy of fuzzers for stateful systems and provide a systematic comparison and classification of these fuzzers.},
+  journal    = {ACM Comput. Surv.},
+  month      = apr,
+  articleno  = {222},
+  numpages   = {23},
+  keywords   = {Stateful fuzzing, state model, active learning}
+}
+
+@inproceedings{ProFuzzBench,
+  author    = {Natella, Roberto and Pham, Van-Thuan},
+  title     = {ProFuzzBench: a benchmark for stateful protocol fuzzing},
+  year      = {2021},
+  isbn      = {9781450384599},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3460319.3469077},
+  doi       = {10.1145/3460319.3469077},
+  abstract  = {We present a new benchmark (ProFuzzBench) for stateful fuzzing of network protocols. The benchmark includes a suite of representative open-source network servers for popular protocols, and tools to automate experimentation. We discuss challenges and potential directions for future research based on this benchmark.},
+  booktitle = {Proceedings of the 30th ACM SIGSOFT International Symposium on Software Testing and Analysis},
+  pages     = {662–665},
+  numpages  = {4},
+  keywords  = {Network Protocols, Fuzzing, Benchmarking},
+  location  = {Virtual, Denmark},
+  series    = {ISSTA 2021}
+}
+
+@inproceedings{AFLNET,
+  author    = {Pham, Van-Thuan and Böhme, Marcel and Roychoudhury, Abhik},
+  booktitle = {2020 IEEE 13th International Conference on Software Testing, Validation and Verification (ICST)},
+  title     = {AFLNET: A Greybox Fuzzer for Network Protocols},
+  year      = {2020},
+  volume    = {},
+  number    = {},
+  pages     = {460-465},
+  keywords  = {Servers;Protocols;Fuzzing;Tools;Data models;Security;Computer bugs},
+  doi       = {10.1109/ICST46399.2020.00062}
+}
