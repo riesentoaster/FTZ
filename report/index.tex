@@ -84,69 +84,139 @@
 
 \clearpage\newpage
 \begin{center}
-    \begin{minipage}{0.8\textwidth}
-        \vspace{70px}
-
-        \begin{abstract}
-            \lipsum[1]\lipsum[2]\lipsum[3]
-        \end{abstract}
-    \end{minipage}
-
+  \begin{minipage}{0.8\textwidth}
     \vspace{70px}
 
-    \begin{minipage}{0.7\textwidth}
-        \textbf{Keywords}: Software Testing, Fuzzing, Stateful Fuzzing, Zephyr, LibAFL.
-    \end{minipage}
+    \begin{abstract}
+      \lipsum[1]\lipsum[2]\lipsum[3]
+    \end{abstract}
+  \end{minipage}
+
+  \vspace{70px}
+
+  \begin{minipage}{0.7\textwidth}
+    \textbf{Keywords}: Software Testing, Fuzzing, Stateful Fuzzing, Zephyr, LibAFL.
+  \end{minipage}
 \end{center}
 
 \clearpage\newpage
 \tableofcontents
 \vspace{30px}
-
 \pagenumbering{arabic}
+\clearpage\newpage
+
 \begin{multicols}{2}
 
-    \section{Introduction}
-    \citeauthor{StatefulReview} introduce a taxonomy of stateful fuzzing in which they define a stateful system as \textquote{a system that takes a sequence of messages as input, producing outputs along the way,and where each input may result in an internal state change}\cite{StatefulReview}.
+  \section{Introduction}
 
-    \section{Related Works}
-    \subsection{Read}
-    \begin{itemize}
-        \item \citetitle{StatefulGreybox}\cite{StatefulGreybox}: \textquote{In this paper, we argue that protocols are often explicitly encoded using state variables that are assigned and compared to named constants […] More specifically, using pattern matching, we identify state variables using enumerated types (enums). An enumerated type is a group of named constants that specifies all possible values for a variable of that type. Our instrumentation injects a call to our runtime at every program location where a state variable is assigned to a new value. Our runtime efficiently constructs the state transition tree (STT). The STT captures the sequence of values assigned to state variables across all fuzzer-generated input sequences, and as a global data structure, it is shared with the fuzzer.}\cite{StatefulGreybox} Built on LibFuzzer
-        \item \citetitle{StateAFL}\cite{StateAFL}: compile-time probes observing memory allocation and I/O operations; state inference based on fuzzy hashing of long-lived memory areas.
-        \item \citetitle{Ijon}\cite{Ijon}: Manual annotations of code, to manually add entries to an AFL-style map (set/inc at calculated offset), include state information (variable values) in how edge coverage is calculated, and store the max value a certain variable reaches during execution for the fuzzer to then maximize.
-        \item \citetitle{SandPuppy}\cite{SandPuppy}: Ijon\cite{Ijon}, but automatic (initial run capturing variable-value traces, analyze along with source code, add Ijon-style instrumentation, repeat during fuzzing)
-        \item \citetitle{INVSCOV}\cite{INVSCOV}: run for 24 hours, record variable values and relationships between them, then add a feedback that rewards when the generated assertions are violated
-        \item \citetitle{Ankou}\cite{Ankou}: take combination of executed branches into consideration, reduce to manageable adaptive fitness function
-        \item \citetitle{FuzzFactory}\cite{FuzzFactory}: framework to add custom feedbacks like number of basic blocks executed, amount of memory allocated, etc.
-        \item \citetitle{ParmeSan}\cite{ParmeSan}: Use sanitizers checks as fuzzing targets
-        \item \citetitle{DDFuzz}\cite{DDFuzz}: Use execution of new data dependencies as feedback
-        \item \citetitle{StateFuzz}\cite{StateFuzz}: Find state variables (long-lived, can be updated by users, change control flow or memory access) using static analysis, use that to guide fuzzing (new coverage, new value-range, new extreme value). (Talk: Good Example of why coverage-guided alone is insufficient). Check value ranges instead of all values (static symbex!). 4-digit number of state varia les in linux kernel and Qualcomm MSM kernel (Google Pixel).
-        \item \citetitle{ProFuzzBench}\cite{ProFuzzBench}: Suite of 10 protocols and 11 open-source implementations of those to be tested. TCP is notably absent from this list. Certain protocols (like FTP) already return HTTP status codes, others are patched to do so. Dockerized. The authors note that configuration is not taken into account and multi-party ($\geq 3$) protocols can not be fuzzed right now. Non-determinism in the programs make feedback (like code coverage) less predictable and thus fuzzing less performant because it introduces non-differentiable duplicate entries into the corpus. Speed is another issue, where complex setup-processes, costly network operations (resp. synchronization for me), and long multipart-inputs contribute. Finally, state identification is only superficially handled.
-    \end{itemize}
+  \subsection{Stateful Fuzzing}
+  \citeauthor{StatefulReview} introduce a taxonomy of stateful fuzzing in which they define a stateful system as \textquote{a system that takes a sequence of messages as input, producing outputs along the way,and where each input may result in an internal state change}\cite{StatefulReview}.
 
-    \subsection{ToDo}
-    \begin{itemize}
-        \item \citetitle{StatefulReview}\cite{StatefulReview}: Review paper!
-        \item \citetitle{AFLNET}\cite{AFLNET}: FTP and RTSP
-    \end{itemize}
+  \textquote{To avoid confusion, we reserve the term message or input message for the individual input that the System Under Test (SUT) consumes at each step and the term trace for a sequence of such messages that make up the entire input.}\cite{StatefulReview}
+
+  \textquote{The input language of a stateful system consists of two levels: (1) the language of the individual messages, which we will refer to as the message format, and (2) the language of traces, built on top of that. A description or specification of such an input language will usually come in two parts, one for each of the levels: for example, a context-free grammar for the message format and a finite state machine describing sequences of these messages. We will call the latter the state model or, if it is described as a state machine, the protocol state machine.}\cite{StatefulReview}
+
+  \textquote{the internal state changes increase the state space that we try to explore: it may be hard for a fuzzer to reach 'deeper' states. Indeed, fuzzing stateful systems is listed as one of the challenges in fuzzing by \Citeauthor{ChallengesAndReflections}\cite{ChallengesAndReflections}}\cite{StatefulReview}.
+
+  \subsection{Zephyr}
+
+  \subsection{Contributions of this Paper}
+
+  \section{Related Works}
+  \subsection{Read}
+  \begin{itemize}
+    \item \citetitle{StatefulGreybox}\cite{StatefulGreybox}: \textquote{In this paper, we argue that protocols are often explicitly encoded using state variables that are assigned and compared to named constants […] More specifically, using pattern matching, we identify state variables using enumerated types (enums). An enumerated type is a group of named constants that specifies all possible values for a variable of that type. Our instrumentation injects a call to our runtime at every program location where a state variable is assigned to a new value. Our runtime efficiently constructs the state transition tree (STT). The STT captures the sequence of values assigned to state variables across all fuzzer-generated input sequences, and as a global data structure, it is shared with the fuzzer.}\cite{StatefulGreybox} Built on LibFuzzer
+    \item \citetitle{StateAFL}\cite{StateAFL}: compile-time probes observing memory allocation and I/O operations; state inference based on fuzzy hashing of long-lived memory areas.
+    \item \citetitle{Ijon}\cite{Ijon}: Manual annotations of code, to manually add entries to an AFL-style map (set/inc at calculated offset), include state information (variable values) in how edge coverage is calculated, and store the max value a certain variable reaches during execution for the fuzzer to then maximize.
+    \item \citetitle{SandPuppy}\cite{SandPuppy}: Ijon\cite{Ijon}, but automatic (initial run capturing variable-value traces, analyze along with source code, add Ijon-style instrumentation, repeat during fuzzing)
+    \item \citetitle{INVSCOV}\cite{INVSCOV}: run for 24 hours, record variable values and relationships between them, then add a feedback that rewards when the generated assertions are violated
+    \item \citetitle{Ankou}\cite{Ankou}: take combination of executed branches into consideration, reduce to manageable adaptive fitness function
+    \item \citetitle{FuzzFactory}\cite{FuzzFactory}: framework to add custom feedbacks like number of basic blocks executed, amount of memory allocated, etc.
+    \item \citetitle{ParmeSan}\cite{ParmeSan}: Use sanitizers checks as fuzzing targets
+    \item \citetitle{DDFuzz}\cite{DDFuzz}: Use execution of new data dependencies as feedback
+    \item \citetitle{StateFuzz}\cite{StateFuzz}: Find state variables (long-lived, can be updated by users, change control flow or memory access) using static analysis, use that to guide fuzzing (new coverage, new value-range, new extreme value). (Talk: Good Example of why coverage-guided alone is insufficient). Check value ranges instead of all values (static symbex!). 4-digit number of state varia les in linux kernel and Qualcomm MSM kernel (Google Pixel).
+    \item \citetitle{ProFuzzBench}\cite{ProFuzzBench}: Suite of 10 protocols and 11 open-source implementations of those to be tested. TCP is notably absent from this list. Certain protocols (like FTP) already return HTTP status codes, others are patched to do so. Dockerized. The authors note that configuration is not taken into account and multi-party ($\geq 3$) protocols can not be fuzzed right now. Non-determinism in the programs make feedback (like code coverage) less predictable and thus fuzzing less performant because it introduces non-differentiable duplicate entries into the corpus. Speed is another issue, where complex setup-processes, costly network operations (resp. synchronization for me), and long multipart-inputs contribute. Finally, state identification is only superficially handled.
+    \item \citetitle{StatefulReview}\cite{StatefulReview}: Provides taxonomy of components and categorizes stateful fuzzers, compares approaches and lists challenges and future directions.
+  \end{itemize}
+
+  \subsection{ToDo}
+  \begin{itemize}
+    \item \citetitle{AFLNET}\cite{AFLNET}: FTP and RTSP
+    \item \citetitle{Autofuzz}\cite{Autofuzz}
+    \item \citetitle{EPF}\cite{EPF}
+    \item \citetitle{ModelBased}\cite{ModelBased}
+    \item \citetitle{GANFuzz}\cite{GANFuzz}
+    \item \citetitle{TCPFuzz}\cite{TCPFuzz}
+    \item \citetitle{FitM}\cite{FitM}
+  \end{itemize}
+
+  \section{Approach and Implementation}
+
+  \subsection{NativeSim}
+
+  \subsection{Layer 1 Mocking}
+
+  \subsection{Feedback}
+
+  \subsubsection{Coverage}
+  \subsubsection{State}
+
+  \subsection{LibAFL}
+  \subsubsection{Snapshotting}
+  \subsubsection{Overcommit}
+  \subsubsection{MappingMutators}
+
+  \section{Evaluation and Results}
 
 
-    \vspace{30px}
-    % \begin{center}
-    %     \begin{minipage}{0.68\textwidth}
-    %         \centering
-    In the interest of open science, the source code of this project is publicly available and released under an open-source license. During development, thousands of lines of code have been introduced to upstream projects. All artifacts produced for this project are available at: \href{https://github.com/riesentoaster/fuzzing-zephyr-network-stack}{github.com/riesentoaster/fuzzing-zephyr-network-stack}.
-    %     \end{minipage}
-    % \end{center}
+  \subsection{Consistency}
+  \subsection{Performance}
 
-    % \end{multicols}
-    \vspace{50px}
+  \subsubsection{Overcommit}
 
-    % \begin{multicols}{2}
-    \defbibheading{bibliography}[\bibname]{\section*{#1}}
-    \addcontentsline{toc}{section}{\bibname}
-    \printbibliography
+  \subsection{Mutation Strategies}
+
+  \subsubsection{Naïve \texttt{havoc\_mutations}}
+
+  \subsubsection{Fixed Header Checksums}
+
+  \subsection{Feedback}
+
+  \subsubsection{Coverage}
+
+  \subsection{States Visited}
+
+  \subsubsection{States Counted}
+
+  \subsubsection{State Combinations}
+
+  \section{Discussion}
+
+  \subsection{Contributions}
+
+  \subsection{Future Work}
+
+\end{multicols}
+\vspace{30px}
+\begin{center}
+  \begin{minipage}{0.65\textwidth}
+    \centering
+    In the interest of open science, the source code of this project is publicly available and released under an open-source license. During development, thousands of lines of code have been introduced to upstream projects.
+
+    All artifacts produced for this project are available at
+
+    \vspace{8px}
+
+    \href{https://github.com/riesentoaster/fuzzing-zephyr-network-stack}{github.com/riesentoaster/fuzzing-zephyr-network-stack}.
+  \end{minipage}
+\end{center}
+
+\vspace{50px}
+
+\begin{multicols}{2}
+  \defbibheading{bibliography}[\bibname]{\section*{#1}}
+  \addcontentsline{toc}{section}{\bibname}
+  \printbibliography
 \end{multicols}
 
 \end{document}

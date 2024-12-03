@@ -223,3 +223,95 @@
   keywords  = {Servers;Protocols;Fuzzing;Tools;Data models;Security;Computer bugs},
   doi       = {10.1109/ICST46399.2020.00062}
 }
+
+@article{Autofuzz,
+  title     = {{Autofuzz}: Automated network protocol fuzzing framework},
+  author    = {Gorbunov, Serge and Rosenbloom, Arnold},
+  journal   = {Ijcsns},
+  volume    = {10},
+  number    = {8},
+  pages     = {239},
+  year      = {2010},
+  publisher = {Citeseer}
+}
+
+@inproceedings{EPF,
+  author    = {Helmke, René and Winter, Eugen and Rademacher, Michael},
+  booktitle = {2021 18th International Conference on Privacy, Security and Trust (PST)},
+  title     = {EPF: An Evolutionary, Protocol-Aware, and Coverage-Guided Network Fuzzing Framework},
+  year      = {2021},
+  volume    = {},
+  number    = {},
+  pages     = {1-7},
+  keywords  = {Measurement;Schedules;Privacy;Protocols;Semantics;Simulated annealing;Fuzzing;security;fuzzing;network;protocol;coverage-guided;genetic;greybox;framework;evolutionary;annealing},
+  doi       = {10.1109/PST52912.2021.9647801}
+}
+
+@inproceedings{ModelBased,
+  author    = {Hsu, Yating and Shu, Guoqiang and Lee, David},
+  booktitle = {2008 IEEE International Conference on Network Protocols},
+  title     = {A model-based approach to security flaw detection of network protocol implementations},
+  year      = {2008},
+  volume    = {},
+  number    = {},
+  pages     = {114-123},
+  keywords  = {Protocols;Fault detection;Network synthesis;System testing;Security;Automation;Minimization methods;Automata;State-space methods;Vehicle crash testing;formal model;fuzz testing;protocol implementation;security flaw},
+  doi       = {10.1109/ICNP.2008.4697030}
+}
+
+@inproceedings{GANFuzz,
+  author    = {Hu, Zhicheng and Shi, Jianqi and Huang, YanHong and Xiong, Jiawen and Bu, Xiangxing},
+  title     = {GANFuzz: a GAN-based industrial network protocol fuzzing framework},
+  year      = {2018},
+  isbn      = {9781450357616},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3203217.3203241},
+  doi       = {10.1145/3203217.3203241},
+  abstract  = {In this paper, we attempt to improve industrial safety from the perspective of communication security. We leverage the protocol fuzzing technology to reveal errors and vulnerabilities inside implementations of industrial network protocols(INPs). Traditionally, to effectively conduct protocol fuzzing, the test data has to be generated under the guidance of protocol grammar, which is built either by interpreting the protocol specifications or reverse engineering from network traces. In this study, we propose an automated test case generation method, in which the protocol grammar is learned by deep learning. Generative adversarial network(GAN) is employed to train a generative model over real-world protocol messages to enable us to learn the protocol grammar. Then we can use the trained generative model to produce fake but plausible messages, which are promising test cases. Based on this approach, we present an automatical and intelligent fuzzing framework(GANFuzz) for testing implementations of INPs. Compared to prior work, GANFuzz offers a new way for this problem. Moreover, GANFuzz does not rely on protocol specification, so that it can be applied to both public and proprietary protocols, which outperforms many previous frameworks. We use GANFuzz to test several simulators of the Modbus-TCP protocol and find some errors and vulnerabilities.},
+  booktitle = {Proceedings of the 15th ACM International Conference on Computing Frontiers},
+  pages     = {138–145},
+  numpages  = {8},
+  keywords  = {fuzzing, generative adversarial network, generative model, implementations, industrial network protocols, industrial safety, protocol grammar},
+  location  = {Ischia, Italy},
+  series    = {CF '18}
+}
+
+@article{ChallengesAndReflections,
+  author   = {Boehme, Marcel and Cadar, Cristian and ROYCHOUDHURY, Abhik},
+  journal  = {IEEE Software},
+  title    = {Fuzzing: Challenges and Reflections},
+  year     = {2021},
+  volume   = {38},
+  number   = {3},
+  pages    = {79-86},
+  keywords = {Fuzzing;Computer bugs;Software engineering;Security;Industries},
+  doi      = {10.1109/MS.2020.3016773}
+}
+
+
+@inproceedings{TCPFuzz,
+  author    = {Yong-Hao Zou and Jia-Ju Bai and Jielong Zhou and Jianfeng Tan and Chenggang Qin and Shi-Min Hu},
+  title     = {{TCP-Fuzz}: Detecting Memory and Semantic Bugs in {TCP} Stacks with Fuzzing},
+  booktitle = {2021 USENIX Annual Technical Conference (USENIX ATC 21)},
+  year      = {2021},
+  isbn      = {978-1-939133-23-6},
+  pages     = {489--502},
+  url       = {https://www.usenix.org/conference/atc21/presentation/zou},
+  publisher = {USENIX Association},
+  month     = jul
+}
+
+
+@inproceedings{FitM,
+  journal      = {Proceedings 2022 Workshop on Binary Analysis Research},
+  organization = {Workshop on Binary Analysis Research},
+  doi          = {10.14722/bar.2022.23008},
+  publisher    = {Internet Society},
+  title        = {FitM: Binary-Only Coverage-Guided Fuzzing for Stateful Network Protocols},
+  url          = {http://dx.doi.org/10.14722/bar.2022.23008},
+  author       = {Maier, Dominik and Bittner, Otto and Beier, Julian and Munier, Marc},
+  date         = {2022},
+  year         = {2022}
+}
+
