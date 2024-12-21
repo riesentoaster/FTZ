@@ -308,9 +308,6 @@ name = "const_panic"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "013b6c2c3a14d678f38cd23994b02da3a1a1b6a5d1eedddfe63a5a5f11b13a81"
-dependencies = [
- "typewit",
-]
 
 [[package]]
 name = "crossterm"
@@ -500,6 +497,7 @@ dependencies = [
  "pcap-file",
  "pnet",
  "serde",
+ "serde_json",
  "smoltcp",
  "wait-timeout",
 ]
@@ -650,7 +648,7 @@ checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
 
 [[package]]
 name = "libafl"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "ahash",
  "arbitrary-int",
@@ -686,7 +684,7 @@ dependencies = [
 
 [[package]]
 name = "libafl_bolts"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "ahash",
  "backtrace",
@@ -717,7 +715,7 @@ dependencies = [
 
 [[package]]
 name = "libafl_derive"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1256,9 +1254,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.128"
+version = "1.0.133"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ff5456707a1de34e7e37f2a6fd3d3f808c318259cbd01ab6377795054b483d8"
+checksum = "c7fceb2473b9166b2294ef05efcb65a3db80803f0b03ef86a5fc88a2b85ee377"
 dependencies = [
  "itoa",
  "memchr",
@@ -1461,21 +1459,6 @@ name = "typeid"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e13db2e0ccd5e14a544e8a246ba2312cd25223f616442d7f2cb0e3db614236e"
-
-[[package]]
-name = "typewit"
-version = "1.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6fb9ae6a3cafaf0a5d14c2302ca525f9ae8e07a0f0e6949de88d882c37a6e24"
-dependencies = [
- "typewit_proc_macros",
-]
-
-[[package]]
-name = "typewit_proc_macros"
-version = "1.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e36a83ea2b3c704935a01b4642946aadd445cea40b10935e3f8bd8052b8193d6"
 
 [[package]]
 name = "uds"

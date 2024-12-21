@@ -5,11 +5,8 @@ use std::{
     time::{Duration, Instant},
 };
 
-use libafl::Error;
-use libafl_bolts::{
-    rands::Rand,
-    shmem::{MmapShMem, ShMemDescription},
-};
+use libafl::{events::ClientDescription, Error};
+use libafl_bolts::shmem::{MmapShMem, ShMemDescription};
 
 use pnet::packet::icmpv6::Icmpv6Types;
 use smoltcp::phy::{self, Device, DeviceCapabilities};
@@ -87,8 +84,8 @@ pub struct ShmemNetworkDevice {
 }
 
 impl ShmemNetworkDevice {
-    pub fn new<R: Rand>(buf_size: usize, rand: &mut R) -> Result<Self, Error> {
-        let shmem = get_shmem(buf_size * 2 + 8, rand)?;
+    pub fn new(buf_size: usize, client_description: &ClientDescription) -> Result<Self, Error> {
+        let shmem = get_shmem(buf_size * 2 + 8, client_description, "net")?;
 
         log::debug!("Created ShmemNetworkDevice");
         let (tx_shmem, rx_shmem) = ShmemNetDeviceBuffer::new(Rc::new(RefCell::new(shmem)));
@@ -125,7 +122,8 @@ impl ShmemNetworkDevice {
         let start = Instant::now();
         while start.elapsed() < SETUP_TIMEOUT {
             if let Some(p) = self.try_recv() {
-                let parsed = parse_eth(&p).map_err(Error::illegal_argument)?;
+                let parsed =
+                    parse_eth(&p).map_err(|e| Error::illegal_argument(format!("{e:?}")))?;
                 if let Some(icmpv6) = parsed.upper().and_then(UpperLayerPacket::get_icmpv6) {
                     match icmpv6.icmpv6_type {
                         Icmpv6Types::NeighborSolicit => {

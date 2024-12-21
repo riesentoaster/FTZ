@@ -8,7 +8,7 @@ use libafl::{
     Error, HasMetadata, SerdeAny,
 };
 use libafl_bolts::{
-    tuples::{Handle, Handled, MatchNameRef},
+    tuples::{Handle, MatchNameRef},
     Named,
 };
 use serde::{Deserialize, Serialize};
@@ -19,9 +19,14 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-#[derive(Serialize, Deserialize, Debug)]
+use super::state::PacketState;
+
+const MAX_PACKETS: usize = 100;
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PacketObserver {
     packets: Vec<(Duration, Vec<u8>)>,
+    states: Vec<u16>,
     start_time: SystemTime,
 }
 
@@ -29,6 +34,7 @@ impl PacketObserver {
     pub fn new() -> Self {
         Self {
             packets: vec![],
+            states: vec![0; MAX_PACKETS],
             start_time: SystemTime::now(),
         }
     }
@@ -38,14 +44,22 @@ impl PacketObserver {
     }
 
     pub fn add_packet(&mut self, packet: Vec<u8>) {
+        if let Some(e) = self.states.iter_mut().find(|e| **e == 0) {
+            *e = (&PacketState::from(&packet as &[u8])).into();
+        }
         self.packets
             .push((self.start_time.elapsed().unwrap(), packet));
+    }
+
+    pub fn get_state_map(&mut self) -> &mut [u16] {
+        &mut self.states
     }
 }
 
 impl<I, S> Observer<I, S> for PacketObserver {
     fn pre_exec(&mut self, _state: &mut S, _input: &I) -> Result<(), Error> {
         self.packets = vec![];
+        // self.state is reset by the MapObserver
         Ok(())
     }
 }
@@ -67,21 +81,19 @@ pub struct PacketMetadata {
 /// Feedback adding packets captured by a [`PacketObserver`] to a metadata field.
 ///
 /// Returns constant `false` as [`Feedback::append_metadata`].
-pub struct PacketFeedback {
+pub struct PacketMetadataFeedback {
     packet_observer: Handle<PacketObserver>,
 }
 
-impl PacketFeedback {
-    pub fn new(packet_observer: &PacketObserver) -> Self {
-        Self {
-            packet_observer: packet_observer.handle(),
-        }
+impl PacketMetadataFeedback {
+    pub fn new(packet_observer: Handle<PacketObserver>) -> Self {
+        Self { packet_observer }
     }
 }
 
-impl<S> StateInitializer<S> for PacketFeedback {}
+impl<S> StateInitializer<S> for PacketMetadataFeedback {}
 
-impl<EM, I, OT, S> Feedback<EM, I, OT, S> for PacketFeedback
+impl<EM, I, OT, S> Feedback<EM, I, OT, S> for PacketMetadataFeedback
 where
     OT: MatchNameRef,
 {
@@ -107,7 +119,7 @@ where
                     match parse_eth(packet) {
                         Ok(p) => format!("{:?}", p),
                         Err(p) => format!(
-                            "Error when parsing packet: {}.\n original data: 0x{:?}",
+                            "Error when parsing packet: {:?}.\n original data: 0x{:?}",
                             p,
                             hex::encode(packet)
                         ),
@@ -160,7 +172,7 @@ where
     }
 }
 
-impl Named for PacketFeedback {
+impl Named for PacketMetadataFeedback {
     fn name(&self) -> &Cow<'static, str> {
         &Cow::Borrowed("PacketFeedback")
     }

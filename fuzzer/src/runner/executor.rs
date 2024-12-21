@@ -16,6 +16,7 @@ use std::{
 };
 
 use libafl::{
+    events::ClientDescription,
     executors::{Executor, ExitKind, HasObservers},
     inputs::HasMutatorBytes,
     observers::ObserversTuple,
@@ -23,7 +24,6 @@ use libafl::{
     Error,
 };
 use libafl_bolts::{
-    rands::Rand,
     shmem::ShMemDescription,
     tuples::{Handle, MatchName, MatchNameRef, RefIndexable},
 };
@@ -32,7 +32,7 @@ use crate::runner::INTER_SEND_WAIT;
 
 use crate::smoltcp::shmem_net_device::ShmemNetworkDevice;
 
-use super::{input::ZephyrInput, metadata::PacketObserver};
+use super::{input::ZephyrInput, observer::packet::PacketObserver};
 
 pub struct ZepyhrExecutor<'a, S, OT> {
     observers: &'a mut OT,
@@ -45,16 +45,16 @@ pub struct ZepyhrExecutor<'a, S, OT> {
 }
 
 impl<'a, S, OT> ZepyhrExecutor<'a, S, OT> {
-    pub fn new<R: Rand>(
+    pub fn new(
         observers: &'a mut OT,
         packet_observer: Handle<PacketObserver>,
         cov_shmem_desc: &ShMemDescription,
         zephyr_exec_path: PathBuf,
         zephyr_out_path: Option<PathBuf>,
         network_buf_size: usize,
-        rand: &mut R,
+        client_description: &ClientDescription,
     ) -> Result<Self, Error> {
-        let device = ShmemNetworkDevice::new(network_buf_size, rand)?;
+        let device = ShmemNetworkDevice::new(network_buf_size, client_description)?;
         let net_shmem_desc = device.get_shmem_description();
 
         let envs = ([
@@ -81,7 +81,6 @@ impl<'a, S, OT> ZepyhrExecutor<'a, S, OT> {
 
 impl<'a, EM, Z, S, OT> Executor<EM, Z> for ZepyhrExecutor<'a, S, OT>
 where
-    Z: UsesState<State = S>,
     EM: UsesState<State = S>,
     S: State<Input = ZephyrInput> + HasExecutions,
     OT: Debug + MatchName + MatchNameRef + ObserversTuple<ZephyrInput, S>,

@@ -1,7 +1,7 @@
 use crate::{
     cli::Cli,
     runner::{
-        objective::CrashLoggingFeedback, PacketFeedback, PacketObserver,
+        objective::CrashLoggingFeedback, PacketMetadataFeedback, PacketObserver,
         ZephyrInteractionGenerator, ZepyhrExecutor,
     },
     shmem::get_shmem,
@@ -9,13 +9,13 @@ use crate::{
 };
 use clap::Parser as _;
 use libafl::{
-    corpus::{Corpus, OnDiskCorpus},
+    corpus::{Corpus, InMemoryCorpus, OnDiskCorpus},
     events::{CentralizedEventManager, CentralizedLauncher, EventConfig, EventRestarter},
     feedback_or_fast,
-    feedbacks::{MaxMapFeedback, TimeFeedback},
+    feedbacks::{AflMapFeedback, MaxMapFeedback, TimeFeedback},
     monitors::OnDiskTomlMonitor,
     mutators::{havoc_mutations, StdMOptMutator},
-    observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, TimeObserver},
+    observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, StdMapObserver, TimeObserver},
     schedulers::StdScheduler,
     stages::StdMutationalStage,
     state::{HasCorpus as _, StdState},
@@ -36,121 +36,130 @@ use libafl::monitors::MultiMonitor;
 #[cfg(feature = "monitor_none")]
 use libafl::monitors::NopMonitor;
 
-#[cfg(not(feature = "ondisk_corpus"))]
-use libafl::corpus::InMemoryCorpus;
-
-#[cfg(feature = "stability")]
-use libafl::stages::CalibrationStage;
-
 pub fn fuzz() {
     log::info!("Initializing fuzzer");
     let opt = Cli::parse();
 
     let zephyr_exec_path = opt.zephyr_exec_dir();
 
-    let mut run_client = |state: Option<_>,
-                          mut manager: CentralizedEventManager<_, _, _, _>,
-                          _core_id| {
-        log::info!("Initializing fuzzing client");
-        let mut rand = StdRand::new();
+    let run_client = |_primary| {
+        let opt = &opt;
+        move |state: Option<_>,
+              mut manager: CentralizedEventManager<_, _, _, _>,
+              client_description| {
+            log::info!("Initializing fuzzing client");
 
-        let mut cov_shmem = get_shmem(COV_SHMEM_SIZE, &mut rand)?;
-        let cov_shmem_description = cov_shmem.description();
+            let mut cov_shmem = get_shmem(COV_SHMEM_SIZE, &client_description, "cov")?;
+            let cov_shmem_description = cov_shmem.description();
 
-        let cov_raw_observer = unsafe {
-            ConstMapObserver::from_mut_ptr(
-                "coverage_observer",
-                NonNull::new(cov_shmem.as_mut_ptr())
-                    .expect("map ptr is null")
-                    .cast::<[u8; COV_SHMEM_SIZE]>(),
-            )
-        };
+            let cov_raw_observer = unsafe {
+                ConstMapObserver::from_mut_ptr(
+                    "coverage_observer",
+                    NonNull::new(cov_shmem.as_mut_ptr())
+                        .expect("map ptr is null")
+                        .cast::<[u8; COV_SHMEM_SIZE]>(),
+                )
+            };
 
-        let cov_observer = HitcountsMapObserver::new(cov_raw_observer).track_indices();
-        let time_observer = TimeObserver::new("time_observer");
-        let packet_observer = PacketObserver::new();
-        let packet_observer_handle = packet_observer.handle();
-        let cov_feedback = MaxMapFeedback::new(&cov_observer);
-        #[cfg(feature = "stability")]
-        let calibration_stage = CalibrationStage::new(&cov_feedback);
+            let cov_observer = HitcountsMapObserver::new(cov_raw_observer).track_indices();
+            let time_observer = TimeObserver::new("time_observer");
 
-        let mut feedback = feedback_or_fast!(
-            TimeFeedback::new(&time_observer),
-            PacketFeedback::new(&packet_observer),
-            cov_feedback,
-        );
+            let mut packet_observer = PacketObserver::new();
+            let packet_observer_handle = packet_observer.handle().clone();
 
-        let mut objective = feedback_or_fast!(
-            TimeFeedback::new(&time_observer),
-            PacketFeedback::new(&packet_observer),
-            CrashLoggingFeedback::new(),
-        );
+            let state_map = packet_observer.get_state_map();
+            let state_observer = unsafe {
+                StdMapObserver::from_mut_ptr(
+                    "state-observer",
+                    state_map.as_mut_ptr(),
+                    state_map.len(),
+                )
+            };
+            let state_feedback = AflMapFeedback::new(&state_observer);
 
-        let mut observers = tuple_list!(cov_observer, time_observer, packet_observer);
+            let _cov_feedback = MaxMapFeedback::new(&cov_observer);
 
-        let solutions = OnDiskCorpus::new("./solutions")?;
+            let mut feedback = feedback_or_fast!(
+                TimeFeedback::new(&time_observer),
+                PacketMetadataFeedback::new(packet_observer_handle.clone()),
+                // CovLogFeedback::new(cov_observer.handle(), client_description.id()),
+                // cov_feedback,
+                state_feedback
+            );
 
-        #[cfg(feature = "ondisk_corpus")]
-        let corpus = OnDiskCorpus::new("./corpus")?;
-        #[cfg(not(feature = "ondisk_corpus"))]
-        let corpus = InMemoryCorpus::new();
+            let mut objective = feedback_or_fast!(
+                TimeFeedback::new(&time_observer),
+                CrashLoggingFeedback::new(),
+            );
 
-        let mut state = state.unwrap_or_else(|| {
-            StdState::new(rand, corpus, solutions, &mut feedback, &mut objective)
+            let mut observers =
+                tuple_list!(cov_observer, time_observer, packet_observer, state_observer);
+
+            let solutions = OnDiskCorpus::new("./solutions")?;
+
+            let corpus = InMemoryCorpus::new();
+
+            let mut state = state.unwrap_or_else(|| {
+                StdState::new(
+                    StdRand::new(),
+                    corpus,
+                    solutions,
+                    &mut feedback,
+                    &mut objective,
+                )
                 .expect("Could not create state")
-        });
+            });
 
-        let mutations = havoc_mutations();
-        let mutator = StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);
+            let mutations = havoc_mutations();
+            let mutator =
+                StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);
 
-        #[cfg(not(feature = "stability"))]
-        let mut stages = tuple_list!(mutator);
-        #[cfg(feature = "stability")]
-        let mut stages = tuple_list!(mutator, calibration_stage);
+            let scheduler = StdScheduler::new();
 
-        let scheduler = StdScheduler::new();
+            let mut fuzzer = StdFuzzer::new(scheduler, feedback, objective);
 
-        let mut fuzzer = StdFuzzer::new(scheduler, feedback, objective);
+            let mut generator = ZephyrInteractionGenerator::new();
 
-        let mut generator = ZephyrInteractionGenerator::new();
-
-        let mut executor = ZepyhrExecutor::new(
-            &mut observers,
-            packet_observer_handle,
-            &cov_shmem_description,
-            zephyr_exec_path.to_path_buf(),
-            opt.zephyr_out_dir().map(PathBuf::to_owned),
-            NETWORK_SHMEM_SIZE,
-            &mut rand,
-        )?;
-
-        if state.must_load_initial_inputs() {
-            log::debug!("Generating inputs");
-            state.generate_initial_inputs(
-                &mut fuzzer,
-                &mut executor,
-                &mut generator,
-                &mut manager,
-                1,
+            let mut executor = ZepyhrExecutor::new(
+                &mut observers,
+                packet_observer_handle,
+                &cov_shmem_description,
+                zephyr_exec_path.to_path_buf(),
+                opt.zephyr_out_dir().map(PathBuf::to_owned),
+                NETWORK_SHMEM_SIZE,
+                &client_description,
             )?;
-            log::info!("Generated {} inputs", state.corpus().count());
-        } else {
-            log::info!("Did not need to load initial inputs");
-        }
 
-        log::info!("Starting Fuzzing");
+            if state.must_load_initial_inputs() {
+                log::debug!("Generating inputs");
+                state.generate_initial_inputs(
+                    &mut fuzzer,
+                    &mut executor,
+                    &mut generator,
+                    &mut manager,
+                    1,
+                )?;
+                log::info!("Generated {} inputs", state.corpus().count());
+            } else {
+                log::info!("Did not need to load initial inputs");
+            }
 
-        if opt.load_only() {
-            manager.send_exiting()?;
-            return Err(Error::shutting_down());
-        } else if opt.fuzz_one() {
-            fuzzer.fuzz_one(&mut stages, &mut executor, &mut state, &mut manager)?;
-            manager.send_exiting()?;
-            return Err(Error::shutting_down());
-        } else {
-            fuzzer.fuzz_loop(&mut stages, &mut executor, &mut state, &mut manager)?;
+            log::info!("Starting Fuzzing");
+
+            if opt.load_only() {
+                manager.send_exiting()?;
+                return Err(Error::shutting_down());
+            } else if opt.fuzz_one() {
+                let mut stages = tuple_list!(mutator);
+                fuzzer.fuzz_one(&mut stages, &mut executor, &mut state, &mut manager)?;
+                manager.send_exiting()?;
+                return Err(Error::shutting_down());
+            } else {
+                let mut stages = tuple_list!(mutator);
+                fuzzer.fuzz_loop(&mut stages, &mut executor, &mut state, &mut manager)?;
+            }
+            Ok(())
         }
-        Ok(())
     };
 
     #[cfg(feature = "monitor_tui")]
@@ -183,8 +192,8 @@ pub fn fuzz() {
         .shmem_provider(StdShMemProvider::new().expect("Failed to init shared memory"))
         .configuration(EventConfig::from_name("default"))
         .monitor(monitor)
-        .main_run_client(&mut run_client.clone())
-        .secondary_run_client(&mut run_client)
+        .main_run_client(&mut run_client(true))
+        .secondary_run_client(&mut run_client(false))
         .cores(&cores)
         .overcommit(overcommit)
         .stdout_file(opt.stdout().and_then(|e| e.as_os_str().to_str()))

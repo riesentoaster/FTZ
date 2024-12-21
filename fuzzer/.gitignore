@@ -8,3 +8,4 @@ corpus*
 hashes*.txt
 profile.json
 !log/*
+cov-*

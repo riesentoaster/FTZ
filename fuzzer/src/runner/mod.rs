@@ -1,20 +1,22 @@
+#![allow(dead_code)]
 use std::{sync::LazyLock, time::Duration};
 
 use smoltcp::wire::IpAddress;
 
 mod client;
+mod cov_log_feedback;
 mod executor;
 mod fuzzer;
 mod generator;
 mod input;
-mod metadata;
 mod objective;
+mod observer;
 
 pub use {
     executor::ZepyhrExecutor,
     fuzzer::fuzz,
     generator::ZephyrInteractionGenerator,
-    metadata::{PacketFeedback, PacketObserver},
+    observer::packet::{PacketMetadataFeedback, PacketObserver},
 };
 
 pub const ZEPHYR_IP: IpAddress = IpAddress::v4(192, 0, 2, 1);

@@ -8,6 +8,7 @@ use pnet::packet::{
 use super::{
     network::{parse_arp, parse_ipv4, parse_ipv6, NetworkLayerPacketType},
     upper::UpperLayerPacket,
+    PacketParseError,
 };
 
 pub struct DataLinkLayerPacket {
@@ -54,19 +55,16 @@ impl DataLinkLayerPacket {
     }
 }
 
-pub fn parse_eth(input: &[u8]) -> Result<DataLinkLayerPacket, String> {
+pub fn parse_eth(input: &[u8]) -> Result<DataLinkLayerPacket, PacketParseError> {
     let eth = EthernetPacket::new(input)
-        .ok_or(format!(
-            "Could not create a Ethernet packet: {:02x?}",
-            input
-        ))?
+        .ok_or(PacketParseError::MalformedEthernet(input.to_vec()))?
         .from_packet();
 
     let net = match eth.ethertype {
         EtherTypes::Ipv4 => parse_ipv4(&eth.payload),
         EtherTypes::Ipv6 => parse_ipv6(&eth.payload),
         EtherTypes::Arp => parse_arp(&eth.payload),
-        _ => Err(format!("Not implemented: {:02x?}", eth)),
+        _ => Err(PacketParseError::UnknownLayer3(input.to_vec())),
     }?;
 
     let (net, upper) = net.contents();
