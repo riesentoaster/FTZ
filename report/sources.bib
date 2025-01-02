@@ -315,3 +315,99 @@
   year         = {2022}
 }
 
+
+@inproceedings{ModbusTCP,
+  author    = {Voyiatzis, Artemios G. and Katsigiannis, Konstantinos and Koubias, Stavros},
+  booktitle = {2015 IEEE 20th Conference on Emerging Technologies \& Factory Automation (ETFA)},
+  title     = {A Modbus/TCP Fuzzer for testing internetworked industrial systems},
+  year      = {2015},
+  volume    = {},
+  number    = {},
+  pages     = {1-6},
+  keywords  = {Protocols;Testing;Software;Reconnaissance;Sockets;Computer crime;Computer crashes},
+  doi       = {10.1109/ETFA.2015.7301400}
+}
+
+@inproceedings{MTFStorm,
+  author    = {Katsigiannis, K. and Serpanos, D.},
+  booktitle = {2018 IEEE 23rd International Conference on Emerging Technologies and Factory Automation (ETFA)},
+  title     = {MTF-Storm: a High Performance Fuzzer for Modbus/TCP},
+  year      = {2018},
+  volume    = {1},
+  number    = {},
+  pages     = {926-931},
+  keywords  = {Protocols;Fuzzing;Integrated circuits;Reconnaissance;Tools;Modbus;fuzzing;protocol testing},
+  doi       = {10.1109/ETFA.2018.8502600}
+}
+
+@article{IndustrialReview,
+  title    = {A survey on fuzz testing technologies for industrial control protocols},
+  journal  = {Journal of Network and Computer Applications},
+  volume   = {232},
+  pages    = {104020},
+  year     = {2024},
+  issn     = {1084-8045},
+  doi      = {https://doi.org/10.1016/j.jnca.2024.104020},
+  url      = {https://www.sciencedirect.com/science/article/pii/S1084804524001978},
+  author   = {Xiaoyan Wei and Zheng Yan and Xueqin Liang},
+  keywords = {Industrial security, Fuzzing, Industrial control protocols, Vulnerability detection},
+  abstract = {The development of the industrial Internet of Things enables industrial control systems to become inter-networked and inter-connected, making them intelligent with high productivity. However, these systems are exposed to external environments and vulnerable to network attacks, which also suffer from internal vulnerabilities. Fuzz testing, in short fuzzing, is a technique to enhance the security of industrial control systems by finding errors when repeatedly executing software that injects illegal, malformed, or unexpected inputs into the systems. Unfortunately, traditional fuzzing of communication protocols faces low coverage and efficiency problems when being applied to industrial protocols, considering the characteristics of industrial protocols such as real-time and multi-interaction. Moreover, fuzzing is difficult to perform because many structures of industrial control protocols are not publicly available. Although researchers have started to focus on the fuzzing of industrial control protocols, existing literature still lacks a thorough survey of its recent advances. To fill this gap, we conduct a comprehensive survey on existing fuzzing methods for industrial control protocols. After a brief introduction to industrial control protocols and fuzzing, we propose a set of metrics for judging the pros and cons of existing fuzzing methods. Based on these metrics, we evaluate and compare the performance of fuzzing methods of industrial control protocols in the past eight years. Based on our review and analysis, we further summarize the open problems of these methods for achieving the proposed metrics and elaborate on future research directions toward secure industrial control systems.}
+}
+
+@article{MTA,
+  title    = {MTA Fuzzer: A low-repetition rate Modbus TCP fuzzing method based on Transformer and Mutation Target Adaptation},
+  journal  = {Computers \& Security},
+  volume   = {144},
+  pages    = {103973},
+  year     = {2024},
+  issn     = {0167-4048},
+  doi      = {https://doi.org/10.1016/j.cose.2024.103973},
+  url      = {https://www.sciencedirect.com/science/article/pii/S0167404824002785},
+  author   = {Wenpeng Wang and Zhixiang Chen and Ziyang Zheng and Hui Wang and Junxing Luo},
+  keywords = {Modbus TCP, Vulnerability mining, Fuzzing, Transformer, Low-repetition rate, Adaptive},
+  abstract = {The widespread application of industrial control systems has driven the development of industrial control protocols. However, traditional industrial control protocols suffer from issues such as a lack of security mechanisms, resulting in the existence of many dangerous vulnerabilities in industrial control systems. Fuzzing, as a commonly used technique for vulnerability discovery, has its own set of issues, including low testing efficiency, lack of adaptive capability, and high repetition rate of generated test cases. To solve the existing problems, we propose a low-repetition rate Modbus TCP fuzzing method based on Transformer and Mutation Target Adaptation. Firstly, the syntactic features of the industrial control protocol Modbus TCP are learned by using a simplified Transformer model. The model effectively reduces the training and generation time without decreasing the acceptance rate of test cases; Secondly, in the test case generation phase, in order to improve the mutation efficiency of test cases, the byte mutation probability adaptive strategy is introduced to replace the greedy strategy of Transformer. This strategy can dynamically adjust the mutation probability of each byte in the newly generated test cases, so as to improve the abnormal rate and reduce the repetition rate of test cases; Finally, the mutation results are selected by the mutation byte adaptive selection strategy, which not only improves the mutation adaptivity, but also maintains the diversity of mutations. The experimental results indicate that, compared to traditional methods, our approach has improved acceptance rates and abnormal rates by at least 10\%. In comparison to AI-based fuzzing methods, our approach maintains a similar acceptance rate while increasing the abnormal rate by 3\% to 25\%.}
+}
+
+@inproceedings{StateMachine,
+  author    = {Zhao, Pengyu and Jiang, Sikang and Liu, Shengli and Liu, Long},
+  booktitle = {2024 4th International Conference on Electronic Information Engineering and Computer Science (EIECS)},
+  title     = {Fuzz Testing of Protocols Based on Protocol Process State Machines},
+  year      = {2024},
+  volume    = {},
+  number    = {},
+  pages     = {844-850},
+  keywords  = {Protocols;Codes;Source coding;Static analysis;Fuzzing;Computer crashes;Software;Security;Optimization;Testing;protocol fuzz testing;vulnerability mining;state variables;state selection},
+  doi       = {10.1109/EIECS63941.2024.10800590}
+}
+
+@inproceedings{AnotherModbusTCP,
+  author    = {Xiong, Qi and Liu, Hui and Xu, Yuan and Rao, Huayi and Yi, Shengwei and Zhang, Baofeng and Jia, Wei and Deng, Hui},
+  booktitle = {2015 IEEE International Conference on Electro/Information Technology (EIT)},
+  title     = {A vulnerability detecting method for Modbus-TCP based on smart fuzzing mechanism},
+  year      = {2015},
+  volume    = {},
+  number    = {},
+  pages     = {404-409},
+  keywords  = {Protocols;Testing;Security;Information technology;Monitoring;Servers;Industrial control;Modbus-TCP Protocol;Fuzzing Test;Vulnerability Detecting;Industrial Control System},
+  doi       = {10.1109/EIT.2015.7293376}
+}
+
+@article{Survey,
+  author     = {Zhang, Xiaohan and Zhang, Cen and Li, Xinghua and Du, Zhengjie and Mao, Bing and Li, Yuekang and Zheng, Yaowen and Li, Yeting and Pan, Li and Liu, Yang and Deng, Robert},
+  title      = {A Survey of Protocol Fuzzing},
+  year       = {2024},
+  issue_date = {February 2025},
+  publisher  = {Association for Computing Machinery},
+  address    = {New York, NY, USA},
+  volume     = {57},
+  number     = {2},
+  issn       = {0360-0300},
+  url        = {https://doi.org/10.1145/3696788},
+  doi        = {10.1145/3696788},
+  abstract   = {Communication protocols form the bedrock of our interconnected world, yet vulnerabilities within their implementations pose significant security threats. Recent developments have seen a surge in fuzzing-based research dedicated to uncovering these vulnerabilities within protocol implementations. However, there still lacks a systematic overview of protocol fuzzing for answering the essential questions such as what the unique challenges are, how existing works solve them, and so on. To bridge this gap, we conducted a comprehensive investigation of related works from both academia and industry. Our study includes a detailed summary of the specific challenges in protocol fuzzing and provides a systematic categorization and overview of existing research efforts. Furthermore, we explore and discuss potential future research directions in protocol fuzzing.},
+  journal    = {ACM Comput. Surv.},
+  month      = oct,
+  articleno  = {35},
+  numpages   = {36},
+  keywords   = {Protocol, fuzz testing, security}
+}

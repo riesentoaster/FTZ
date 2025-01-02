@@ -137,6 +137,11 @@
     \item \citetitle{StateFuzz}\cite{StateFuzz}: Find state variables (long-lived, can be updated by users, change control flow or memory access) using static analysis, use that to guide fuzzing (new coverage, new value-range, new extreme value). (Talk: Good Example of why coverage-guided alone is insufficient). Check value ranges instead of all values (static symbex!). 4-digit number of state varia les in linux kernel and Qualcomm MSM kernel (Google Pixel).
     \item \citetitle{ProFuzzBench}\cite{ProFuzzBench}: Suite of 10 protocols and 11 open-source implementations of those to be tested. TCP is notably absent from this list. Certain protocols (like FTP) already return HTTP status codes, others are patched to do so. Dockerized. The authors note that configuration is not taken into account and multi-party ($\geq 3$) protocols can not be fuzzed right now. Non-determinism in the programs make feedback (like code coverage) less predictable and thus fuzzing less performant because it introduces non-differentiable duplicate entries into the corpus. Speed is another issue, where complex setup-processes, costly network operations (resp. synchronization for me), and long multipart-inputs contribute. Finally, state identification is only superficially handled.
     \item \citetitle{StatefulReview}\cite{StatefulReview}: Provides taxonomy of components and categorizes stateful fuzzers, compares approaches and lists challenges and future directions.
+    \item \citetitle{ModbusTCP}\cite{ModbusTCP} is a Modbus fuzzer, that only seems to use TCP as transport. Generation of packets happens only for Modbus itself. \citetitle{MTFStorm}\cite{MTFStorm} is follow-up work that does the same more systematically.
+    \item \citetitle{IndustrialReview}\cite{IndustrialReview} review industrial control protocol. Notably, Modbus/TCP fuzzing seems common, but TCP is only used as transport layer, not target.
+    \item \citetitle{MTA}\cite{MTA} use machine learning models to generate Modbus/TCP packets, but target Modbus and again only use TCP as a transportation layer.
+    \item \citetitle{AnotherModbusTCP}\cite{AnotherModbusTCP} is another Modbus/TCP fuzzer that does not fuzz the TCP stack.
+    \item \citetitle{StateMachine}\cite{StateMachine} calculate a directed graph from the measured state variables, and schedule mutations based on a formula incorporating state depth, coverage, number of transitions, and number of mutations based on this state.
   \end{itemize}
 
   \subsection{ToDo}
@@ -148,6 +153,7 @@
     \item \citetitle{GANFuzz}\cite{GANFuzz}
     \item \citetitle{TCPFuzz}\cite{TCPFuzz}
     \item \citetitle{FitM}\cite{FitM}
+    \item \citetitle{Survey}\cite{Survey}
   \end{itemize}
 
   \section{Approach and Implementation}
