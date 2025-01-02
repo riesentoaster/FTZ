@@ -12,13 +12,13 @@ license = "MIT"
 debug = true
 
 [dependencies]
+pnet = { version = "0.35.0", features = ["serde"] }
 libafl = { path = "../LibAFL/libafl", features = ["multipart_inputs"] }
 libafl_bolts = { path = "../LibAFL/libafl_bolts", features = [
     "errors_backtrace",
 ] }
 wait-timeout = "0.2.0"
 pcap = "2.2.0"
-pnet = "0.35.0"
 pcap-file = "2.0.0"
 smoltcp = { version = "0.11.0", features = ["log", "iface-max-addr-count-3"] }
 log = "0.4.22"
@@ -31,9 +31,10 @@ hex = "0.4.3"
 serde_json = "1.0.133"
 
 [features]
-default = ["monitor_stdout"]
+default = ["monitor_stdout", "multipart_input"]
 monitor_tui = ["libafl/tui_monitor"]
 monitor_stdout = []
 monitor_none = []
 stability = []
 hashes = ["stability"]
+multipart_input = []

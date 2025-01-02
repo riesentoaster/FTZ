@@ -1,10 +1,12 @@
+use serde::{Deserialize, Serialize};
+
 pub mod data_link;
 pub mod interactive;
 pub mod network;
 pub mod upper;
 
 #[repr(u8)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash)]
 pub enum PacketParseError {
     MalformedEthernet(Vec<u8>),
     MalformedIpv4(Vec<u8>),

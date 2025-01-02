@@ -30,6 +30,10 @@ impl Debug for DataLinkLayerPacket {
 }
 
 impl DataLinkLayerPacket {
+    pub fn contents_owned(self) -> (Ethernet, NetworkLayerPacketType, Option<UpperLayerPacket>) {
+        (self.eth, self.net, self.upper)
+    }
+
     pub fn upper(&self) -> Option<&UpperLayerPacket> {
         self.upper.as_ref()
     }

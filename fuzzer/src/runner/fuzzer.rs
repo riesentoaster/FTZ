@@ -1,21 +1,24 @@
 use crate::{
     cli::Cli,
+    packets::outgoing_tcp_packets,
     runner::{
-        objective::CrashLoggingFeedback, PacketMetadataFeedback, PacketObserver,
-        ZephyrInteractionGenerator, ZepyhrExecutor,
+        input::{FixedZephyrInputGenerator, ZephyrInput, ZephyrInputType},
+        objective::CrashLoggingFeedback,
+        observer::state::PacketState,
+        PacketMetadataFeedback, PacketObserver, ZepyhrExecutor,
     },
     shmem::get_shmem,
     COV_SHMEM_SIZE, NETWORK_SHMEM_SIZE,
 };
 use clap::Parser as _;
 use libafl::{
-    corpus::{Corpus, InMemoryCorpus, OnDiskCorpus},
+    corpus::{Corpus, OnDiskCorpus},
     events::{CentralizedEventManager, CentralizedLauncher, EventConfig, EventRestarter},
-    feedback_or_fast,
-    feedbacks::{AflMapFeedback, MaxMapFeedback, TimeFeedback},
+    feedback_and, feedback_or_fast,
+    feedbacks::{ConstFeedback, MaxMapFeedback, TimeFeedback},
     monitors::OnDiskTomlMonitor,
-    mutators::{havoc_mutations, StdMOptMutator},
-    observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, StdMapObserver, TimeObserver},
+    mutators::StdMOptMutator,
+    observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, TimeObserver},
     schedulers::StdScheduler,
     stages::StdMutationalStage,
     state::{HasCorpus as _, StdState},
@@ -54,7 +57,7 @@ pub fn fuzz() {
 
             let cov_raw_observer = unsafe {
                 ConstMapObserver::from_mut_ptr(
-                    "coverage_observer",
+                    "coverage-observer",
                     NonNull::new(cov_shmem.as_mut_ptr())
                         .expect("map ptr is null")
                         .cast::<[u8; COV_SHMEM_SIZE]>(),
@@ -62,28 +65,30 @@ pub fn fuzz() {
             };
 
             let cov_observer = HitcountsMapObserver::new(cov_raw_observer).track_indices();
-            let time_observer = TimeObserver::new("time_observer");
+            let time_observer = TimeObserver::new("time-observer");
 
             let mut packet_observer = PacketObserver::new();
             let packet_observer_handle = packet_observer.handle().clone();
 
-            let state_map = packet_observer.get_state_map();
-            let state_observer = unsafe {
-                StdMapObserver::from_mut_ptr(
+            let state_map = packet_observer.get_states_mut();
+            let state_observer_raw = unsafe {
+                ConstMapObserver::from_mut_ptr(
                     "state-observer",
-                    state_map.as_mut_ptr(),
-                    state_map.len(),
+                    NonNull::new(state_map.as_mut_ptr())
+                        .expect("map ptr is null")
+                        .cast::<[u8; PacketState::max_numeric_value() as usize + 1]>(),
                 )
             };
-            let state_feedback = AflMapFeedback::new(&state_observer);
+            let state_observer = HitcountsMapObserver::new(state_observer_raw).track_indices();
+            let state_feedback = MaxMapFeedback::new(&state_observer);
 
-            let _cov_feedback = MaxMapFeedback::new(&cov_observer);
+            let cov_feedback = MaxMapFeedback::new(&cov_observer);
 
             let mut feedback = feedback_or_fast!(
                 TimeFeedback::new(&time_observer),
                 PacketMetadataFeedback::new(packet_observer_handle.clone()),
                 // CovLogFeedback::new(cov_observer.handle(), client_description.id()),
-                // cov_feedback,
+                feedback_and!(cov_feedback, ConstFeedback::new(false)),
                 state_feedback
             );
 
@@ -97,9 +102,9 @@ pub fn fuzz() {
 
             let solutions = OnDiskCorpus::new("./solutions")?;
 
-            let corpus = InMemoryCorpus::new();
+            let corpus = OnDiskCorpus::new("corpus")?;
 
-            let mut state = state.unwrap_or_else(|| {
+            let mut state: StdState<ZephyrInputType, _, _, _> = state.unwrap_or_else(|| {
                 StdState::new(
                     StdRand::new(),
                     corpus,
@@ -110,7 +115,8 @@ pub fn fuzz() {
                 .expect("Could not create state")
             });
 
-            let mutations = havoc_mutations();
+            let mutations = ZephyrInputType::mutators();
+
             let mutator =
                 StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);
 
@@ -118,7 +124,8 @@ pub fn fuzz() {
 
             let mut fuzzer = StdFuzzer::new(scheduler, feedback, objective);
 
-            let mut generator = ZephyrInteractionGenerator::new();
+            let outgoing_packets = outgoing_tcp_packets();
+            let mut generator = FixedZephyrInputGenerator::new(outgoing_packets, false);
 
             let mut executor = ZepyhrExecutor::new(
                 &mut observers,
@@ -137,7 +144,7 @@ pub fn fuzz() {
                     &mut executor,
                     &mut generator,
                     &mut manager,
-                    1,
+                    outgoing_tcp_packets().len() - 1,
                 )?;
                 log::info!("Generated {} inputs", state.corpus().count());
             } else {

@@ -33,6 +33,19 @@ impl NetworkLayerPacketType {
         matches!(self, Self::Arp(..))
     }
 
+    pub fn get_ipv4(&self) -> Option<&Ipv4> {
+        match self {
+            NetworkLayerPacketType::Ipv4(ipv4) => Some(ipv4),
+            _ => None,
+        }
+    }
+    pub fn get_ipv4_owned(self) -> Option<Ipv4> {
+        match self {
+            NetworkLayerPacketType::Ipv4(ipv4) => Some(ipv4),
+            _ => None,
+        }
+    }
+
     pub fn types_to_string(&self) -> &str {
         match self {
             NetworkLayerPacketType::Ipv4(ipv4) => "ipv4",

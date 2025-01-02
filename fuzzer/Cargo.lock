@@ -985,6 +985,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ffc190d4067df16af3aba49b3b74c469e611cad6314676eaf1157f31aa0fb2f7"
 dependencies = [
  "no-std-net",
+ "serde",
 ]
 
 [[package]]
@@ -997,6 +998,7 @@ dependencies = [
  "libc",
  "pnet_base",
  "pnet_sys",
+ "serde",
  "winapi",
 ]
 

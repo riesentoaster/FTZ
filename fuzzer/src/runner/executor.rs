@@ -18,7 +18,6 @@ use std::{
 use libafl::{
     events::ClientDescription,
     executors::{Executor, ExitKind, HasObservers},
-    inputs::HasMutatorBytes,
     observers::ObserversTuple,
     state::{HasExecutions, State, UsesState},
     Error,
@@ -32,19 +31,22 @@ use crate::runner::INTER_SEND_WAIT;
 
 use crate::smoltcp::shmem_net_device::ShmemNetworkDevice;
 
-use super::{input::ZephyrInput, observer::packet::PacketObserver};
+use super::{
+    input::{ZephyrInput, ZephyrInputPart},
+    observer::packet::PacketObserver,
+};
 
-pub struct ZepyhrExecutor<'a, S, OT> {
+pub struct ZepyhrExecutor<'a, S, OT, II> {
     observers: &'a mut OT,
     packet_observer: Handle<PacketObserver>,
     device: ShmemNetworkDevice,
     envs: Vec<(String, String)>,
     zephyr_exec_path: PathBuf,
     zephyr_out_path: Option<PathBuf>,
-    phantom: PhantomData<S>,
+    phantom: PhantomData<(S, II)>,
 }
 
-impl<'a, S, OT> ZepyhrExecutor<'a, S, OT> {
+impl<'a, S, OT, II> ZepyhrExecutor<'a, S, OT, II> {
     pub fn new(
         observers: &'a mut OT,
         packet_observer: Handle<PacketObserver>,
@@ -79,11 +81,14 @@ impl<'a, S, OT> ZepyhrExecutor<'a, S, OT> {
     }
 }
 
-impl<'a, EM, Z, S, OT> Executor<EM, Z> for ZepyhrExecutor<'a, S, OT>
+impl<'a, EM, Z, S, OT, I, II> Executor<EM, Z> for ZepyhrExecutor<'a, S, OT, II>
 where
     EM: UsesState<State = S>,
-    S: State<Input = ZephyrInput> + HasExecutions,
-    OT: Debug + MatchName + MatchNameRef + ObserversTuple<ZephyrInput, S>,
+    S: State<Input = I> + HasExecutions,
+    OT: Debug + MatchName + MatchNameRef + ObserversTuple<I, S>,
+    I: ZephyrInput<II>,
+    II: ZephyrInputPart,
+    Vec<u8>: From<II>,
 {
     fn run_target(
         &mut self,
@@ -135,9 +140,9 @@ where
 
         log::debug!("Started Zephyr");
 
-        for e in input.parts() {
-            packets_observer.add_packet(e.bytes().to_vec());
-            self.device.send(e.bytes());
+        for e in input.to_packets() {
+            self.device.send(&e);
+            packets_observer.add_packet(e);
             let mut last_packet_time = Instant::now();
             while last_packet_time.elapsed() < INTER_SEND_WAIT {
                 if let Some(incoming) = self.device.try_recv() {
@@ -184,14 +189,14 @@ where
     }
 }
 
-impl<'a, S, OT> UsesState for ZepyhrExecutor<'a, S, OT>
+impl<'a, S, OT, II> UsesState for ZepyhrExecutor<'a, S, OT, II>
 where
     S: State,
 {
     type State = S;
 }
 
-impl<'a, S, OT> HasObservers for ZepyhrExecutor<'a, S, OT> {
+impl<'a, S, OT, II> HasObservers for ZepyhrExecutor<'a, S, OT, II> {
     type Observers = OT;
 
     fn observers(&self) -> RefIndexable<&Self::Observers, Self::Observers> {

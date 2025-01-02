@@ -26,7 +26,7 @@ const MAX_PACKETS: usize = 100;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PacketObserver {
     packets: Vec<(Duration, Vec<u8>)>,
-    states: Vec<u16>,
+    states: Vec<u8>,
     start_time: SystemTime,
 }
 
@@ -34,7 +34,7 @@ impl PacketObserver {
     pub fn new() -> Self {
         Self {
             packets: vec![],
-            states: vec![0; MAX_PACKETS],
+            states: vec![0; PacketState::max_numeric_value() as usize + 1],
             start_time: SystemTime::now(),
         }
     }
@@ -43,23 +43,23 @@ impl PacketObserver {
         &self.packets
     }
 
-    pub fn add_packet(&mut self, packet: Vec<u8>) {
-        if let Some(e) = self.states.iter_mut().find(|e| **e == 0) {
-            *e = (&PacketState::from(&packet as &[u8])).into();
-        }
-        self.packets
-            .push((self.start_time.elapsed().unwrap(), packet));
+    pub fn get_states_mut(&mut self) -> &mut Vec<u8> {
+        &mut self.states
     }
 
-    pub fn get_state_map(&mut self) -> &mut [u16] {
-        &mut self.states
+    pub fn add_packet(&mut self, packet: Vec<u8>) {
+        let state = PacketState::from(&packet as &[u8]);
+        let state_idx: u16 = (&state).into();
+        self.states[state_idx as usize] += 1;
+        self.packets
+            .push((self.start_time.elapsed().unwrap(), packet));
     }
 }
 
 impl<I, S> Observer<I, S> for PacketObserver {
     fn pre_exec(&mut self, _state: &mut S, _input: &I) -> Result<(), Error> {
         self.packets = vec![];
-        // self.state is reset by the MapObserver
+        self.states.fill(0);
         Ok(())
     }
 }

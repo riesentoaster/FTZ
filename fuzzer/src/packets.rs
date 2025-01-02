@@ -1,4 +1,27 @@
-use crate::direction::Direction;
+use crate::{
+    direction::Direction,
+    layers::{data_link::parse_eth, upper::UpperLayerPacket},
+};
+
+pub fn outgoing_tcp_packets() -> Vec<Vec<u8>> {
+    get_packets()
+        .iter()
+        .filter(|e| match e {
+            Direction::Outgoing(_) => true,
+            Direction::Incoming(_) => false,
+        })
+        .cloned()
+        .map(Direction::inner)
+        .filter(|e| {
+            parse_eth(e).is_ok_and(|p| {
+                p.contents_owned()
+                    .2
+                    .and_then(UpperLayerPacket::get_tcp_owned)
+                    .is_some()
+            })
+        })
+        .collect()
+}
 
 #[allow(unused)]
 pub fn get_packets() -> [Direction<Vec<u8>>; 22] {

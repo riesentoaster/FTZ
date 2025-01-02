@@ -20,7 +20,7 @@ CURRENT_DIR="$(pwd)"
 
 cd ${ZEPHYR_PROJECT_DIR}
 git diff > /tmp/zephyr.diff
-if diff /tmp/zephyr.diff $DIFF_PATH > /dev/null; then
+if diff /tmp/zephyr.diff $DIFF_PATH > /dev/null && [ -f "${CUSTOM_TARGET_DIR}/zephyr/zephyr.exe" ]; then
     echo "\e[33mWarning: Not recompiling Zephyr, no changes compared to ../zephyr.diff\e[0m"
 else
     echo "Found changes, recompiling Zephyr"

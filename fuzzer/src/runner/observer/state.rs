@@ -1,7 +1,10 @@
 use std::ops::Deref;
 
+use serde::{Deserialize, Serialize};
+
 use crate::layers::{data_link::parse_eth, upper::UpperLayerPacket, PacketParseError};
 
+#[derive(Debug, Serialize, Deserialize, Clone, Hash)]
 pub enum PacketState {
     ParseError(PacketParseError),
     NoUpper,
@@ -34,20 +37,26 @@ impl From<&[u8]> for PacketState {
 impl From<&PacketState> for u16 {
     fn from(val: &PacketState) -> Self {
         match val {
-            PacketState::NoUpper => 0x1,
-            PacketState::Icmpv6 => 0x2,
+            PacketState::Tcp(flags) => (*flags).into(),
+            PacketState::NoUpper => 0x1 << 8,
+            PacketState::Icmpv6 => 0x2 << 8,
             PacketState::ParseError(packet_parse_error) => match packet_parse_error {
-                PacketParseError::MalformedEthernet(_) => 0x3,
-                PacketParseError::MalformedIpv4(_) => 0x4,
-                PacketParseError::MalformedIpv6(_) => 0x5,
-                PacketParseError::MalformedArp(_) => 0x6,
-                PacketParseError::MalformedTcp(_) => 0x7,
-                PacketParseError::MalformedIcmpv6(_) => 0x8,
-                PacketParseError::MalformedHopopt(_) => 0x9,
-                PacketParseError::UnknownLayer3(_) => 0xa,
-                PacketParseError::UnknownLayer4(_) => 0xb,
+                PacketParseError::MalformedEthernet(_) => 0x3 << 8,
+                PacketParseError::MalformedIpv4(_) => 0x4 << 8,
+                PacketParseError::MalformedIpv6(_) => 0x5 << 8,
+                PacketParseError::MalformedArp(_) => 0x6 << 8,
+                PacketParseError::MalformedTcp(_) => 0x7 << 8,
+                PacketParseError::MalformedIcmpv6(_) => 0x8 << 8,
+                PacketParseError::MalformedHopopt(_) => 0x9 << 8,
+                PacketParseError::UnknownLayer3(_) => 0xa << 8,
+                PacketParseError::UnknownLayer4(_) => 0xb << 8,
             },
-            PacketState::Tcp(flags) => (*flags as u16) << 8,
         }
+    }
+}
+
+impl PacketState {
+    pub const fn max_numeric_value() -> u16 {
+        0xb << 8
     }
 }

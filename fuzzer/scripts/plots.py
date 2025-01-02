@@ -19,8 +19,9 @@ pattern = re.compile(
             "corpus:\s*(\d+)",
             "objectives:\s*(\d+)",
             "executions:\s*(\d+)",
-            "exec/sec:\s*([\d.]+)",
+            "exec/sec:\s*([\d.]+k?)",
             "coverage_observer:\s*([\d.]+)%",
+            "state-observer:\s*([\d.]+)%",
         ]
     )
 )
@@ -29,15 +30,19 @@ pattern = re.compile(
 def extract(line: str) -> Optional[Tuple[int, int, int, int, float, float]]:
     m = pattern.search(line)
     if m:
-        h, m, s, clients, corpus, objectives, executions, execs_s, coverage = m.groups()
+        h, m, s, clients, corpus, objectives, executions, execs_s, coverage, state = m.groups()
         time = int(h) * 3600 + int(m) * 60 + int(s)
         clients = int(clients)
         corpus = int(corpus)
         objectives = int(objectives)
         executions = int(executions)
-        exec_s = float(execs_s)
+        if execs_s.endswith("k"):
+            exec_s = float(execs_s[:-1]) * 1000
+        else:
+            exec_s = float(execs_s)
         coverage = float(coverage)
-        return (time, clients, corpus, objectives, executions, exec_s, coverage)
+        state = float(state)
+        return (time, clients, corpus, objectives, executions, exec_s, coverage, state)
     else:
         if "GLOBAL" in line:
             print(line)
@@ -55,7 +60,11 @@ def plot(times: List[int], y: List[Any], ax: axis.Axis, ylabel: str, format_str=
         else (lambda x, pos: f"{x/3600:.1f}")
     )
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(xaxis_fmt))
-    xaxis_interval = (max(times) // 10 // 1800) * 1800
+    if max(times) > 6 * 3600:
+        xaxis_interval = (max(times) // 10 // 1800) * 1800
+    else:
+        xaxis_interval = 1800
+
     ax.xaxis.set_major_locator(ticker.MultipleLocator(xaxis_interval))
     ax.grid()
 
@@ -71,7 +80,7 @@ def main():
     with open(args.input) as f:
         lines = f.readlines()
         lines = [data for line in lines if (data := extract(line))]
-        times, clients, corpus, objectives, executions, exec_s, coverage = zip(*lines)
+        times, clients, corpus, objectives, executions, exec_s, coverage, state = zip(*lines)
 
     configs = [
         {"y": clients, "ylabel": "Clients [count]"},
@@ -80,13 +89,14 @@ def main():
         {"y": executions, "ylabel": "Executions [count]"},
         {"y": exec_s, "ylabel": "Executions/s [1/s]", "format_str": "%.3f"},
         {"y": coverage, "ylabel": "Coverage [%]", "format_str": "%.3f"},
+        {"y": state, "ylabel": "State [%]", "format_str": "%.3f"},
     ]
 
     plt_height = math.ceil(math.sqrt(len(configs)))
     plt_width = math.ceil(len(configs) / plt_height)
 
     fig, axes = plt.subplots(
-        plt_height, plt_width, figsize=(5 * plt_height, 7 * plt_width)
+        plt_height, plt_width, figsize=(7 * plt_width, 7 * plt_height + 1)
     )
     axes = axes.flatten()
 

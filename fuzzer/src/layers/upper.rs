@@ -41,6 +41,16 @@ impl UpperLayerPacket {
         matches!(self, Self::Tcp(..))
     }
 
+    pub fn get_tcp_owned(self) -> Option<Tcp> {
+        match self {
+            UpperLayerPacket::Icmpv6(icmpv6) => None,
+            UpperLayerPacket::Hopopt(extension, upper_layer_packet) => {
+                upper_layer_packet.get_tcp_owned()
+            }
+            UpperLayerPacket::Tcp(tcp, _) => Some(tcp),
+        }
+    }
+
     pub fn types_to_string(&self) -> String {
         match self {
             UpperLayerPacket::Icmpv6(icmpv6) => "icmpv6".to_string(),

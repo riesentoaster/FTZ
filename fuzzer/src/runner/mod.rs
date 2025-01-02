@@ -7,7 +7,6 @@ mod client;
 mod cov_log_feedback;
 mod executor;
 mod fuzzer;
-mod generator;
 mod input;
 mod objective;
 mod observer;
@@ -15,7 +14,6 @@ mod observer;
 pub use {
     executor::ZepyhrExecutor,
     fuzzer::fuzz,
-    generator::ZephyrInteractionGenerator,
     observer::packet::{PacketMetadataFeedback, PacketObserver},
 };
 
