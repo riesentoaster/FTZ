@@ -2,6 +2,10 @@
 
 Using LibAFL, I want to fuzz the TCP/IP stack of Zephyr.
 
+## Repo management
+
+This repository uses [git lfs](https://git-lfs.com) for storing large log files and [precommit](https://pre-commit.com) to ensure some consistency. Install as necessary. 
+
 ## Report
 
 Read the report [here](./report/out/index.pdf). Its artifacts are in the [`report`](./report/) subdirectory. The report is licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
