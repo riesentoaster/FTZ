@@ -6,6 +6,8 @@ Using LibAFL, I want to fuzz the TCP/IP stack of Zephyr.
 
 This repository uses [git lfs](https://git-lfs.com) for storing large log files and [precommit](https://pre-commit.com) to ensure some consistency. Install as necessary. 
 
+It also includes LibAFL as a git submodule to allow using the current version. Clone the repository using `git clone --recurse-submodules https://github.com/riesentoaster/fuzzing-zephyr-network-stack`.
+
 ## Report
 
 Read the report [here](./report/out/index.pdf). Its artifacts are in the [`report`](./report/) subdirectory. The report is licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
