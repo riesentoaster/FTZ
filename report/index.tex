@@ -118,6 +118,9 @@
 
   \textquote{the internal state changes increase the state space that we try to explore: it may be hard for a fuzzer to reach 'deeper' states. Indeed, fuzzing stateful systems is listed as one of the challenges in fuzzing by \Citeauthor{ChallengesAndReflections}\cite{ChallengesAndReflections}}\cite{StatefulReview}.
 
+  \subsubsection{TCP/IP}
+  Checksums such as in TCP/IP are challenging.\cite{StateOfTheArt} Approaches to deal with this include removing the program sections from the target program\cite{TFuzz}.
+
   \subsection{Zephyr}
 
   \subsection{Contributions of this Paper}
@@ -136,23 +139,26 @@
     \item \citetitle{DDFuzz}\cite{DDFuzz}: Use execution of new data dependencies as feedback
     \item \citetitle{StateFuzz}\cite{StateFuzz}: Find state variables (long-lived, can be updated by users, change control flow or memory access) using static analysis, use that to guide fuzzing (new coverage, new value-range, new extreme value). (Talk: Good Example of why coverage-guided alone is insufficient). Check value ranges instead of all values (static symbex!). 4-digit number of state varia les in linux kernel and Qualcomm MSM kernel (Google Pixel).
     \item \citetitle{ProFuzzBench}\cite{ProFuzzBench}: Suite of 10 protocols and 11 open-source implementations of those to be tested. TCP is notably absent from this list. Certain protocols (like FTP) already return HTTP status codes, others are patched to do so. Dockerized. The authors note that configuration is not taken into account and multi-party ($\geq 3$) protocols can not be fuzzed right now. Non-determinism in the programs make feedback (like code coverage) less predictable and thus fuzzing less performant because it introduces non-differentiable duplicate entries into the corpus. Speed is another issue, where complex setup-processes, costly network operations (resp. synchronization for me), and long multipart-inputs contribute. Finally, state identification is only superficially handled.
+    \item \citetitle{AFLNET}\cite{AFLNET}: FTP and RTSP as targets, state transition (+coverage) feedback, corpus from traces, mutation on random entry (havoc and insert/delete/duplicate etc.), corpus scheduling based on statistics about each state.
+    \item \citetitle{TCPFuzz}\cite{TCPFuzz}: TCP targets, differential fuzzing, input: syscalls + packets, complex mutators including intelligent dependencies between the current and all previous packets and syscalls in the input, feedback: inter-package diff in coverage.
+    \item \citetitle{FitM}\cite{FitM}: Use persistent snapshots of userspace processes (CRIU), fuzzer-in-the-middle, multiple strategies such as input deduplication and resynchronization necessary because of the approach
+    \item \citetitle{Autofuzz}\cite{Autofuzz}: Man-in-the-middle, learn protocol by constructing a FSA and packet syntax using a bioinformatics technique. Fuzz server and client.
+    \item \citetitle{EPF}\cite{EPF}: Target SCADA, uses population-based simulated annealing to schedule which packet type to add/mutate next in conjunction with coverage feedback. Requires Scapy-compatible implementation of packet types to ensure packet structure.
+    \item \citetitle{ModelBased}\cite{ModelBased}: Build FSM and minimize it, then use it to schedule basic mutations.
+    \item \citetitle{GANFuzz}\cite{GANFuzz}: Learn GAN to generate next inputs. Targets Modbus-TCP.
     \item \citetitle{StatefulReview}\cite{StatefulReview}: Provides taxonomy of components and categorizes stateful fuzzers, compares approaches and lists challenges and future directions.
+    \item \citetitle{Congestion}\cite{Congestion}: Manual FSM from RFC to generate abstract attack models against congestion control implementations, which are then transformed to concrete attacks strategies and tested on actual implementations.
     \item \citetitle{ModbusTCP}\cite{ModbusTCP} is a Modbus fuzzer, that only seems to use TCP as transport. Generation of packets happens only for Modbus itself. \citetitle{MTFStorm}\cite{MTFStorm} is follow-up work that does the same more systematically.
     \item \citetitle{IndustrialReview}\cite{IndustrialReview} review industrial control protocol. Notably, Modbus/TCP fuzzing seems common, but TCP is only used as transport layer, not target.
+
     \item \citetitle{MTA}\cite{MTA} use machine learning models to generate Modbus/TCP packets, but target Modbus and again only use TCP as a transportation layer.
-    \item \citetitle{AnotherModbusTCP}\cite{AnotherModbusTCP} is another Modbus/TCP fuzzer that does not fuzz the TCP stack.
+    \item \citetitle{AnotherModbusTCP}\cite{AnotherModbusTCP} is another Modbus/TCP fuzzer that does not fuzz the TCP stack. See also\cite{ModbusTCP2}.
+    \item A similar approach using a Scapy-based fuzzer was implemented for the industrial protocol EtherNet/IP, where TCP was declared as out-of-scope\cite{ENIP}.
     \item \citetitle{StateMachine}\cite{StateMachine} calculate a directed graph from the measured state variables, and schedule mutations based on a formula incorporating state depth, coverage, number of transitions, and number of mutations based on this state.
   \end{itemize}
 
   \subsection{ToDo}
   \begin{itemize}
-    \item \citetitle{AFLNET}\cite{AFLNET}: FTP and RTSP
-    \item \citetitle{Autofuzz}\cite{Autofuzz}
-    \item \citetitle{EPF}\cite{EPF}
-    \item \citetitle{ModelBased}\cite{ModelBased}
-    \item \citetitle{GANFuzz}\cite{GANFuzz}
-    \item \citetitle{TCPFuzz}\cite{TCPFuzz}
-    \item \citetitle{FitM}\cite{FitM}
     \item \citetitle{Survey}\cite{Survey}
   \end{itemize}
 

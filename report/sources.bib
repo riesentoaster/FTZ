@@ -411,3 +411,71 @@
   numpages   = {36},
   keywords   = {Protocol, fuzz testing, security}
 }
+
+@article{StateOfTheArt,
+  author   = {Liang, Hongliang and Pei, Xiaoxiao and Jia, Xiaodong and Shen, Wuwei and Zhang, Jian},
+  journal  = {IEEE Transactions on Reliability},
+  title    = {Fuzzing: State of the Art},
+  year     = {2018},
+  volume   = {67},
+  number   = {3},
+  pages    = {1199-1218},
+  keywords = {Fuzzing;Computer bugs;Software testing;Security;Fuzzing;reliability;security;software testing;survey},
+  doi      = {10.1109/TR.2018.2834476}
+}
+
+
+@article{ModbusTCP2,
+  author         = {Lai, Yingxu and Gao, Huijuan and Liu, Jing},
+  title          = {Vulnerability Mining Method for the Modbus TCP Using an Anti-Sample Fuzzer},
+  journal        = {Sensors},
+  volume         = {20},
+  year           = {2020},
+  number         = {7},
+  article-number = {2040},
+  url            = {https://www.mdpi.com/1424-8220/20/7/2040},
+  pubmedid       = {32260503},
+  issn           = {1424-8220},
+  abstract       = {Vulnerability mining technology is used for protecting the security of industrial control systems and their network protocols. Traditionally, vulnerability mining methods have the shortcomings of poor vulnerability mining ability and low reception rate. In this study, a test case generation model for vulnerability mining of the Modbus TCP based on an anti-sample algorithm is proposed. Firstly, a recurrent neural network is trained to learn the semantics of the protocol data unit. The softmax function is used to express the probability distribution of data values. Next, the random variable threshold and the maximum probability are compared in the algorithm to determine whether to replace the current data value with the minimum probability data value. Finally, the Modbus application protocol (MBAP) header is completed according to the protocol specification. Experiments using the anti-sample fuzzer show that it not only improves the reception rate of test cases and the ability to exploit vulnerabilities, but also detects vulnerabilities of industrial control protocols more quickly.},
+  doi            = {10.3390/s20072040}
+}
+
+
+
+@inproceedings{TFuzz,
+  author    = {Peng, Hui and Shoshitaishvili, Yan and Payer, Mathias},
+  booktitle = {2018 IEEE Symposium on Security and Privacy (SP)},
+  title     = {T-Fuzz: Fuzzing by Program Transformation},
+  year      = {2018},
+  volume    = {},
+  number    = {},
+  pages     = {697-710},
+  keywords  = {Computer bugs;Fuzzing;Software;Security;Libraries;Tools;Fuzz;Bug finding;Program Analysis},
+  doi       = {10.1109/SP.2018.00056}
+}
+
+@phdthesis{ENIP,
+  author  = {Tacliad, Francisco},
+  title   = {{ENIP Fuzz}: a Scapy-based EtherNet/IP fuzzer for security testing},
+  school  = {Monterey, California: Naval Postgraduate School},
+  year    = {2016},
+  address = {https://hdl.handle.net/10945/56714},
+  month   = {09}
+}
+
+@inproceedings{Congestion,
+  author    = {Jero, Samuel and Hoque, Endadul and Choffnes, David and Mislove, Alan and Nita-Rotaru, Cristina},
+  title     = {Automated Attack Discovery in TCP Congestion Control Using a Model-guided Approach},
+  year      = {2018},
+  isbn      = {9781450355858},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3232755.3232769},
+  doi       = {10.1145/3232755.3232769},
+  abstract  = {In this work, we propose an automated method to find attacks against TCP congestion control implementations that combines the generality of implementation-agnostic fuzzing with the precision of runtime analysis. It uses a model-guided approach to generate abstract attack strategies by leveraging a state machine model of congestion control to find vulnerable state machine paths that an attacker could exploit to increase or decrease the throughput of a connection. These abstract strategies are then mapped to concrete attack strategies, which consist of sequences of actions such as injection or modification of acknowledgements. We design and implement a virtualized platform, TCPwn, that consists of a proxy-based attack injector to inject these concrete attack strategies. We evaluated 5 TCP implementations from 4 Linux distributions and Windows 8.1. Overall, we found 11 classes of attacks, of which 8 are new.},
+  booktitle = {Proceedings of the 2018 Applied Networking Research Workshop},
+  pages     = {95},
+  numpages  = {1},
+  location  = {Montreal, QC, Canada},
+  series    = {ANRW '18}
+}
