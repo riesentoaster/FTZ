@@ -19,7 +19,7 @@ use libafl::{
     monitors::OnDiskTomlMonitor,
     mutators::StdMOptMutator,
     observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, TimeObserver},
-    schedulers::StdScheduler,
+    schedulers::{powersched::PowerSchedule, StdWeightedScheduler},
     stages::StdMutationalStage,
     state::{HasCorpus as _, StdState},
     Error, Fuzzer as _, StdFuzzer,
@@ -79,6 +79,7 @@ pub fn fuzz() {
                         .cast::<[u8; PacketState::max_numeric_value() as usize + 1]>(),
                 )
             };
+
             let state_observer = HitcountsMapObserver::new(state_observer_raw).track_indices();
             let state_feedback = MaxMapFeedback::new(&state_observer);
 
@@ -96,9 +97,6 @@ pub fn fuzz() {
                 TimeFeedback::new(&time_observer),
                 CrashLoggingFeedback::new(),
             );
-
-            let mut observers =
-                tuple_list!(cov_observer, time_observer, packet_observer, state_observer);
 
             let solutions = OnDiskCorpus::new("./solutions")?;
 
@@ -120,12 +118,19 @@ pub fn fuzz() {
             let mutator =
                 StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);
 
-            let scheduler = StdScheduler::new();
+            let scheduler = StdWeightedScheduler::with_schedule(
+                &mut state,
+                &state_observer,
+                Some(PowerSchedule::fast()),
+            );
 
             let mut fuzzer = StdFuzzer::new(scheduler, feedback, objective);
 
             let outgoing_packets = outgoing_tcp_packets();
             let mut generator = FixedZephyrInputGenerator::new(outgoing_packets, false);
+
+            let mut observers =
+                tuple_list!(cov_observer, time_observer, packet_observer, state_observer);
 
             let mut executor = ZepyhrExecutor::new(
                 &mut observers,
