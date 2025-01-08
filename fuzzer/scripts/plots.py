@@ -20,8 +20,8 @@ pattern = re.compile(
             "objectives:\s*(\d+)",
             "executions:\s*(\d+)",
             "exec/sec:\s*([\d.]+k?)",
-            "coverage_observer:\s*([\d.]+)%",
             "state-observer:\s*([\d.]+)%",
+            "coverage-observer:\s*([\d.]+)%",
         ]
     )
 )
@@ -30,7 +30,9 @@ pattern = re.compile(
 def extract(line: str) -> Optional[Tuple[int, int, int, int, float, float]]:
     m = pattern.search(line)
     if m:
-        h, m, s, clients, corpus, objectives, executions, execs_s, coverage, state = m.groups()
+        h, m, s, clients, corpus, objectives, executions, execs_s, state, coverage = (
+            m.groups()
+        )
         time = int(h) * 3600 + int(m) * 60 + int(s)
         clients = int(clients)
         corpus = int(corpus)
@@ -42,7 +44,7 @@ def extract(line: str) -> Optional[Tuple[int, int, int, int, float, float]]:
             exec_s = float(execs_s)
         coverage = float(coverage)
         state = float(state)
-        return (time, clients, corpus, objectives, executions, exec_s, coverage, state)
+        return (time, clients, corpus, objectives, executions, exec_s, state, coverage)
     else:
         if "GLOBAL" in line:
             print(line)
@@ -80,17 +82,44 @@ def main():
     with open(args.input) as f:
         lines = f.readlines()
         lines = [data for line in lines if (data := extract(line))]
-        times, clients, corpus, objectives, executions, exec_s, coverage, state = zip(*lines)
+        times, clients, corpus, objectives, executions, exec_s, state, coverage = zip(
+            *lines
+        )
 
     configs = [
         {"y": clients, "ylabel": "Clients [count]"},
         {"y": corpus, "ylabel": "Corpus [count]"},
-        {"y": objectives, "ylabel": "Objectives [count]"},
         {"y": executions, "ylabel": "Executions [count]"},
         {"y": exec_s, "ylabel": "Executions/s [1/s]", "format_str": "%.3f"},
+        {"y": objectives, "ylabel": "Objectives [count]"},
         {"y": coverage, "ylabel": "Coverage [%]", "format_str": "%.3f"},
         {"y": state, "ylabel": "State [%]", "format_str": "%.3f"},
     ]
+    max_time = max(times)
+
+    last_hour_state_times, last_hour_state = zip(
+        *[(t, s) for t, s in zip(times, state) if max_time - t < 3600]
+    )
+    last_hour_coverage_times, last_hour_coverage = zip(
+        *[(t, s) for t, s in zip(times, coverage) if max_time - t < 3600]
+    )
+
+    configs.append(
+        {
+            "y": last_hour_state,
+            "ylabel": "State [%]",
+            "format_str": "%.3f",
+            "times": last_hour_state_times,
+        }
+    )
+    configs.append(
+        {
+            "y": last_hour_coverage,
+            "ylabel": "Coverage [%]",
+            "format_str": "%.3f",
+            "times": last_hour_coverage_times,
+        }
+    )
 
     plt_height = math.ceil(math.sqrt(len(configs)))
     plt_width = math.ceil(len(configs) / plt_height)
@@ -101,7 +130,9 @@ def main():
     axes = axes.flatten()
 
     for config, ax in zip(configs, list(axes)):
-        plot(**config, ax=ax, times=times)
+        if "times" not in config:
+            config["times"] = times
+        plot(**config, ax=ax)
 
     base = ".".join(args.input.split(".")[:-1]) if "." in args.input else args.input
     fig.suptitle(base.split("/")[-1])

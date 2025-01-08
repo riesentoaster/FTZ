@@ -114,6 +114,76 @@ pub fn fuzz() {
             });
 
             let mutations = ZephyrInputType::mutators();
+            // let mutations = tuple_list!()
+            //     .merge(
+            //         int_mutators_no_crossover()
+            //             .map(ToMappingMutator::new(ParsedZephyrInput::ipv4_version_mut)),
+            //     )
+            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
+            //         ParsedZephyrInput::ipv4_header_length_mut,
+            //     )))
+            //     .merge(
+            //         int_mutators_no_crossover()
+            //             .map(ToMappingMutator::new(ParsedZephyrInput::ipv4_dscp_mut)),
+            //     )
+            //     .merge(
+            //         int_mutators_no_crossover()
+            //             .map(ToMappingMutator::new(ParsedZephyrInput::ipv4_ecn_mut)),
+            //     )
+            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
+            //         ParsedZephyrInput::ipv4_total_length_mut,
+            //     )))
+            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
+            //         ParsedZephyrInput::ipv4_identification_mut,
+            //     )))
+            //     .merge(
+            //         int_mutators_no_crossover()
+            //             .map(ToMappingMutator::new(ParsedZephyrInput::ipv4_flags_mut)),
+            //     )
+            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
+            //         ParsedZephyrInput::ipv4_fragment_offset_mut,
+            //     )))
+            //     .merge(
+            //         int_mutators_no_crossover()
+            //             .map(ToMappingMutator::new(ParsedZephyrInput::ipv4_ttl_mut)),
+            //     )
+            //     .merge(
+            //         int_mutators_no_crossover()
+            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_source_mut)),
+            //     )
+            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
+            //         ParsedZephyrInput::tcp_destination_mut,
+            //     )))
+            //     .merge(
+            //         int_mutators_no_crossover()
+            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_sequence_mut)),
+            //     )
+            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
+            //         ParsedZephyrInput::tcp_acknowledgement_mut,
+            //     )))
+            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
+            //         ParsedZephyrInput::tcp_data_offset_mut,
+            //     )))
+            //     .merge(
+            //         int_mutators_no_crossover()
+            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_reserved_mut)),
+            //     )
+            //     .merge(
+            //         int_mutators_no_crossover()
+            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_flags_mut)),
+            //     )
+            //     .merge(
+            //         int_mutators_no_crossover()
+            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_window_mut)),
+            //     )
+            //     .merge(
+            //         int_mutators_no_crossover()
+            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_urgent_ptr_mut)),
+            //     )
+            //     .merge(
+            //         havoc_mutations_no_crossover()
+            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_payload_mut)),
+            //     );
 
             let mutator =
                 StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);

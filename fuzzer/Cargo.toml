@@ -29,6 +29,7 @@ ahash = "0.8.11"
 base64 = "0.22.1"
 hex = "0.4.3"
 serde_json = "1.0.133"
+etherparse = { path = "../etherparse/etherparse", features = ["serde"] }
 
 [features]
 default = ["monitor_stdout", "multipart_input"]

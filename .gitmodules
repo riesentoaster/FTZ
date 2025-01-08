@@ -1,3 +1,6 @@
 [submodule "LibAFL"]
 	path = LibAFL
 	url = https://github.com/riesentoaster/LibAFL
+[submodule "etherparse"]
+	path = etherparse
+	url = https://github.com/riesentoaster/etherparse

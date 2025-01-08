@@ -1,3 +1,4 @@
+#![recursion_limit = "1024"]
 use std::io::{self, Write};
 
 use runner::fuzz;
@@ -11,7 +12,7 @@ mod runner;
 mod shmem;
 mod smoltcp;
 
-pub const NETWORK_SHMEM_SIZE: usize = 1 << 16;
+pub const NETWORK_SHMEM_SIZE: usize = 1600;
 pub const COV_SHMEM_SIZE: usize = 25632; // manually extracted
 pub const PCAP_PATH: &str = "./pcap.pcap";
 

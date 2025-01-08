@@ -1,3 +1,4 @@
+use etherparse::{EtherparseInput, TcpMutators};
 use generator::FixedZephyrInputPartGenerator;
 use libafl::{
     corpus::{CorpusId, Testcase},
@@ -14,11 +15,12 @@ use libafl_bolts::{
 use serde::Serialize;
 
 mod appending;
+mod bool;
+mod etherparse;
 mod generator;
 mod parsed;
 mod stateful;
-use parsed::ParsedZephyrInput;
-use stateful::{ReplayingStatefulInput, ToReplayingStatefulMutator};
+pub use stateful::{ReplayingStatefulInput, ToReplayingStatefulMutator};
 
 use crate::packets::outgoing_tcp_packets;
 
@@ -26,10 +28,13 @@ type HavocStatefulInput = ReplayingStatefulInput<BytesInput>;
 type HavocMultipartInput = MultipartInput<BytesInput>;
 type ParsedStatefulInput = ReplayingStatefulInput<ParsedZephyrInput>;
 type ParsedMultipartInput = MultipartInput<ParsedZephyrInput>;
+type EtherparseStatefulInput = ReplayingStatefulInput<EtherparseInput>;
 
-pub type ZephyrInputType = HavocStatefulInput;
+pub type ZephyrInputType = EtherparseStatefulInput;
 
-pub use {appending::AppendingMutator, generator::FixedZephyrInputGenerator};
+pub use {
+    appending::AppendingMutator, generator::FixedZephyrInputGenerator, parsed::ParsedZephyrInput,
+};
 
 pub trait ZephyrInputPart: Sized
 where
@@ -63,6 +68,18 @@ impl ZephyrInputPart for ParsedZephyrInput {
     }
 }
 
+impl ZephyrInputPart for EtherparseInput {
+    type Mutators = TcpMutators;
+    type Generator = FixedZephyrInputPartGenerator<Self>;
+
+    fn mutators() -> Self::Mutators {
+        EtherparseInput::mutators()
+    }
+    fn generator() -> Self::Generator {
+        FixedZephyrInputPartGenerator::new(outgoing_tcp_packets(), true)
+    }
+}
+
 pub trait ZephyrInput<I>
 where
     Vec<u8>: From<I>,
@@ -72,6 +89,12 @@ where
     fn mutators() -> Self::Mutators;
     fn to_packets(&self) -> Vec<Vec<u8>>;
     fn parse(input: &[Vec<u8>]) -> Self;
+    fn fixed_generator(fixed: Vec<Vec<u8>>, restart: bool) -> FixedZephyrInputGenerator<Self>
+    where
+        Self: Sized,
+    {
+        FixedZephyrInputGenerator::new(fixed, restart)
+    }
 }
 
 impl<I> ZephyrInput<I> for MultipartInput<I>
@@ -168,4 +191,56 @@ pub fn generate_filename<I: Input>(testcase: &Testcase<I>, id: &CorpusId) -> Str
         id,
         testcase.input().as_ref().unwrap().generate_name(Some(*id))
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use libafl::{generators::Generator, mutators::Mutator, state::NopState};
+    use libafl_bolts::rands::StdRand;
+
+    use crate::{
+        packets::outgoing_tcp_packets,
+        runner::input::{
+            etherparse::EtherparseInput, generator::FixedZephyrInputPartGenerator,
+            AppendingMutator, EtherparseStatefulInput, FixedZephyrInputGenerator, ZephyrInput,
+            ZephyrInputPart,
+        },
+    };
+
+    #[test]
+    fn generate_etherparse() {
+        type I = EtherparseStatefulInput;
+        type II = EtherparseInput;
+        let mut generator = II::generator();
+        let g: &mut dyn Generator<II, _> = &mut generator;
+        let _i: II = g.generate(&mut StdRand::new()).unwrap();
+
+        let mut generator = FixedZephyrInputGenerator::new(outgoing_tcp_packets(), true);
+        let g: &mut dyn Generator<I, _> = &mut generator;
+        let _i: I = g.generate(&mut StdRand::new()).unwrap();
+    }
+
+    #[test]
+    fn appending_mutator_etherparse() {
+        let input = EtherparseStatefulInput::parse(&outgoing_tcp_packets());
+        fn take_zephyr_input<I: ZephyrInput<II>, II>(input: I) -> I
+        where
+            Vec<u8>: From<II>,
+            II: ZephyrInputPart,
+        {
+            input
+        }
+        let _input = take_zephyr_input(input);
+        let mut generator = FixedZephyrInputGenerator::new(outgoing_tcp_packets(), true);
+        let mut state: NopState<EtherparseStatefulInput> = NopState::new();
+        let input = generator.generate(&mut state).unwrap();
+        let mut input: EtherparseStatefulInput = take_zephyr_input(input);
+
+        let mut inner_generator = FixedZephyrInputPartGenerator::new(outgoing_tcp_packets(), true);
+        let _input_inner: EtherparseInput = inner_generator.generate(&mut state).unwrap();
+
+        let mut mutator = AppendingMutator::new(inner_generator);
+        mutator.mutate(&mut state, &mut input).unwrap();
+        println!("{:?}", input);
+    }
 }
