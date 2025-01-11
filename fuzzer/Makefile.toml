@@ -16,6 +16,7 @@ echo "Testing for changes in zephyr compared to diff file"
 
 DIFF_PATH="$(realpath ../zephyr.diff)"
 CUSTOM_TARGET_DIR="$(realpath ${ZEPHYR_EXE_DIR})"
+ASAN_BLACKLIST_PATH="$(realpath asan-blacklist.txt)"
 CURRENT_DIR="$(pwd)"
 
 cd ${ZEPHYR_PROJECT_DIR}
@@ -35,8 +36,17 @@ else
         -d "$CUSTOM_TARGET_DIR" \
         ${ZEPHYR_PRISTINE:+--pristine} \
         -- \
-        -DEXTRA_CFLAGS="-g -O2 -fsanitize-coverage=trace-pc-guard"
+        -DEXTRA_CFLAGS="\
+                -g \
+                -O1 \
+                -fno-omit-frame-pointer \
+                -fsanitize-coverage=trace-pc-guard \
+                -fsanitize-ignorelist=${ASAN_BLACKLIST_PATH} \
+            "
     
+                # -fno-optimize-sibling-calls \
+                # -fsanitize-blacklist=${ASAN_BLACKLIST_PATH} \
+    # -fno-inline \
     cd $CURRENT_DIR
     echo "Adding changes to git"
     cargo make zephyr_diff
@@ -50,8 +60,15 @@ args = ["build", "--profile", "release"]
 [tasks.build_all]
 dependencies = ["build_fuzzer", "build_zephyr"]
 
+
+[tasks.clear_shmem]
+script_runner = "@shell"
+script = '''
+rm -rf /dev/shm/*
+'''
+
 [tasks.run]
-dependencies = ["build_all"]
+dependencies = ["build_all", "clear_shmem"]
 script_runner = "@shell"
 script = '''
 ${FUZZER_DIR} --zephyr-exec-dir ${ZEPHYR_EXE_DIR}/zephyr/zephyr.exe ${@}

@@ -1,4 +1,4 @@
-#![recursion_limit = "1024"]
+#![recursion_limit = "1024"] // too complex types in mutators
 use std::io::{self, Write};
 
 use runner::fuzz;
@@ -13,7 +13,7 @@ mod shmem;
 mod smoltcp;
 
 pub const NETWORK_SHMEM_SIZE: usize = 1600;
-pub const COV_SHMEM_SIZE: usize = 25632; // manually extracted
+pub const COV_SHMEM_SIZE: usize = 25780; // manually extracted
 pub const PCAP_PATH: &str = "./pcap.pcap";
 
 fn main() {
