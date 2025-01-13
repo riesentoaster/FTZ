@@ -32,6 +32,10 @@ index 8c46147bc0a..27f56fbb176 100644
  	zephyr_library_compile_definitions(_POSIX_C_SOURCE=200809L _XOPEN_SOURCE=600 _XOPEN_SOURCE_EXTENDED)
  else()
  	zephyr_library_sources(
+diff --git a/capture.pcap b/capture.pcap
+new file mode 100644
+index 00000000000..3f4773ec70c
+Binary files /dev/null and b/capture.pcap differ
 diff --git a/drivers/ethernet/CMakeLists.txt b/drivers/ethernet/CMakeLists.txt
 index 65ce8a45332..b98650d2fd5 100644
 --- a/drivers/ethernet/CMakeLists.txt
@@ -116,10 +120,10 @@ index d4c065fbdde..6aeb1f9cc51 100644
  endif # ETH_NATIVE_POSIX
 diff --git a/drivers/ethernet/eth_shmem.c b/drivers/ethernet/eth_shmem.c
 new file mode 100644
-index 00000000000..9e01f94ea38
+index 00000000000..def3c2dfd0f
 --- /dev/null
 +++ b/drivers/ethernet/eth_shmem.c
-@@ -0,0 +1,166 @@
+@@ -0,0 +1,235 @@
 +/**
 + * @file
 + * Ethernet driver using shared memory for communication
@@ -136,6 +140,10 @@ index 00000000000..9e01f94ea38
 +#include <zephyr/net/net_if.h>
 +#include <zephyr/net/ethernet.h>
 +#include <ethernet/eth_stats.h>
++#include <posix_native_task.h>
++#include <cmdline.h>
++
++static const char *if_name_cmd_opt;
 +
 +#include "coverage.h"
 +#include "eth_shmem_priv.h"
@@ -146,10 +154,13 @@ index 00000000000..9e01f94ea38
 +    uint8_t mac_addr[6];
 +    struct net_linkaddr ll_addr;
 +    struct net_if *iface;
++    const char *if_name;
 +    k_tid_t rx_thread;
 +    struct k_thread rx_thread_data;
 +    struct z_thread_stack_element *rx_stack;
 +    size_t rx_stack_size;
++    bool init_done;
++    uint8_t recv_buffer[NET_ETH_MTU + sizeof(struct net_eth_hdr)];
 +};
 +
 +static int eth_send(const struct device *dev, struct net_pkt *pkt)
@@ -165,13 +176,14 @@ index 00000000000..9e01f94ea38
 +
 +    buf = prepare_send_buf(count);
 +    while (buf == 0) {
-+        k_sleep(K_MSEC(5));
++        k_sleep(K_MSEC(1));
 +        buf = prepare_send_buf(count);
 +    }
 +
-+    if (net_pkt_read(pkt, buf, count)) {
++    int ret = net_pkt_read(pkt, buf, count);
++    if (ret) {
 +        MY_LOG("eth_send: net_pkt_read failed\n");
-+        return -EIO;
++        return ret;
 +    }
 +
 +    send_buf(count);
@@ -180,18 +192,37 @@ index 00000000000..9e01f94ea38
 +
 +static void eth_rx(void *p1, void *p2, void *p3)
 +{
++    ARG_UNUSED(p2);
++    ARG_UNUSED(p3);
++
 +    struct eth_context *ctx = p1;
++
 +    struct net_if *iface = ctx->iface;
-+    struct net_pkt *pkt;
-+    uint8_t recv_buffer[NET_ETH_MTU + sizeof(struct net_eth_hdr)];
++    struct net_pkt *pkt = NULL;
 +    int count;
 +
 +    while (1) {
 +        if (net_if_is_up(iface)) {
 +            while (incoming_available()) {
-+                count = read_incoming(recv_buffer, sizeof(recv_buffer));
++                MY_LOG("incoming_available: true\n");
++                count = read_incoming(ctx->recv_buffer, sizeof(ctx->recv_buffer));
 +                if (count <= 0) {
 +                    continue;
++                }
++
++                MY_LOG("Received packet of size %d: ", count);
++                for (int i = 0; i < count; i++) {
++                    MY_LOG("%02x ", ctx->recv_buffer[i]);
++                }
++                MY_LOG("\n");
++                if (ctx->recv_buffer[12] == 0x08 && ctx->recv_buffer[13] == 0x00) {
++                    // IP header starts at offset 14
++                    uint8_t ip_proto = ctx->recv_buffer[23];  // Protocol field in IP header
++                    if (ip_proto == 6) {  // TCP
++                        MY_LOG("TCP packet received, len %d\n", count);
++                        // Print TCP flags (offset 14 + 20 + 13 = 47)
++                        MY_LOG("TCP flags: 0x%02x\n", ctx->recv_buffer[47]);
++                    }
 +                }
 +
 +                pkt = net_pkt_rx_alloc_with_buffer(iface, count, 
@@ -200,7 +231,7 @@ index 00000000000..9e01f94ea38
 +                    continue;
 +                }
 +
-+                if (net_pkt_write(pkt, recv_buffer, count)) {
++                if (net_pkt_write(pkt, ctx->recv_buffer, count)) {
 +                    net_pkt_unref(pkt);
 +                    continue;
 +                }
@@ -208,12 +239,12 @@ index 00000000000..9e01f94ea38
 +                if (net_recv_data(iface, pkt) < 0) {
 +                    net_pkt_unref(pkt);
 +                }
++                k_yield();
 +            }
-+            k_sleep(K_MSEC(5));
 +        } else {
 +            MY_LOG("attempting to receive packet while iface is down\n");
 +        }
-+        k_sleep(K_MSEC(10));
++		k_sleep(K_MSEC(10));
 +    }
 +}
 +
@@ -221,25 +252,47 @@ index 00000000000..9e01f94ea38
 +{
 +    MY_LOG("initializing interface\n");
 +    struct eth_context *ctx = net_if_get_device(iface)->data;
++    ctx->ll_addr.addr = ctx->mac_addr;
++	ctx->ll_addr.len = sizeof(ctx->mac_addr);
++
++	struct net_linkaddr *ll_addr = &ctx->ll_addr;
++
 +    ctx->iface = iface;
 +
 +    ethernet_init(iface);
-+    
-+    /* Set up MAC address before anything else */
-+    if (CONFIG_ETH_NATIVE_POSIX_MAC_ADDR[0] != 0) {
-+        if (net_bytes_from_str(ctx->mac_addr, sizeof(ctx->mac_addr),
-+                              CONFIG_ETH_NATIVE_POSIX_MAC_ADDR) < 0) {
-+            LOG_ERR("Invalid MAC address %s",
-+                    CONFIG_ETH_NATIVE_POSIX_MAC_ADDR);
-+        }
++
++    if (ctx->init_done) {
++        return;
 +    }
 +
-+    ctx->ll_addr.addr = ctx->mac_addr;
-+    ctx->ll_addr.len = sizeof(ctx->mac_addr);
++    net_lldp_set_lldpdu(iface);
++
++    ctx->init_done = true;
++    
++
++    BUILD_ASSERT(CONFIG_ETH_NATIVE_POSIX_INTERFACE_COUNT == 1,
++		     "Cannot have static MAC if interface count > 1");
++
++	if (CONFIG_ETH_NATIVE_POSIX_MAC_ADDR[0] != 0) {
++		if (net_bytes_from_str(ctx->mac_addr, sizeof(ctx->mac_addr),
++				       CONFIG_ETH_NATIVE_POSIX_MAC_ADDR) < 0) {
++			LOG_ERR("Invalid MAC address %s",
++				CONFIG_ETH_NATIVE_POSIX_MAC_ADDR);
++		}
++	}
++
++    if (CONFIG_ETH_NATIVE_POSIX_INTERFACE_COUNT == 1) {
++		ctx->if_name = CONFIG_ETH_NATIVE_POSIX_DRV_NAME;
++	}
++
++    if (if_name_cmd_opt != NULL) {
++		ctx->if_name = if_name_cmd_opt;
++	}
++
 +
 +    /* This must be done before any packets can be received/sent */
-+    net_if_set_link_addr(iface, ctx->ll_addr.addr, ctx->ll_addr.len, 
-+                         NET_LINK_ETHERNET);
++	net_if_set_link_addr(iface, ll_addr->addr, ll_addr->len,
++			     NET_LINK_ETHERNET);
 +
 +    init_shmem_eth_interface();
 +    k_thread_create(&ctx->rx_thread_data, ctx->rx_stack,
@@ -252,7 +305,8 @@ index 00000000000..9e01f94ea38
 +K_KERNEL_STACK_DEFINE(rx_thread_stack, CONFIG_ARCH_POSIX_RECOMMENDED_STACK_SIZE);
 +static struct k_thread rx_thread_data;
 +
-+static struct eth_context eth_context_data = {		     
++static struct eth_context eth_context_data = {
++    .if_name = CONFIG_ETH_NATIVE_POSIX_DRV_NAME,
 +    .rx_thread = &rx_thread_data,			     
 +    .rx_stack = rx_thread_stack,			     
 +    .rx_stack_size = K_KERNEL_STACK_SIZEOF(rx_thread_stack), 
@@ -261,6 +315,7 @@ index 00000000000..9e01f94ea38
 +static enum ethernet_hw_caps eth_get_capabilities(const struct device *dev)
 +{
 +	ARG_UNUSED(dev);
++    MY_LOG("eth_get_capabilities called\n");
 +	return ETHERNET_TXTIME;
 +}
 +
@@ -272,7 +327,7 @@ index 00000000000..9e01f94ea38
 +	ARG_UNUSED(type); 
 +	ARG_UNUSED(config);
 +
-+    MY_LOG("eth_set_config\n");
++    MY_LOG("eth_set_config called\n");
 +
 +	return 0;
 +}
@@ -286,6 +341,24 @@ index 00000000000..9e01f94ea38
 +
 +ETH_NET_DEVICE_INIT(eth_shmem, "ETH_SHMEM", NULL, NULL, &eth_context_data, NULL, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT, &eth_if_api, NET_ETH_MTU)
 +
++static void add_native_posix_options(void)
++{
++	static struct args_struct_t eth_native_posix_options[] = {
++		{
++			.is_mandatory = false,
++			.option = "eth-if",
++			.name = "name",
++			.type = 's',
++			.dest = (void *)&if_name_cmd_opt,
++			.descript = "Name of the eth interface to use",
++		},
++		ARG_TABLE_ENDMARKER,
++	};
++
++	native_add_command_line_opts(eth_native_posix_options);
++}
++
++NATIVE_TASK(add_native_posix_options, PRE_BOOT_1, 10);
 diff --git a/drivers/ethernet/eth_shmem_adapt.c b/drivers/ethernet/eth_shmem_adapt.c
 new file mode 100644
 index 00000000000..085f27d340c
@@ -454,19 +527,20 @@ index 00000000000..89d55b57a04
 +
 +#endif /* ETH_SHMEM_PRIV_H */
 diff --git a/samples/net/sockets/echo/prj.conf b/samples/net/sockets/echo/prj.conf
-index 33729784d8e..aade1e133e2 100644
+index 33729784d8e..3c17a6df83b 100644
 --- a/samples/net/sockets/echo/prj.conf
 +++ b/samples/net/sockets/echo/prj.conf
-@@ -12,6 +12,8 @@ CONFIG_NET_IPV4_MAPPING_TO_IPV6=y
+@@ -12,6 +12,9 @@ CONFIG_NET_IPV4_MAPPING_TO_IPV6=y
  
  # Network driver config
  CONFIG_TEST_RANDOM_GENERATOR=y
 +CONFIG_ETH_NATIVE_POSIX=y
-+CONFIG_ETH_NATIVE_POSIX_TAP=y
++# CONFIG_ETH_NATIVE_POSIX_TAP=y
++CONFIG_ETH_NATIVE_POSIX_SHMEM=y
  
  # Network address config
  CONFIG_NET_CONFIG_SETTINGS=y
-@@ -21,3 +23,10 @@ CONFIG_NET_CONFIG_MY_IPV4_ADDR="192.0.2.1"
+@@ -21,3 +24,10 @@ CONFIG_NET_CONFIG_MY_IPV4_ADDR="192.0.2.1"
  CONFIG_NET_CONFIG_PEER_IPV4_ADDR="192.0.2.2"
  CONFIG_NET_CONFIG_MY_IPV6_ADDR="2001:db8::1"
  CONFIG_NET_CONFIG_PEER_IPV6_ADDR="2001:db8::2"

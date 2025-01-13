@@ -1,5 +1,4 @@
 use std::{
-    ffi::CStr,
     fmt::Debug,
     fs::OpenOptions,
     marker::PhantomData,
@@ -16,7 +15,6 @@ use std::{
 };
 
 use libafl::{
-    events::ClientDescription,
     executors::{Executor, ExitKind, HasObservers},
     observers::ObserversTuple,
     state::{HasExecutions, State, UsesState},
@@ -27,7 +25,7 @@ use libafl_bolts::{
     tuples::{Handle, MatchName, MatchNameRef, RefIndexable},
 };
 
-use crate::runner::INTER_SEND_WAIT;
+use crate::runner::{get_path, INTER_SEND_WAIT};
 
 use crate::smoltcp::shmem_net_device::ShmemNetworkDevice;
 
@@ -54,9 +52,9 @@ impl<'a, S, OT, II> ZepyhrExecutor<'a, S, OT, II> {
         zephyr_exec_path: PathBuf,
         zephyr_out_path: Option<PathBuf>,
         network_buf_size: usize,
-        client_description: &ClientDescription,
+        id: usize,
     ) -> Result<Self, Error> {
-        let device = ShmemNetworkDevice::new(network_buf_size, client_description)?;
+        let device = ShmemNetworkDevice::new(network_buf_size, id)?;
         let net_shmem_desc = device.get_shmem_description();
 
         let envs = ([
@@ -208,15 +206,4 @@ impl<'a, S, OT, II> HasObservers for ZepyhrExecutor<'a, S, OT, II> {
     fn observers_mut(&mut self) -> RefIndexable<&mut Self::Observers, Self::Observers> {
         RefIndexable::from(&mut *self.observers)
     }
-}
-
-fn get_path(shmem_desc: &ShMemDescription) -> Result<&str, Error> {
-    CStr::from_bytes_until_nul(&shmem_desc.id)
-        .map_err(|e| {
-            Error::illegal_argument(format!("Error parsing path from shmem desc: {:?}", e))
-        })?
-        .to_str()
-        .map_err(|e| {
-            Error::illegal_argument(format!("Could not parse string from shmmem path: {:?}", e))
-        })
 }

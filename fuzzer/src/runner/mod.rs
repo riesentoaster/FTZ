@@ -1,6 +1,8 @@
 #![allow(dead_code)]
-use std::{sync::LazyLock, time::Duration};
+use std::{ffi::CStr, sync::LazyLock, time::Duration};
 
+use libafl::Error;
+use libafl_bolts::shmem::ShMemDescription;
 use smoltcp::wire::IpAddress;
 
 mod client;
@@ -12,6 +14,7 @@ mod objective;
 mod observer;
 
 pub use {
+    client::connect_to_zephyr,
     executor::ZepyhrExecutor,
     fuzzer::fuzz,
     observer::packet::{PacketMetadataFeedback, PacketObserver},
@@ -29,3 +32,14 @@ pub static IPV6_LINK_LOCAL_ADDR: LazyLock<IpAddress> = LazyLock::new(|| {
     )
 });
 pub const CLIENT_MAC_ADDR: [u8; 6] = [0x00, 0x00, 0x5e, 0x00, 0x53, 0xff];
+
+pub(crate) fn get_path(shmem_desc: &ShMemDescription) -> Result<&str, Error> {
+    CStr::from_bytes_until_nul(&shmem_desc.id)
+        .map_err(|e| {
+            Error::illegal_argument(format!("Error parsing path from shmem desc: {:?}", e))
+        })?
+        .to_str()
+        .map_err(|e| {
+            Error::illegal_argument(format!("Could not parse string from shmmem path: {:?}", e))
+        })
+}

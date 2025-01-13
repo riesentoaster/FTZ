@@ -4,6 +4,41 @@ use std::{
 };
 
 #[derive(Debug, Clone)]
+pub enum Source<T> {
+    Client(T),
+    Server(T),
+}
+
+impl<T> Source<T> {
+    pub fn inner(self) -> T {
+        match self {
+            Source::Client(e) => e,
+            Source::Server(e) => e,
+        }
+    }
+}
+
+impl<T> Deref for Source<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Source::Client(e) => e,
+            Source::Server(e) => e,
+        }
+    }
+}
+
+impl<T> DerefMut for Source<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        match self {
+            Source::Client(e) => e,
+            Source::Server(e) => e,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum Direction<T> {
     Outgoing(T),
     Incoming(T),

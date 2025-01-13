@@ -1,6 +1,6 @@
 use etherparse::{
-    err::packet::SliceError, ip_number::AUTH, Ethernet2Header, Ipv4Extensions, Ipv4Header, Packet,
-    PacketHeaders, Payload, TcpHeader,
+    ip_number::AUTH, Ethernet2Header, Ipv4Extensions, Ipv4Header, Packet, PacketHeaders, Payload,
+    TcpHeader,
 };
 
 use libafl::{
@@ -85,16 +85,7 @@ impl TryFrom<&[u8]> for EtherparseInput {
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         let res: Packet = match PacketHeaders::from_ethernet_slice(value) {
             Ok(e) => Ok(e.into()),
-            Err(SliceError::Len(_)) => Err(PacketParseError::MalformedEthernet(value.to_vec())),
-            Err(SliceError::Ipv4(_)) => Err(PacketParseError::MalformedIpv4(value.to_vec())),
-            Err(SliceError::LinuxSll(_)) => {
-                Err(PacketParseError::MalformedEthernet(value.to_vec()))
-            }
-            Err(SliceError::Ip(_)) => Err(PacketParseError::MalformedIpv4(value.to_vec())),
-            Err(SliceError::Ipv4Exts(_)) => Err(PacketParseError::MalformedIpv4(value.to_vec())),
-            Err(SliceError::Ipv6(_)) => Err(PacketParseError::MalformedIpv6(value.to_vec())),
-            Err(SliceError::Ipv6Exts(_)) => Err(PacketParseError::MalformedIpv6(value.to_vec())),
-            Err(SliceError::Tcp(_)) => Err(PacketParseError::MalformedTcp(value.to_vec())),
+            Err(e) => Err(PacketParseError::from_slice_error(e, value)),
         }?;
         let tcp = res.transport.unwrap().tcp().unwrap();
         let (ip, ipv4_extensions) = match res.net.unwrap() {

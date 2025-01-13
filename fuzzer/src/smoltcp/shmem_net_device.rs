@@ -5,11 +5,10 @@ use std::{
     time::{Duration, Instant},
 };
 
-use libafl::{events::ClientDescription, Error};
+use libafl::Error;
 use libafl_bolts::shmem::{MmapShMem, ShMemDescription};
 
 use pnet::packet::icmpv6::Icmpv6Types;
-use smoltcp::phy::{self, Device, DeviceCapabilities};
 
 use crate::{
     direction::Direction,
@@ -27,53 +26,14 @@ use crate::{
 
 use super::shmem_net_device_buffers::ShmemNetDeviceBuffer;
 
-pub struct RxToken {
-    buf: Vec<u8>,
-}
-
-impl phy::RxToken for RxToken {
-    fn consume<R, F>(mut self, f: F) -> R
-    where
-        F: FnOnce(&mut [u8]) -> R,
-    {
-        log::debug!("Consuming a RxToken");
-        f(&mut self.buf)
-    }
-}
-
-pub struct TxToken {
-    shmem: ShmemNetDeviceBuffer<MmapShMem>,
-}
-
-impl phy::TxToken for TxToken {
-    fn consume<R, F>(mut self, len: usize, f: F) -> R
-    where
-        F: FnOnce(&mut [u8]) -> R,
-    {
-        log::debug!("Sending {len} bytes");
-        while !self.shmem.is_empty() {
-            log::info!("not ready");
-            sleep(Duration::from_millis(1));
-        }
-
-        let mut buf = vec![0; len];
-        let res = f(&mut buf);
-
-        self.shmem.prep_data(len).copy_from_slice(&buf);
-        self.shmem.send(len);
-        log::debug!("Sent packet of len: {}", len);
-        res
-    }
-}
-
 pub struct ShmemNetworkDevice {
     tx_shmem: ShmemNetDeviceBuffer<MmapShMem>,
     rx_shmem: ShmemNetDeviceBuffer<MmapShMem>,
 }
 
 impl ShmemNetworkDevice {
-    pub fn new(buf_size: usize, client_description: &ClientDescription) -> Result<Self, Error> {
-        let shmem = get_shmem(buf_size * 2 + 8, client_description, "net")?;
+    pub fn new(buf_size: usize, id: usize) -> Result<Self, Error> {
+        let shmem = get_shmem(buf_size * 2 + 8, id, "net")?;
 
         log::debug!("Created ShmemNetworkDevice");
         let (tx_shmem, rx_shmem) = ShmemNetDeviceBuffer::new(Rc::new(RefCell::new(shmem)));
@@ -94,6 +54,10 @@ impl ShmemNetworkDevice {
         self.tx_shmem.prep_data(data.len()).copy_from_slice(data);
         self.tx_shmem.send(data.len());
         log::debug!("Sent packet of len: {}", data.len());
+    }
+
+    pub fn copy_of_tx_buffer(&self) -> ShmemNetDeviceBuffer<MmapShMem> {
+        self.tx_shmem.clone()
     }
 
     /// Reset the entire layer 1.
@@ -151,46 +115,5 @@ impl ShmemNetworkDevice {
             sleep(Duration::from_millis(5));
         }
         Ok(())
-    }
-}
-
-impl Device for ShmemNetworkDevice {
-    type RxToken<'a> = RxToken
-    where
-        Self: 'a;
-
-    type TxToken<'a> = TxToken
-    where
-        Self: 'a;
-
-    fn receive(
-        &mut self,
-        _timestamp: smoltcp::time::Instant,
-    ) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
-        self.rx_shmem.get_data_and_set_empty().map(|data| {
-            // log::warn!("Received: {}", BASE64_STANDARD.encode(&data));
-            log::debug!("Recieved {} bytes", data.len());
-            log::debug!("Package contents: {:?}", parse_eth(&data).unwrap());
-            (
-                RxToken { buf: data },
-                TxToken {
-                    shmem: self.tx_shmem.clone(),
-                },
-            )
-        })
-    }
-
-    fn transmit(&mut self, _timestamp: smoltcp::time::Instant) -> Option<Self::TxToken<'_>> {
-        log::debug!("Retrieving TxToken");
-        Some(TxToken {
-            shmem: self.tx_shmem.clone(),
-        })
-    }
-
-    fn capabilities(&self) -> DeviceCapabilities {
-        let mut res = DeviceCapabilities::default();
-        res.max_transmission_unit = 1500;
-        res.medium = phy::Medium::Ethernet;
-        res
     }
 }

@@ -13,7 +13,10 @@ use crate::{
 use clap::Parser as _;
 use libafl::{
     corpus::{Corpus, OnDiskCorpus},
-    events::{CentralizedEventManager, CentralizedLauncher, EventConfig, EventRestarter},
+    events::{
+        CentralizedEventManager, CentralizedLauncher, ClientDescription, EventConfig,
+        EventRestarter,
+    },
     feedback_and, feedback_or_fast,
     feedbacks::{ConstFeedback, MaxMapFeedback, TimeFeedback},
     monitors::OnDiskTomlMonitor,
@@ -49,10 +52,10 @@ pub fn fuzz() {
         let opt = &opt;
         move |state: Option<_>,
               mut manager: CentralizedEventManager<_, _, _, _>,
-              client_description| {
+              client_description: ClientDescription| {
             log::info!("Initializing fuzzing client");
 
-            let mut cov_shmem = get_shmem(COV_SHMEM_SIZE, &client_description, "cov")?;
+            let mut cov_shmem = get_shmem(COV_SHMEM_SIZE, client_description.id(), "cov")?;
             let cov_shmem_description = cov_shmem.description();
 
             let cov_raw_observer = unsafe {
@@ -210,7 +213,7 @@ pub fn fuzz() {
                 zephyr_exec_path.to_path_buf(),
                 opt.zephyr_out_dir().map(PathBuf::to_owned),
                 NETWORK_SHMEM_SIZE,
-                &client_description,
+                client_description.id(),
             )?;
 
             if state.must_load_initial_inputs() {
