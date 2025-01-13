@@ -1,15 +1,37 @@
+diff --git a/Kconfig.zephyr b/Kconfig.zephyr
+index 2d8031260ce..7e1a5f0ffd4 100644
+--- a/Kconfig.zephyr
++++ b/Kconfig.zephyr
+@@ -477,6 +477,12 @@ config NATIVE_APPLICATION
+ 	  resources and libraries provided by the host. This option is deprecated
+ 	  and will be removed in Zephyr v4.3
+ 
++config SHMEM_COVERAGE
++	bool "Record coverage to shared memory"
++	default n
++	help
++		Introduces helper code for recording coverage to shared memory
++
+ config NATIVE_LIBRARY
+ 	bool
+ 	select NATIVE_BUILD
 diff --git a/arch/posix/core/CMakeLists.txt b/arch/posix/core/CMakeLists.txt
-index 8c46147bc0a..31790da1eb0 100644
+index 8c46147bc0a..27f56fbb176 100644
 --- a/arch/posix/core/CMakeLists.txt
 +++ b/arch/posix/core/CMakeLists.txt
-@@ -29,6 +29,7 @@ if(CONFIG_NATIVE_APPLICATION)
- 		${ZEPHYR_BASE}/scripts/native_simulator/common/src/nct.c
- 		${ZEPHYR_BASE}/scripts/native_simulator/common/src/nce.c
+@@ -31,6 +31,12 @@ if(CONFIG_NATIVE_APPLICATION)
  		${ZEPHYR_BASE}/scripts/native_simulator/common/src/nsi_host_trampolines.c
-+		${ZEPHYR_BASE}/scripts/native_simulator/common/src/coverage.c
  	)
  
++	if(CONFIG_SHMEM_COVERAGE)
++		zephyr_library_sources(
++			${ZEPHYR_BASE}/scripts/native_simulator/common/src/coverage.c
++		)
++	endif()
++
  	zephyr_library_compile_definitions(_POSIX_C_SOURCE=200809L _XOPEN_SOURCE=600 _XOPEN_SOURCE_EXTENDED)
+ else()
+ 	zephyr_library_sources(
 diff --git a/drivers/ethernet/CMakeLists.txt b/drivers/ethernet/CMakeLists.txt
 index 65ce8a45332..b98650d2fd5 100644
 --- a/drivers/ethernet/CMakeLists.txt
@@ -94,10 +116,10 @@ index d4c065fbdde..6aeb1f9cc51 100644
  endif # ETH_NATIVE_POSIX
 diff --git a/drivers/ethernet/eth_shmem.c b/drivers/ethernet/eth_shmem.c
 new file mode 100644
-index 00000000000..ae8bfdaf002
+index 00000000000..9e01f94ea38
 --- /dev/null
 +++ b/drivers/ethernet/eth_shmem.c
-@@ -0,0 +1,162 @@
+@@ -0,0 +1,166 @@
 +/**
 + * @file
 + * Ethernet driver using shared memory for communication
@@ -200,8 +222,10 @@ index 00000000000..ae8bfdaf002
 +    MY_LOG("initializing interface\n");
 +    struct eth_context *ctx = net_if_get_device(iface)->data;
 +    ctx->iface = iface;
++
++    ethernet_init(iface);
 +    
-+    /* Use MAC address from config */
++    /* Set up MAC address before anything else */
 +    if (CONFIG_ETH_NATIVE_POSIX_MAC_ADDR[0] != 0) {
 +        if (net_bytes_from_str(ctx->mac_addr, sizeof(ctx->mac_addr),
 +                              CONFIG_ETH_NATIVE_POSIX_MAC_ADDR) < 0) {
@@ -213,7 +237,9 @@ index 00000000000..ae8bfdaf002
 +    ctx->ll_addr.addr = ctx->mac_addr;
 +    ctx->ll_addr.len = sizeof(ctx->mac_addr);
 +
-+    net_if_set_link_addr(iface, ctx->ll_addr.addr, ctx->ll_addr.len, NET_LINK_ETHERNET);
++    /* This must be done before any packets can be received/sent */
++    net_if_set_link_addr(iface, ctx->ll_addr.addr, ctx->ll_addr.len, 
++                         NET_LINK_ETHERNET);
 +
 +    init_shmem_eth_interface();
 +    k_thread_create(&ctx->rx_thread_data, ctx->rx_stack,
@@ -262,7 +288,7 @@ index 00000000000..ae8bfdaf002
 +
 diff --git a/drivers/ethernet/eth_shmem_adapt.c b/drivers/ethernet/eth_shmem_adapt.c
 new file mode 100644
-index 00000000000..7c83bc593a3
+index 00000000000..085f27d340c
 --- /dev/null
 +++ b/drivers/ethernet/eth_shmem_adapt.c
 @@ -0,0 +1,140 @@
@@ -298,14 +324,13 @@ index 00000000000..7c83bc593a3
 +static int net_shmem_fd = 0;
 +static bool net_shmem_init = false;
 +static char* net_shmem_name = 0;
-+static size_t net_shmem_size = -1;
++static size_t net_shmem_size = 0;
 +static int32_t* net_shmem_ptr_rx = 0;
 +static int32_t* net_shmem_ptr_tx = 0;
 +
 +void init_shmem_eth_interface(void) {
 +	if (!net_shmem_init) {
 +		MY_LOG("initializing shmem interface ");
-+		net_shmem_init = true;
 +		net_shmem_name = getenv("SHMEM_ETH_INTERFACE_NAME");
 +		if (net_shmem_name == 0) custom_panic("\nSHMEM_ETH_INTERFACE_NAME, the path to the mmap based shmem, is not set in the env");
 +		MY_LOG("with name %s ", net_shmem_name);
@@ -329,6 +354,7 @@ index 00000000000..7c83bc593a3
 +		net_shmem_ptr_rx = (int32_t*) raw_ptr;
 +		net_shmem_ptr_tx = (int32_t*) (raw_ptr + net_shmem_size / 2);
 +        MY_LOG("initialized shmem interface\n");
++		net_shmem_init = true;
 +	} else {
 +		printf("Warning: attempting to initialize shmem interface again\n");
 +	}
@@ -378,7 +404,7 @@ index 00000000000..7c83bc593a3
 +		custom_panic("Incoming too large");
 +	
 +	void* res = memcpy(buf, (net_shmem_ptr_rx + 1), incoming_size);
-+	if (res == 0)
++	if (res != buf)
 +		custom_panic("Could not copy received data");
 +	
 +	*net_shmem_ptr_rx = -1; // status = ready
@@ -428,7 +454,7 @@ index 00000000000..89d55b57a04
 +
 +#endif /* ETH_SHMEM_PRIV_H */
 diff --git a/samples/net/sockets/echo/prj.conf b/samples/net/sockets/echo/prj.conf
-index 33729784d8e..ec2235e34c5 100644
+index 33729784d8e..aade1e133e2 100644
 --- a/samples/net/sockets/echo/prj.conf
 +++ b/samples/net/sockets/echo/prj.conf
 @@ -12,6 +12,8 @@ CONFIG_NET_IPV4_MAPPING_TO_IPV6=y
@@ -436,11 +462,11 @@ index 33729784d8e..ec2235e34c5 100644
  # Network driver config
  CONFIG_TEST_RANDOM_GENERATOR=y
 +CONFIG_ETH_NATIVE_POSIX=y
-+CONFIG_ETH_NATIVE_POSIX_SHMEM=y
++CONFIG_ETH_NATIVE_POSIX_TAP=y
  
  # Network address config
  CONFIG_NET_CONFIG_SETTINGS=y
-@@ -21,3 +23,7 @@ CONFIG_NET_CONFIG_MY_IPV4_ADDR="192.0.2.1"
+@@ -21,3 +23,10 @@ CONFIG_NET_CONFIG_MY_IPV4_ADDR="192.0.2.1"
  CONFIG_NET_CONFIG_PEER_IPV4_ADDR="192.0.2.2"
  CONFIG_NET_CONFIG_MY_IPV6_ADDR="2001:db8::1"
  CONFIG_NET_CONFIG_PEER_IPV6_ADDR="2001:db8::2"
@@ -448,15 +474,18 @@ index 33729784d8e..ec2235e34c5 100644
 +# MAC address config
 +CONFIG_ETH_NATIVE_POSIX_RANDOM_MAC=n
 +CONFIG_ETH_NATIVE_POSIX_MAC_ADDR="02:00:5e:00:53:31"
++
++# Coverage config
++CONFIG_SHMEM_COVERAGE=y
 diff --git a/samples/net/sockets/echo/src/socket_echo.c b/samples/net/sockets/echo/src/socket_echo.c
-index c8aad2bb068..6fef17641ad 100644
+index c8aad2bb068..cb72bf3e2e4 100644
 --- a/samples/net/sockets/echo/src/socket_echo.c
 +++ b/samples/net/sockets/echo/src/socket_echo.c
 @@ -19,6 +19,7 @@
  
  #include <zephyr/net/socket.h>
  #include <zephyr/kernel.h>
-+#include "coverage.h"
++// #include "coverage.h"
  
  #endif
  
@@ -464,7 +493,7 @@ index c8aad2bb068..6fef17641ad 100644
  		.sin6_port = htons(BIND_PORT),
  	};
  	static int counter;
-+	init_coverage();
++	// init_coverage();
  
  	serv = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
  	if (serv < 0) {
@@ -472,14 +501,14 @@ index c8aad2bb068..6fef17641ad 100644
  
  	printf("Single-threaded TCP echo server waits for a connection on "
  	       "port %d...\n", BIND_PORT);
-+	k_sleep(K_MSEC(200)); // wait until all setup code is done, to ensure consistent coverage
-+	reset_coverage();
++	// k_sleep(K_MSEC(200)); // wait until all setup code is done, to ensure consistent coverage
++	// reset_coverage();
  
  	while (1) {
  		struct sockaddr_in6 client_addr;
 diff --git a/scripts/native_simulator/common/src/coverage.c b/scripts/native_simulator/common/src/coverage.c
 new file mode 100644
-index 00000000000..6c4f961d7f5
+index 00000000000..2091015da13
 --- /dev/null
 +++ b/scripts/native_simulator/common/src/coverage.c
 @@ -0,0 +1,111 @@
@@ -505,7 +534,7 @@ index 00000000000..6c4f961d7f5
 +static int cov_shmem_fd = 0;
 +static bool cov_shmem_init = false;
 +static char *cov_shmem_name = 0;
-+static size_t cov_shmem_size = -1;
++static size_t cov_shmem_size = 0;
 +static uint32_t *cov_shmem_ptr = 0;
 +static uint32_t *guard_stop = 0;
 +static uint32_t *guard_start = 0;
@@ -513,7 +542,6 @@ index 00000000000..6c4f961d7f5
 +void init_coverage(void) {
 +	if (!cov_shmem_init) {
 +		MY_LOG("initializing coverage ");
-+		cov_shmem_init = true;
 +		cov_shmem_name = getenv("SHMEM_COVERAGE_NAME");
 +		if (cov_shmem_name == 0) custom_panic("SHMEM_COVERAGE_NAME, the path to the mmap based shmem, is not set in the env");
 +		MY_LOG("with shmem name %s ", cov_shmem_name);
@@ -540,6 +568,7 @@ index 00000000000..6c4f961d7f5
 +		// Memory map the shared memory object
 +		cov_shmem_ptr = mmap(0, cov_shmem_size, PROT_READ | PROT_WRITE, MAP_SHARED, cov_shmem_fd, 0);
 +		if (cov_shmem_ptr == MAP_FAILED) custom_panic("mmap broke");
++        cov_shmem_init = true;
 +	} else {
 +		printf("Warning: Calling init_coverage again\n");
 +	}
