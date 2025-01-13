@@ -42,16 +42,18 @@ where
 
 pub struct FixedZephyrInputGenerator<I> {
     fixed: Vec<Vec<u8>>,
-    offset: usize,
+    max_exclusive: isize,
     phantom: PhantomData<I>,
     restart: bool,
 }
 
 impl<I> FixedZephyrInputGenerator<I> {
     pub fn new(fixed: Vec<Vec<u8>>, restart: bool) -> Self {
+        let max_exclusive = fixed.len() as isize;
+        assert!(max_exclusive >= 0);
         Self {
             fixed,
-            offset: 0,
+            max_exclusive,
             restart,
             phantom: PhantomData,
         }
@@ -65,14 +67,19 @@ where
     Vec<u8>: From<I>,
 {
     fn generate(&mut self, _state: &mut S) -> Result<Z, libafl::Error> {
-        if !self.restart && self.offset >= self.fixed.len() {
-            return Err(Error::illegal_state(
-                "Attempting to generate more values than provided",
-            ));
+        // reset
+        if self.max_exclusive < 0 {
+            if !self.restart {
+                return Err(Error::illegal_state(
+                    "Attempting to generate more values than provided",
+                ));
+            } else {
+                self.max_exclusive = self.fixed.len() as isize;
+            }
         }
-        let max = self.offset % self.fixed.len();
-        let res = Z::parse(&self.fixed[0..max]);
-        self.offset += 1;
+
+        let res = Z::parse(&self.fixed[0..self.max_exclusive as usize]);
+        self.max_exclusive -= 1;
         Ok(res)
     }
 }

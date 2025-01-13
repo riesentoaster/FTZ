@@ -7,8 +7,8 @@ pub fn outgoing_tcp_packets() -> Vec<Vec<u8>> {
     get_packets()
         .iter()
         .filter(|e| match e {
-            Direction::Outgoing(_) => true,
-            Direction::Incoming(_) => false,
+            Direction::Outgoing(_) => false,
+            Direction::Incoming(_) => true,
         })
         .cloned()
         .map(Direction::inner)

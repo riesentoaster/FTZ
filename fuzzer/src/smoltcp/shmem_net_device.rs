@@ -53,27 +53,15 @@ impl phy::TxToken for TxToken {
         log::debug!("Sending {len} bytes");
         while !self.shmem.is_empty() {
             log::info!("not ready");
-            sleep(Duration::from_millis(10));
+            sleep(Duration::from_millis(1));
         }
 
         let mut buf = vec![0; len];
         let res = f(&mut buf);
-        // log::warn!("Sent: {}", BASE64_STANDARD.encode(&buf));
-
-        match parse_eth(&buf) {
-            Ok(p) => {
-                log::debug!(
-                    "Attempting to send packet with len {} of type {}",
-                    buf.len(),
-                    p.types_to_string()
-                );
-            }
-            Err(e) => panic!("Could not parse outgoing packet: {:?}", e),
-        }
 
         self.shmem.prep_data(len).copy_from_slice(&buf);
         self.shmem.send(len);
-        log::debug!("Sent the following packet: {:?}", parse_eth(&buf));
+        log::debug!("Sent packet of len: {}", len);
         res
     }
 }
@@ -95,12 +83,17 @@ impl ShmemNetworkDevice {
     }
 
     pub fn try_recv(&mut self) -> Option<Vec<u8>> {
-        self.rx_shmem.get_data_and_set_empty()
+        let res = self.rx_shmem.get_data_and_set_empty();
+        if let Some(p) = res.as_ref() {
+            log::debug!("Received packet of len: {}", p.len());
+        }
+        res
     }
 
     pub fn send(&mut self, data: &[u8]) {
         self.tx_shmem.prep_data(data.len()).copy_from_slice(data);
         self.tx_shmem.send(data.len());
+        log::debug!("Sent packet of len: {}", data.len());
     }
 
     /// Reset the entire layer 1.

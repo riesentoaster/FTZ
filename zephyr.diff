@@ -1,236 +1,299 @@
-diff --git a/drivers/ethernet/eth_native_posix.c b/drivers/ethernet/eth_native_posix.c
-index fdd63cced53..a89691cf788 100644
---- a/drivers/ethernet/eth_native_posix.c
-+++ b/drivers/ethernet/eth_native_posix.c
-@@ -173,6 +173,16 @@ static int eth_send(const struct device *dev, struct net_pkt *pkt)
- 	int count = net_pkt_get_len(pkt);
- 	int ret;
+diff --git a/arch/posix/core/CMakeLists.txt b/arch/posix/core/CMakeLists.txt
+index 8c46147bc0a..31790da1eb0 100644
+--- a/arch/posix/core/CMakeLists.txt
++++ b/arch/posix/core/CMakeLists.txt
+@@ -29,6 +29,7 @@ if(CONFIG_NATIVE_APPLICATION)
+ 		${ZEPHYR_BASE}/scripts/native_simulator/common/src/nct.c
+ 		${ZEPHYR_BASE}/scripts/native_simulator/common/src/nce.c
+ 		${ZEPHYR_BASE}/scripts/native_simulator/common/src/nsi_host_trampolines.c
++		${ZEPHYR_BASE}/scripts/native_simulator/common/src/coverage.c
+ 	)
  
-+	uint8_t* buf = prepare_send_buf(count);
-+	while (buf == 0) {
-+		k_sleep(K_MSEC(5));
-+		buf = prepare_send_buf(count);
-+	}
-+	ret = net_pkt_read(pkt, buf, count);
+ 	zephyr_library_compile_definitions(_POSIX_C_SOURCE=200809L _XOPEN_SOURCE=600 _XOPEN_SOURCE_EXTENDED)
+diff --git a/drivers/ethernet/CMakeLists.txt b/drivers/ethernet/CMakeLists.txt
+index 65ce8a45332..b98650d2fd5 100644
+--- a/drivers/ethernet/CMakeLists.txt
++++ b/drivers/ethernet/CMakeLists.txt
+@@ -60,15 +60,24 @@ zephyr_library_sources_ifdef(CONFIG_ETH_NUMAKER		eth_numaker.c)
+ 
+ if(CONFIG_ETH_NATIVE_POSIX)
+   if (CONFIG_NATIVE_APPLICATION)
+-    set(native_posix_source_files eth_native_posix.c eth_native_posix_adapt.c)
++    if(CONFIG_ETH_NATIVE_POSIX_TAP)
++      set(native_posix_source_files eth_native_posix.c eth_native_posix_adapt.c)
++    elseif(CONFIG_ETH_NATIVE_POSIX_SHMEM)
++      set(native_posix_source_files eth_shmem.c eth_shmem_adapt.c)
++    endif()
+     set_source_files_properties(${native_posix_source_files}
+       PROPERTIES COMPILE_DEFINITIONS
+       "NO_POSIX_CHEATS;_BSD_SOURCE;_DEFAULT_SOURCE"
+     )
+     zephyr_library_sources(${native_posix_source_files})
+   else()
+-    zephyr_library_sources(eth_native_posix.c)
+-    target_sources(native_simulator INTERFACE eth_native_posix_adapt.c)
++    if(CONFIG_ETH_NATIVE_POSIX_TAP)
++      zephyr_library_sources(eth_native_posix.c)
++      target_sources(native_simulator INTERFACE eth_native_posix_adapt.c)
++    elseif(CONFIG_ETH_NATIVE_POSIX_SHMEM)
++      zephyr_library_sources(eth_shmem.c)
++      target_sources(native_simulator INTERFACE eth_shmem_adapt.c)
++    endif()
+   endif()
+ endif()
+ 
+diff --git a/drivers/ethernet/Kconfig.native_posix b/drivers/ethernet/Kconfig.native_posix
+index d4c065fbdde..6aeb1f9cc51 100644
+--- a/drivers/ethernet/Kconfig.native_posix
++++ b/drivers/ethernet/Kconfig.native_posix
+@@ -10,6 +10,24 @@ menuconfig ETH_NATIVE_POSIX
+ 	  Enable native posix ethernet driver. Note, this driver is run inside
+ 	  a process in your host system.
+ 
++choice ETH_NATIVE_POSIX_DRIVER_TYPE
++	prompt "Native posix ethernet driver type"
++	depends on ETH_NATIVE_POSIX
++	default ETH_NATIVE_POSIX_TAP
 +
-+	send_buf(count);
-+	return ret;
++config ETH_NATIVE_POSIX_TAP
++	bool "TAP device driver"
++	help
++	  Use TAP device for ethernet communication
 +
- 	ret = net_pkt_read(pkt, ctx->send, count);
- 	if (ret) {
- 		return ret;
-@@ -230,7 +240,9 @@ static int read_data(struct eth_context *ctx, int fd)
- 	int status;
- 	int count;
- 
--	count = nsi_host_read(fd, ctx->recv, sizeof(ctx->recv));
-+	count = read_incoming(ctx->recv, sizeof(ctx->recv));
++config ETH_NATIVE_POSIX_SHMEM
++	bool "Shared memory ethernet driver"
++	help
++	  Enable shared memory based ethernet driver. This is useful for
++	  fuzzing and testing where direct network access is not needed.
 +
-+	// count = nsi_host_read(fd, ctx->recv, sizeof(ctx->recv));
- 	if (count <= 0) {
- 		return 0;
- 	}
-@@ -258,14 +270,14 @@ static void eth_rx(void *p1, void *p2, void *p3)
- 	LOG_DBG("Starting ZETH RX thread");
- 
- 	while (1) {
--		if (net_if_is_up(ctx->iface)) {
--			while (!eth_wait_data(ctx->dev_fd)) {
-+		if (is_setup()) {
-+			while (incoming_available()) {
- 				read_data(ctx, ctx->dev_fd);
- 				k_yield();
- 			}
- 		}
- 
--		k_sleep(K_MSEC(CONFIG_ETH_NATIVE_POSIX_RX_TIMEOUT));
-+		k_sleep(K_MSEC(5));
- 	}
- }
- 
-@@ -356,7 +368,8 @@ static void eth_iface_init(struct net_if *iface)
- 	net_if_set_link_addr(iface, ll_addr->addr, ll_addr->len,
- 			     NET_LINK_ETHERNET);
- 
--	ctx->dev_fd = eth_iface_create(CONFIG_ETH_NATIVE_POSIX_DEV_NAME, ctx->if_name, false);
-+	// ctx->dev_fd = eth_iface_create(CONFIG_ETH_NATIVE_POSIX_DEV_NAME, ctx->if_name, false);
-+	init_shmem_eth_interface();
- 	if (ctx->dev_fd < 0) {
- 		LOG_ERR("Cannot create %s (%d/%s)", ctx->if_name, ctx->dev_fd,
- 			strerror(-ctx->dev_fd));
-diff --git a/samples/net/sockets/echo/prj.conf b/samples/net/sockets/echo/prj.conf
-index 33729784d8e..671bd2eb4b9 100644
---- a/samples/net/sockets/echo/prj.conf
-+++ b/samples/net/sockets/echo/prj.conf
-@@ -21,3 +21,35 @@ CONFIG_NET_CONFIG_MY_IPV4_ADDR="192.0.2.1"
- CONFIG_NET_CONFIG_PEER_IPV4_ADDR="192.0.2.2"
- CONFIG_NET_CONFIG_MY_IPV6_ADDR="2001:db8::1"
- CONFIG_NET_CONFIG_PEER_IPV6_ADDR="2001:db8::2"
-+CONFIG_ETH_NATIVE_POSIX_RANDOM_MAC=n
-+CONFIG_ETH_NATIVE_POSIX_MAC_ADDR="02:00:5e:00:53:31"
-+# CONFIG_ASAN=y
++endchoice
 +
-+# CONFIG_LOG_BACKEND_FORMAT_TIMESTAMP=y
-+# CONFIG_LOG_BACKEND_SHOW_COLOR=y
-+# CONFIG_NET_LOG=y
-+# CONFIG_NET_PKT_LOG_LEVEL_DBG=y # network layer
-+# CONFIG_NET_SOCKETS_LOG_LEVEL_DBG=y
-+# CONFIG_NET_TCP_LOG_LEVEL_DBG=y
-+# CONFIG_NET_IF_LOG_LEVEL_DBG=y
-+# CONFIG_NET_CONFIG_LOG_LEVEL_DBG=y
-+# CONFIG_NET_CONNECTION_MANAGER_LOG_LEVEL_DBG=y
-+# CONFIG_NET_DHCPV4_LOG_LEVEL_DBG=y
-+# CONFIG_NET_DHCPV4_LOG_LEVEL_DBG=y
-+# CONFIG_NET_BUF_LOG_LEVEL_DBG=y
-+# CONFIG_NET_HOSTNAME_LOG_LEVEL_DBG=y
-+# CONFIG_NET_TCP_LOG_LEVEL_DBG=y
-+# CONFIG_NET_UDP_LOG_LEVEL_DBG=y
-+# CONFIG_NET_CONFIG_LOG_LEVEL_DBG=y
-+# CONFIG_NET_MGMT_EVENT_LOG_LEVEL_DBG=y
-+# CONFIG_NET_ARP_LOG_LEVEL_DBG=y
-+# CONFIG_NET_CORE_LOG_LEVEL_DBG=y
-+# CONFIG_NET_IF_LOG_LEVEL_DBG=y
-+# CONFIG_NET_UTILS_LOG_LEVEL_DBG=y
-+# CONFIG_NET_CONTEXT_LOG_LEVEL_DBG=y
-+# CONFIG_NET_PKT_LOG_LEVEL_DBG=y
-+# CONFIG_NET_CONN_LOG_LEVEL_DBG=y
-+# CONFIG_NET_ROUTE_LOG_LEVEL_DBG=y
-+# CONFIG_NET_SOCKETS_LOG_LEVEL_DBG=y
-+# CONFIG_NET_TC_LOG_LEVEL_DBG=y
-+# CONFIG_ETHERNET_LOG_LEVEL_DBG=y # driver
-\ No newline at end of file
-diff --git a/samples/net/sockets/echo/src/socket_echo.c b/samples/net/sockets/echo/src/socket_echo.c
-index c8aad2bb068..2066c518b0a 100644
---- a/samples/net/sockets/echo/src/socket_echo.c
-+++ b/samples/net/sockets/echo/src/socket_echo.c
-@@ -19,6 +19,7 @@
+ if ETH_NATIVE_POSIX
  
- #include <zephyr/net/socket.h>
- #include <zephyr/kernel.h>
-+#include "nsi_host_trampolines.h"
+ config ETH_NATIVE_POSIX_INTERFACE_COUNT
+@@ -36,6 +54,7 @@ config ETH_NATIVE_POSIX_DRV_NAME
+ config ETH_NATIVE_POSIX_DEV_NAME
+ 	string "Host ethernet TUN/TAP device name"
+ 	default "/dev/net/tun"
++	depends on ETH_NATIVE_POSIX_TAP
+ 	help
+ 	  This option sets the TUN/TAP device name in your host system.
  
- #endif
+@@ -83,4 +102,12 @@ config ETH_NATIVE_POSIX_RX_TIMEOUT
+ 	  Specify how long the thread sleeps between these checks if no new data
+ 	  available.
  
-@@ -35,6 +36,7 @@ int main(void)
- 		.sin6_port = htons(BIND_PORT),
- 	};
- 	static int counter;
-+	init_coverage();
- 
- 	serv = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
- 	if (serv < 0) {
-@@ -45,15 +47,12 @@ int main(void)
- 	ret = getsockopt(serv, IPPROTO_IPV6, IPV6_V6ONLY, &opt, &optlen);
- 	if (ret == 0) {
- 		if (opt) {
--			printf("IPV6_V6ONLY option is on, turning it off.\n");
--
- 			opt = 0;
- 			ret = setsockopt(serv, IPPROTO_IPV6, IPV6_V6ONLY,
- 					 &opt, optlen);
- 			if (ret < 0) {
- 				printf("Cannot turn off IPV6_V6ONLY option\n");
- 			} else {
--				printf("Sharing same socket between IPv6 and IPv4\n");
- 			}
- 		}
- 	}
-@@ -68,8 +67,8 @@ int main(void)
- 		exit(1);
- 	}
- 
--	printf("Single-threaded TCP echo server waits for a connection on "
--	       "port %d...\n", BIND_PORT);
-+	k_sleep(K_MSEC(200)); // wait until all setup code is done, to ensure consistent coverage
-+	reset_coverage();
- 
- 	while (1) {
- 		struct sockaddr_in6 client_addr;
-@@ -85,7 +84,6 @@ int main(void)
- 
- 		inet_ntop(client_addr.sin6_family, &client_addr.sin6_addr,
- 			  addr_str, sizeof(addr_str));
--		printf("Connection #%d from %s\n", counter++, addr_str);
- 
- 		while (1) {
- 			char buf[128], *p;
-@@ -113,7 +111,6 @@ int main(void)
- 
- error:
- 		close(client);
--		printf("Connection from %s closed\n", addr_str);
- 	}
- 	return 0;
- }
-diff --git a/scripts/native_simulator/common/src/include/nsi_host_trampolines.h b/scripts/native_simulator/common/src/include/nsi_host_trampolines.h
-index 31f954ee0cc..fa84aa61e83 100644
---- a/scripts/native_simulator/common/src/include/nsi_host_trampolines.h
-+++ b/scripts/native_simulator/common/src/include/nsi_host_trampolines.h
-@@ -17,11 +17,14 @@
- 
- #ifndef NSI_COMMON_SRC_INCL_NSI_HOST_TRAMPOLINES_H
- #define NSI_COMMON_SRC_INCL_NSI_HOST_TRAMPOLINES_H
--
-+#include <stdbool.h>
- #ifdef __cplusplus
- extern "C" {
- #endif
- 
-+// #define MY_LOG(...) printf(__VA_ARGS__);
-+#define MY_LOG(...) //
++config ETH_NATIVE_POSIX_SHMEM_RX_TIMEOUT
++	int "RX polling timeout"
++	default 10
++	depends on ETH_NATIVE_POSIX_SHMEM
++	help
++	  This option defines how long to wait for the driver to receive
++	  data from shared memory interface.
 +
- void *nsi_host_calloc(unsigned long nmemb, unsigned long size);
- int nsi_host_close(int fd);
- /* void nsi_host_exit (int status); Use nsi_exit() instead */
-@@ -37,6 +40,18 @@ void *nsi_host_realloc(void *ptr, unsigned long size);
- void nsi_host_srandom(unsigned int seed);
- char *nsi_host_strdup(const char *s);
- long nsi_host_write(int fd, const void *buffer, unsigned long size);
-+void init_shmem_eth_interface(void);
-+void write_shmem(size_t size, const char* buf);
-+void close_shmem_eth_interface(void);
-+void custom_panic(const char* message);
-+void* prepare_send_buf(size_t size);
-+void send_buf(size_t size);
-+bool is_setup(void);
-+int read_incoming(void* buf, unsigned long size);
-+bool incoming_available(void);
-+void init_coverage(void);
-+void reset_coverage(void);
-+uint32_t read_u32_from_random();
- 
- #ifdef __cplusplus
- }
-diff --git a/scripts/native_simulator/common/src/nsi_host_trampolines.c b/scripts/native_simulator/common/src/nsi_host_trampolines.c
-index eb378b7533f..5a1390f0a23 100644
---- a/scripts/native_simulator/common/src/nsi_host_trampolines.c
-+++ b/scripts/native_simulator/common/src/nsi_host_trampolines.c
-@@ -10,6 +10,14 @@
- #include <unistd.h>
- #include <fcntl.h>
- #include <string.h>
+ endif # ETH_NATIVE_POSIX
+diff --git a/drivers/ethernet/eth_shmem.c b/drivers/ethernet/eth_shmem.c
+new file mode 100644
+index 00000000000..ae8bfdaf002
+--- /dev/null
++++ b/drivers/ethernet/eth_shmem.c
+@@ -0,0 +1,162 @@
++/**
++ * @file
++ * Ethernet driver using shared memory for communication
++ */
++
++#define LOG_MODULE_NAME eth_shmem
++#define LOG_LEVEL CONFIG_ETHERNET_LOG_LEVEL
++
++#include <zephyr/logging/log.h>
++LOG_MODULE_REGISTER(LOG_MODULE_NAME);
++
++#include <zephyr/kernel.h>
++#include <zephyr/net/net_pkt.h>
++#include <zephyr/net/net_if.h>
++#include <zephyr/net/ethernet.h>
++#include <ethernet/eth_stats.h>
++
++#include "coverage.h"
++#include "eth_shmem_priv.h"
++
++#define NET_BUF_TIMEOUT K_MSEC(100)
++
++struct eth_context {
++    uint8_t mac_addr[6];
++    struct net_linkaddr ll_addr;
++    struct net_if *iface;
++    k_tid_t rx_thread;
++    struct k_thread rx_thread_data;
++    struct z_thread_stack_element *rx_stack;
++    size_t rx_stack_size;
++};
++
++static int eth_send(const struct device *dev, struct net_pkt *pkt)
++{
++    struct eth_context *ctx = dev->data;
++    int count = net_pkt_get_len(pkt);
++    void *buf = 0;
++
++    if (!net_if_is_up(ctx->iface)) {
++        MY_LOG("eth_send: iface is down\n");
++        return -ENETDOWN;
++    }
++
++    buf = prepare_send_buf(count);
++    while (buf == 0) {
++        k_sleep(K_MSEC(5));
++        buf = prepare_send_buf(count);
++    }
++
++    if (net_pkt_read(pkt, buf, count)) {
++        MY_LOG("eth_send: net_pkt_read failed\n");
++        return -EIO;
++    }
++
++    send_buf(count);
++    return 0;
++}
++
++static void eth_rx(void *p1, void *p2, void *p3)
++{
++    struct eth_context *ctx = p1;
++    struct net_if *iface = ctx->iface;
++    struct net_pkt *pkt;
++    uint8_t recv_buffer[NET_ETH_MTU + sizeof(struct net_eth_hdr)];
++    int count;
++
++    while (1) {
++        if (net_if_is_up(iface)) {
++            while (incoming_available()) {
++                count = read_incoming(recv_buffer, sizeof(recv_buffer));
++                if (count <= 0) {
++                    continue;
++                }
++
++                pkt = net_pkt_rx_alloc_with_buffer(iface, count, 
++                        AF_UNSPEC, 0, NET_BUF_TIMEOUT);
++                if (!pkt) {
++                    continue;
++                }
++
++                if (net_pkt_write(pkt, recv_buffer, count)) {
++                    net_pkt_unref(pkt);
++                    continue;
++                }
++
++                if (net_recv_data(iface, pkt) < 0) {
++                    net_pkt_unref(pkt);
++                }
++            }
++            k_sleep(K_MSEC(5));
++        } else {
++            MY_LOG("attempting to receive packet while iface is down\n");
++        }
++        k_sleep(K_MSEC(10));
++    }
++}
++
++static void eth_iface_init(struct net_if *iface)
++{
++    MY_LOG("initializing interface\n");
++    struct eth_context *ctx = net_if_get_device(iface)->data;
++    ctx->iface = iface;
++    
++    /* Use MAC address from config */
++    if (CONFIG_ETH_NATIVE_POSIX_MAC_ADDR[0] != 0) {
++        if (net_bytes_from_str(ctx->mac_addr, sizeof(ctx->mac_addr),
++                              CONFIG_ETH_NATIVE_POSIX_MAC_ADDR) < 0) {
++            LOG_ERR("Invalid MAC address %s",
++                    CONFIG_ETH_NATIVE_POSIX_MAC_ADDR);
++        }
++    }
++
++    ctx->ll_addr.addr = ctx->mac_addr;
++    ctx->ll_addr.len = sizeof(ctx->mac_addr);
++
++    net_if_set_link_addr(iface, ctx->ll_addr.addr, ctx->ll_addr.len, NET_LINK_ETHERNET);
++
++    init_shmem_eth_interface();
++    k_thread_create(&ctx->rx_thread_data, ctx->rx_stack,
++                    ctx->rx_stack_size,
++                    eth_rx, ctx, NULL, NULL,
++                    K_PRIO_COOP(14), 0, K_NO_WAIT);
++    MY_LOG("initialized interface\n");
++}
++
++K_KERNEL_STACK_DEFINE(rx_thread_stack, CONFIG_ARCH_POSIX_RECOMMENDED_STACK_SIZE);
++static struct k_thread rx_thread_data;
++
++static struct eth_context eth_context_data = {		     
++    .rx_thread = &rx_thread_data,			     
++    .rx_stack = rx_thread_stack,			     
++    .rx_stack_size = K_KERNEL_STACK_SIZEOF(rx_thread_stack), 
++};
++
++static enum ethernet_hw_caps eth_get_capabilities(const struct device *dev)
++{
++	ARG_UNUSED(dev);
++	return ETHERNET_TXTIME;
++}
++
++static int eth_set_config(const struct device *dev,
++			 enum ethernet_config_type type,
++			 const struct ethernet_config *config)
++{
++	ARG_UNUSED(dev);
++	ARG_UNUSED(type); 
++	ARG_UNUSED(config);
++
++    MY_LOG("eth_set_config\n");
++
++	return 0;
++}
++
++static const struct ethernet_api eth_if_api = {
++	.iface_api.init = eth_iface_init,
++	.get_capabilities = eth_get_capabilities,
++	.set_config = eth_set_config,
++	.send = eth_send,
++};
++
++ETH_NET_DEVICE_INIT(eth_shmem, "ETH_SHMEM", NULL, NULL, &eth_context_data, NULL, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT, &eth_if_api, NET_ETH_MTU)
++
+diff --git a/drivers/ethernet/eth_shmem_adapt.c b/drivers/ethernet/eth_shmem_adapt.c
+new file mode 100644
+index 00000000000..7c83bc593a3
+--- /dev/null
++++ b/drivers/ethernet/eth_shmem_adapt.c
+@@ -0,0 +1,140 @@
++/**
++ * @file
++ * Shared memory adaptation layer for Ethernet driver
++ */
++
++
 +#include <stdio.h>
-+#include <stdint.h>
++#include <stdlib.h>
++#include <stdarg.h>
++#include <errno.h>
++#include <string.h>
++#include <stdbool.h>
++#include <unistd.h>
 +#include <fcntl.h>
++#include <sys/ioctl.h>
++#include <sys/socket.h>
++#include <sys/select.h>
++#include <net/if.h>
++#include <time.h>
++#include <inttypes.h>
++#include <nsi_tracing.h>
++#include <stddef.h>
++#include <stdint.h>
 +#include <sys/mman.h>
 +#include <sys/stat.h>
-+#include <stdbool.h>
-+#include "nsi_host_trampolines.h"
 +#include <dlfcn.h>
- 
- void *nsi_host_calloc(unsigned long nmemb, unsigned long size)
- {
-@@ -75,3 +83,242 @@ long nsi_host_write(int fd, const void *buffer, unsigned long size)
- {
- 	return write(fd, buffer, size);
- }
 +
-+void custom_panic(const char* message) {
-+	fprintf(stderr, "PANIC in zephyr: %s\n", message);
-+	// int* ptr = 0;
-+	// *ptr = 0;
-+	exit(1);
-+}
++#include "coverage.h" // for MY_LOG and custom_panic
 +
 +static int net_shmem_fd = 0;
 +static bool net_shmem_init = false;
@@ -240,17 +303,16 @@ index eb378b7533f..5a1390f0a23 100644
 +static int32_t* net_shmem_ptr_tx = 0;
 +
 +void init_shmem_eth_interface(void) {
-+	MY_LOG("init_shmem_eth_interface\n");
 +	if (!net_shmem_init) {
-+		MY_LOG("init_shmem_eth_interface: initializing\n");
++		MY_LOG("initializing shmem interface ");
 +		net_shmem_init = true;
 +		net_shmem_name = getenv("SHMEM_ETH_INTERFACE_NAME");
-+		if (net_shmem_name == 0) custom_panic("SHMEM_ETH_INTERFACE_NAME, the path to the mmap based shmem, is not set in the env");
-+		MY_LOG("shmem name: %s\n", net_shmem_name);
++		if (net_shmem_name == 0) custom_panic("\nSHMEM_ETH_INTERFACE_NAME, the path to the mmap based shmem, is not set in the env");
++		MY_LOG("with name %s ", net_shmem_name);
 +
 +		char* net_shmem_size_str = getenv("SHMEM_ETH_INTERFACE_SIZE");
-+		if (net_shmem_size_str == 0) custom_panic("SHMEM_ETH_INTERFACE_SIZE, the size of the mmap based shmem, is not set in the env");
-+		MY_LOG("shmem size: %s\n", net_shmem_size_str);
++		if (net_shmem_size_str == 0) custom_panic("\nSHMEM_ETH_INTERFACE_SIZE, the size of the mmap based shmem, is not set in the env");
++		MY_LOG("and size: %s\n", net_shmem_size_str);
 +
 +		net_shmem_size = atoi(net_shmem_size_str);
 +
@@ -266,30 +328,11 @@ index eb378b7533f..5a1390f0a23 100644
 +		if (raw_ptr == MAP_FAILED) custom_panic("mmap broke");
 +		net_shmem_ptr_rx = (int32_t*) raw_ptr;
 +		net_shmem_ptr_tx = (int32_t*) (raw_ptr + net_shmem_size / 2);
-+		// printf("Initialized shmem for the eth interface of size %u at %s", net_shmem_size, net_shmem_name);
++        MY_LOG("initialized shmem interface\n");
 +	} else {
-+		printf("Warning: Calling init_shmem_eth_interface again\n");
++		printf("Warning: attempting to initialize shmem interface again\n");
 +	}
-+	MY_LOG("states at startup: tx %d, rx: %d\n", *net_shmem_ptr_tx, *net_shmem_ptr_rx);
-+	MY_LOG("/init_shmem_eth_interface\n");
 +}
-+
-+// void write_shmem(size_t size, const char* buf) {
-+// 	if (!net_shmem_init) custom_panic("Not initialized");
-+// 	int* shmem_int = (int*) ((int32_t *) net_shmem_ptr_rx);
-+// 	size_t iter = 0;
-+// 	while (*shmem_int != 0) if (iter++ > (1 << 0)) custom_panic("Not ready");
-+// 	*(shmem_int) = 2; // sender = zephyr
-+// 	*(shmem_int + 1) = size; 
-+// 	char* shmem_char = (char*)(shmem_int + 2);
-+// 	memcpy(shmem_char, buf, size);
-+// }
-+
-+// void close_shmem_eth_interface(void) {
-+// 	munmap(net_shmem_ptr_rx, net_shmem_size);
-+//     close(net_shmem_fd);
-+//     shm_unlink(net_shmem_name);   // Unlink the shared memory object when done
-+// }
 +
 +void* prepare_send_buf(size_t size) {
 +	if (!net_shmem_init)
@@ -300,19 +343,16 @@ index eb378b7533f..5a1390f0a23 100644
 +
 +
 +	if ((*net_shmem_ptr_tx) >= 0) { // shmem[0] >= 0 means there is still a packet in the buffer
-+		// MY_LOG("buffer not ready, remaining size: %d\n", *net_shmem_ptr_tx);
++		MY_LOG("buffer not ready for packet of size %d, previous packet of size %d\n", size, *net_shmem_ptr_tx);
 +		return 0;
 +	}
-+
-+	MY_LOG("prepared_send_buf\n");;
 +	
 +	return net_shmem_ptr_tx + 1;
 +}
 +
 +void send_buf(size_t size) {
-+	MY_LOG("send_buf\n");
++	MY_LOG("sending packet of size %d\n", size);
 +	*net_shmem_ptr_tx = size; // set as sent
-+	MY_LOG("/send_buf\n");
 +}
 +
 +bool is_setup(void) {
@@ -334,7 +374,6 @@ index eb378b7533f..5a1390f0a23 100644
 +	// 	*ptr = 0;
 +	// }
 +
-+	MY_LOG("read_incoming\n");
 +	if (incoming_size > size) // assuming the fuzzer checks sizes, this should be enough checks
 +		custom_panic("Incoming too large");
 +	
@@ -343,8 +382,7 @@ index eb378b7533f..5a1390f0a23 100644
 +		custom_panic("Could not copy received data");
 +	
 +	*net_shmem_ptr_rx = -1; // status = ready
-+	MY_LOG("read %d %p %d\n", incoming_size, (void*)net_shmem_ptr_rx, *net_shmem_ptr_rx);
-+	MY_LOG("/read_incoming\n");
++	MY_LOG("received packet of size %d\n", incoming_size);
 +	
 +	return incoming_size;
 +}
@@ -352,8 +390,116 @@ index eb378b7533f..5a1390f0a23 100644
 +bool incoming_available(void) {
 +	if (!net_shmem_init)
 +		custom_panic("Not initialized");
-+
 +	return (*net_shmem_ptr_rx) >= 0;
++}
++
++uint32_t read_u32_from_random(void) {
++    int fd = open("/dev/random", O_RDONLY);
++    if (fd < 0) custom_panic("Could not open random device");
++
++    uint32_t value;
++    if (read(fd, &value, sizeof(value)) != sizeof(value)) {
++        close(fd);
++        custom_panic("Could not read random value");
++    }
++
++    close(fd);
++    return value;
++}
+diff --git a/drivers/ethernet/eth_shmem_priv.h b/drivers/ethernet/eth_shmem_priv.h
+new file mode 100644
+index 00000000000..89d55b57a04
+--- /dev/null
++++ b/drivers/ethernet/eth_shmem_priv.h
+@@ -0,0 +1,15 @@
++#ifndef ETH_SHMEM_PRIV_H
++#define ETH_SHMEM_PRIV_H
++
++#include <stdbool.h>
++#include <stddef.h>
++
++bool is_setup(void);
++void send_buf(size_t size);
++void* prepare_send_buf(size_t size);
++void init_shmem_eth_interface(void);
++int read_incoming(void* buf, unsigned long size);
++bool incoming_available(void);
++
++
++#endif /* ETH_SHMEM_PRIV_H */
+diff --git a/samples/net/sockets/echo/prj.conf b/samples/net/sockets/echo/prj.conf
+index 33729784d8e..ec2235e34c5 100644
+--- a/samples/net/sockets/echo/prj.conf
++++ b/samples/net/sockets/echo/prj.conf
+@@ -12,6 +12,8 @@ CONFIG_NET_IPV4_MAPPING_TO_IPV6=y
+ 
+ # Network driver config
+ CONFIG_TEST_RANDOM_GENERATOR=y
++CONFIG_ETH_NATIVE_POSIX=y
++CONFIG_ETH_NATIVE_POSIX_SHMEM=y
+ 
+ # Network address config
+ CONFIG_NET_CONFIG_SETTINGS=y
+@@ -21,3 +23,7 @@ CONFIG_NET_CONFIG_MY_IPV4_ADDR="192.0.2.1"
+ CONFIG_NET_CONFIG_PEER_IPV4_ADDR="192.0.2.2"
+ CONFIG_NET_CONFIG_MY_IPV6_ADDR="2001:db8::1"
+ CONFIG_NET_CONFIG_PEER_IPV6_ADDR="2001:db8::2"
++
++# MAC address config
++CONFIG_ETH_NATIVE_POSIX_RANDOM_MAC=n
++CONFIG_ETH_NATIVE_POSIX_MAC_ADDR="02:00:5e:00:53:31"
+diff --git a/samples/net/sockets/echo/src/socket_echo.c b/samples/net/sockets/echo/src/socket_echo.c
+index c8aad2bb068..6fef17641ad 100644
+--- a/samples/net/sockets/echo/src/socket_echo.c
++++ b/samples/net/sockets/echo/src/socket_echo.c
+@@ -19,6 +19,7 @@
+ 
+ #include <zephyr/net/socket.h>
+ #include <zephyr/kernel.h>
++#include "coverage.h"
+ 
+ #endif
+ 
+@@ -35,6 +36,7 @@ int main(void)
+ 		.sin6_port = htons(BIND_PORT),
+ 	};
+ 	static int counter;
++	init_coverage();
+ 
+ 	serv = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+ 	if (serv < 0) {
+@@ -70,6 +72,8 @@ int main(void)
+ 
+ 	printf("Single-threaded TCP echo server waits for a connection on "
+ 	       "port %d...\n", BIND_PORT);
++	k_sleep(K_MSEC(200)); // wait until all setup code is done, to ensure consistent coverage
++	reset_coverage();
+ 
+ 	while (1) {
+ 		struct sockaddr_in6 client_addr;
+diff --git a/scripts/native_simulator/common/src/coverage.c b/scripts/native_simulator/common/src/coverage.c
+new file mode 100644
+index 00000000000..6c4f961d7f5
+--- /dev/null
++++ b/scripts/native_simulator/common/src/coverage.c
+@@ -0,0 +1,111 @@
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <stdint.h>
++#include <fcntl.h>
++#include <sys/mman.h>
++#include <sys/stat.h>
++#include <unistd.h>
++#include <stdbool.h>
++
++#include "coverage.h"
++
++void custom_panic(const char* message) {
++	fprintf(stderr, "PANIC in zephyr: %s\n", message);
++	int* ptr = 0;
++	*ptr = 0;
++	exit(1);
 +}
 +
 +static int cov_shmem_fd = 0;
@@ -365,17 +511,16 @@ index eb378b7533f..5a1390f0a23 100644
 +static uint32_t *guard_start = 0;
 +
 +void init_coverage(void) {
-+	MY_LOG("init_coverage\n");
 +	if (!cov_shmem_init) {
-+		MY_LOG("init_coverage: initializing\n");
++		MY_LOG("initializing coverage ");
 +		cov_shmem_init = true;
 +		cov_shmem_name = getenv("SHMEM_COVERAGE_NAME");
 +		if (cov_shmem_name == 0) custom_panic("SHMEM_COVERAGE_NAME, the path to the mmap based shmem, is not set in the env");
-+		MY_LOG("shmem name: %s\n", cov_shmem_name);
++		MY_LOG("with shmem name %s ", cov_shmem_name);
 +
 +		char* cov_shmem_size_str = getenv("SHMEM_COVERAGE_SIZE");
 +		if (cov_shmem_size_str == 0) custom_panic("SHMEM_COVERAGE_SIZE, the size of the mmap based shmem, is not set in the env");
-+		MY_LOG("shmem size: %s\n", cov_shmem_size_str);
++		MY_LOG("of size: %s\n", cov_shmem_size_str);
 +
 +		cov_shmem_size = atoi(cov_shmem_size_str);
 +		if (guard_stop == 0) custom_panic("Coverage guards not initialized when initing coverage shmem");
@@ -404,6 +549,7 @@ index eb378b7533f..5a1390f0a23 100644
 +	if (!cov_shmem_init)
 +		custom_panic("attempting to reset non-initialized coverage shmem");
 +	memset(cov_shmem_ptr, 0, cov_shmem_size);
++	MY_LOG("reset coverage\n");
 +}
 +
 +
@@ -411,12 +557,12 @@ index eb378b7533f..5a1390f0a23 100644
 +{
 +  if (start == stop)
 +  {
-+    MY_LOG("Skipping initialization");
++    MY_LOG("Skipping initialization\n");
 +    return;
 +  };
 +
 +
-+  MY_LOG("Coverage initialization");
++  MY_LOG("Coverage initialization\n");
 +  guard_start = start;
 +  guard_stop = stop;
 +
@@ -425,7 +571,6 @@ index eb378b7533f..5a1390f0a23 100644
 +  MY_LOG("Done with initialization\n");
 +}
 +
-+__attribute__((no_sanitize("coverage")))
 +void __sanitizer_cov_trace_pc_guard(uint32_t *guard)
 +{
 +	if (!cov_shmem_init) return; // ignore coverage before initialization
@@ -449,17 +594,21 @@ index eb378b7533f..5a1390f0a23 100644
 +
 +	*(guard - guard_start + cov_shmem_ptr) = 1;
 +}
+diff --git a/scripts/native_simulator/common/src/include/coverage.h b/scripts/native_simulator/common/src/include/coverage.h
+new file mode 100644
+index 00000000000..866214c6404
+--- /dev/null
++++ b/scripts/native_simulator/common/src/include/coverage.h
+@@ -0,0 +1,12 @@
++#ifndef COVERAGE_H
++#define COVERAGE_H  
 +
-+uint32_t read_u32_from_random() {
-+    int fd = open("/dev/random", O_RDONLY);
-+    if (fd < 0) custom_panic("Could not open random device");
++// #define MY_LOG(...) //;
++#define MY_LOG(...) printf(__VA_ARGS__);
 +
-+    uint32_t value;
-+    if (read(fd, &value, sizeof(value)) != sizeof(value)) {
-+        close(fd);
-+        custom_panic("Could not read random value");
-+    }
++void custom_panic(const char* message);
 +
-+    close(fd);
-+    return value;
-+}
++void init_coverage(void);
++void reset_coverage(void);
++
++#endif /* COVERAGE_H */

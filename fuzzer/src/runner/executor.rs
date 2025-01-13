@@ -138,9 +138,11 @@ where
         self.device
             .init_zephyr(|packet| packets_observer.add_packet(packet.inner()))?;
 
-        log::debug!("Started Zephyr");
+        let packets = input.to_packets();
 
-        for e in input.to_packets() {
+        log::debug!("Started Zephyr, now sending {} packets", packets.len());
+
+        for e in packets {
             self.device.send(&e);
             packets_observer.add_packet(e);
             let mut last_packet_time = Instant::now();

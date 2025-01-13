@@ -46,6 +46,7 @@ impl DataLinkLayerPacket {
         &self.eth
     }
 
+    #[allow(dead_code)]
     pub fn types_to_string(&self) -> String {
         if self.upper().is_some() {
             format!(

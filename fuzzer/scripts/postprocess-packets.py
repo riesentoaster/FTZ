@@ -83,6 +83,7 @@ def main():
     if output_dir.is_dir():
         if args.force:
             print(f"Cleaning old files from output dir {output_dir}")
+            shutil.rmtree(output_dir)
         else:
             sys.exit(f"Output directory '{output_dir}' already exists.")
 

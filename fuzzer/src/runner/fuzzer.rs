@@ -197,6 +197,7 @@ pub fn fuzz() {
             let mut fuzzer = StdFuzzer::new(scheduler, feedback, objective);
 
             let outgoing_packets = outgoing_tcp_packets();
+            let outgoing_packets_len = 1; //outgoing_packets.len();
             let mut generator = FixedZephyrInputGenerator::new(outgoing_packets, false);
 
             let mut observers =
@@ -213,13 +214,16 @@ pub fn fuzz() {
             )?;
 
             if state.must_load_initial_inputs() {
-                log::debug!("Generating inputs");
+                log::debug!(
+                    "Generating inputs from fixed trace, expecting {} packets",
+                    outgoing_packets_len
+                );
                 state.generate_initial_inputs(
                     &mut fuzzer,
                     &mut executor,
                     &mut generator,
                     &mut manager,
-                    outgoing_tcp_packets().len() - 1,
+                    outgoing_packets_len,
                 )?;
                 log::info!("Generated {} inputs", state.corpus().count());
             } else {

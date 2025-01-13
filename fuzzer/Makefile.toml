@@ -20,7 +20,9 @@ ASAN_BLACKLIST_PATH="$(realpath asan-blacklist.txt)"
 CURRENT_DIR="$(pwd)"
 
 cd ${ZEPHYR_PROJECT_DIR}
-git diff > /tmp/zephyr.diff
+git add .
+git diff --staged > /tmp/zephyr.diff
+git reset --quiet
 if diff /tmp/zephyr.diff $DIFF_PATH > /dev/null && [ -f "${CUSTOM_TARGET_DIR}/zephyr/zephyr.exe" ]; then
     echo "\e[33mWarning: Not recompiling Zephyr, no changes compared to ../zephyr.diff\e[0m"
 else
@@ -79,7 +81,9 @@ script_runner = "@shell"
 script = '''
 DIFF_PATH="$(realpath ../zephyr.diff)"
 cd ${ZEPHYR_PROJECT_DIR}
-git diff > "${DIFF_PATH}"
+git add .
+git diff --staged > "${DIFF_PATH}"
+git reset --quiet
 '''
 
 [tasks.extract_pcap]
