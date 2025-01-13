@@ -9,7 +9,7 @@ repos:
         args:
           - -c
           - |
-            if [ -d "~/zephyrproject" ]; then
+            if [ -d "../zephyrproject" ]; then
               cd fuzzer
               cargo make zephyr_diff
             else
