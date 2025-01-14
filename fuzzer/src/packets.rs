@@ -6,12 +6,17 @@ pub fn outgoing_tcp_packets() -> Vec<Vec<u8>> {
     get_packets()
         .iter()
         .filter(|e| match e {
-            Source::Client(_) => false,
-            Source::Server(_) => true,
+            Source::Client(_) => true,
+            Source::Server(_) => false,
         })
         .cloned()
         .map(Source::inner)
-        .filter(|e| PacketHeaders::from_ethernet_slice(e).is_ok_and(|p| p.transport.is_some()))
+        .filter(|e| {
+            PacketHeaders::from_ethernet_slice(e).is_ok_and(|p| {
+                p.transport
+                    .is_some_and(|transport| transport.tcp().is_some())
+            })
+        })
         .collect()
 }
 

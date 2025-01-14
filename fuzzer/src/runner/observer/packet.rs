@@ -80,7 +80,7 @@ pub struct PacketMetadata {
 
 /// Feedback adding packets captured by a [`PacketObserver`] to a metadata field.
 ///
-/// Returns constant `false` as [`Feedback::append_metadata`].
+/// Returns constant `false` as [`Feedback::is_interesting`].
 pub struct PacketMetadataFeedback {
     packet_observer: Handle<PacketObserver>,
 }

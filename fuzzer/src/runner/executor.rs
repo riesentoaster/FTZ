@@ -25,7 +25,10 @@ use libafl_bolts::{
     tuples::{Handle, MatchName, MatchNameRef, RefIndexable},
 };
 
-use crate::runner::{get_path, INTER_SEND_WAIT};
+use crate::{
+    layers::data_link::parse_eth,
+    runner::{get_path, INTER_SEND_WAIT},
+};
 
 use crate::smoltcp::shmem_net_device::ShmemNetworkDevice;
 
@@ -146,7 +149,20 @@ where
             let mut last_packet_time = Instant::now();
             while last_packet_time.elapsed() < INTER_SEND_WAIT {
                 if let Some(incoming) = self.device.try_recv() {
+                    let parsed = parse_eth(&incoming)
+                        .map_err(|e| Error::illegal_argument(format!("{e:?}")))?;
                     packets_observer.add_packet(incoming);
+                    if let Some(manual_response_res) = ShmemNetworkDevice::respond_manually(parsed)
+                    {
+                        match manual_response_res {
+                            Ok(manual_response) => {
+                                self.device.send(&manual_response);
+                                packets_observer.add_packet(manual_response);
+                            }
+                            Err(e) => return Err(e),
+                        }
+                    }
+
                     last_packet_time = Instant::now();
                 }
                 sleep(INTER_SEND_WAIT / 5);

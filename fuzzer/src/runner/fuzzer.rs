@@ -117,76 +117,6 @@ pub fn fuzz() {
             });
 
             let mutations = ZephyrInputType::mutators();
-            // let mutations = tuple_list!()
-            //     .merge(
-            //         int_mutators_no_crossover()
-            //             .map(ToMappingMutator::new(ParsedZephyrInput::ipv4_version_mut)),
-            //     )
-            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
-            //         ParsedZephyrInput::ipv4_header_length_mut,
-            //     )))
-            //     .merge(
-            //         int_mutators_no_crossover()
-            //             .map(ToMappingMutator::new(ParsedZephyrInput::ipv4_dscp_mut)),
-            //     )
-            //     .merge(
-            //         int_mutators_no_crossover()
-            //             .map(ToMappingMutator::new(ParsedZephyrInput::ipv4_ecn_mut)),
-            //     )
-            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
-            //         ParsedZephyrInput::ipv4_total_length_mut,
-            //     )))
-            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
-            //         ParsedZephyrInput::ipv4_identification_mut,
-            //     )))
-            //     .merge(
-            //         int_mutators_no_crossover()
-            //             .map(ToMappingMutator::new(ParsedZephyrInput::ipv4_flags_mut)),
-            //     )
-            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
-            //         ParsedZephyrInput::ipv4_fragment_offset_mut,
-            //     )))
-            //     .merge(
-            //         int_mutators_no_crossover()
-            //             .map(ToMappingMutator::new(ParsedZephyrInput::ipv4_ttl_mut)),
-            //     )
-            //     .merge(
-            //         int_mutators_no_crossover()
-            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_source_mut)),
-            //     )
-            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
-            //         ParsedZephyrInput::tcp_destination_mut,
-            //     )))
-            //     .merge(
-            //         int_mutators_no_crossover()
-            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_sequence_mut)),
-            //     )
-            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
-            //         ParsedZephyrInput::tcp_acknowledgement_mut,
-            //     )))
-            //     .merge(int_mutators_no_crossover().map(ToMappingMutator::new(
-            //         ParsedZephyrInput::tcp_data_offset_mut,
-            //     )))
-            //     .merge(
-            //         int_mutators_no_crossover()
-            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_reserved_mut)),
-            //     )
-            //     .merge(
-            //         int_mutators_no_crossover()
-            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_flags_mut)),
-            //     )
-            //     .merge(
-            //         int_mutators_no_crossover()
-            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_window_mut)),
-            //     )
-            //     .merge(
-            //         int_mutators_no_crossover()
-            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_urgent_ptr_mut)),
-            //     )
-            //     .merge(
-            //         havoc_mutations_no_crossover()
-            //             .map(ToMappingMutator::new(ParsedZephyrInput::tcp_payload_mut)),
-            //     );
 
             let mutator =
                 StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);
@@ -198,10 +128,6 @@ pub fn fuzz() {
             );
 
             let mut fuzzer = StdFuzzer::new(scheduler, feedback, objective);
-
-            let outgoing_packets = outgoing_tcp_packets();
-            let outgoing_packets_len = 1; //outgoing_packets.len();
-            let mut generator = FixedZephyrInputGenerator::new(outgoing_packets, false);
 
             let mut observers =
                 tuple_list!(cov_observer, time_observer, packet_observer, state_observer);
@@ -217,6 +143,10 @@ pub fn fuzz() {
             )?;
 
             if state.must_load_initial_inputs() {
+                let outgoing_packets = outgoing_tcp_packets();
+                let outgoing_packets_len = outgoing_packets.len();
+                let mut generator = FixedZephyrInputGenerator::new(outgoing_packets, false);
+
                 log::debug!(
                     "Generating inputs from fixed trace, expecting {} packets",
                     outgoing_packets_len
@@ -287,7 +217,7 @@ pub fn fuzz() {
         .overcommit(overcommit)
         .stdout_file(opt.stdout().and_then(|e| e.as_os_str().to_str()))
         .stderr_file(opt.stderr().and_then(|e| e.as_os_str().to_str()))
-        .launch_delay(200)
+        .launch_delay(20)
         .build()
         .launch()
     {

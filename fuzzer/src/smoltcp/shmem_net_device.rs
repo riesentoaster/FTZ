@@ -13,10 +13,10 @@ use pnet::packet::icmpv6::Icmpv6Types;
 use crate::{
     direction::Direction,
     layers::{
-        data_link::parse_eth,
+        data_link::{parse_eth, DataLinkLayerPacket},
         interactive::{
             create_response_to_icmpv6_neighbor_solicitation,
-            create_response_to_icmpv6_router_solicitation,
+            create_response_to_icmpv6_router_solicitation, respond_to_arp,
         },
         upper::UpperLayerPacket,
     },
@@ -72,6 +72,39 @@ impl ShmemNetworkDevice {
         self.rx_shmem.description()
     }
 
+    pub fn respond_manually(parsed: DataLinkLayerPacket) -> Option<Result<Vec<u8>, Error>> {
+        if let Some(icmpv6) = parsed.upper().and_then(UpperLayerPacket::get_icmpv6) {
+            match icmpv6.icmpv6_type {
+                Icmpv6Types::NeighborSolicit => {
+                    log::debug!("Manually responding to icmpv6 NeighborSolicit");
+                    let res = create_response_to_icmpv6_neighbor_solicitation(&parsed, CLIENT_MAC_ADDR, *IPV6_LINK_LOCAL_ADDR).ok_or({
+                        Error::illegal_argument(format!("Could not calculate return package for an incoming icmpv6 message:\n{:?}", parsed))
+                    });
+                    Some(res)
+                }
+                Icmpv6Types::RouterSolicit => {
+                    log::debug!("Manually responding to icmpv6 RouterSolicit");
+                    let res = create_response_to_icmpv6_router_solicitation(&parsed, CLIENT_MAC_ADDR, *IPV6_LINK_LOCAL_ADDR).ok_or({
+                        Error::illegal_argument(format!("Could not calculate return package for an incoming icmpv6 message:\n{:?}", parsed))
+                    });
+                    Some(res)
+                }
+                _ => {
+                    log::debug!(
+                        "Received icmpv6 package of type other than NeighborSolicit or RouterSolicit of upper type {:?}",
+                        icmpv6.icmpv6_type
+                    );
+                    None
+                }
+            }
+        } else if parsed.net().is_arp() {
+            log::debug!("Manually responding to arp");
+            let res = respond_to_arp(&parsed, CLIENT_MAC_ADDR);
+            Some(Ok(res))
+        } else {
+            None
+        }
+    }
     pub fn init_zephyr(
         &mut self,
         mut package_logger: impl FnMut(Direction<Vec<u8>>),
@@ -81,36 +114,16 @@ impl ShmemNetworkDevice {
             if let Some(p) = self.try_recv() {
                 let parsed =
                     parse_eth(&p).map_err(|e| Error::illegal_argument(format!("{e:?}")))?;
-                if let Some(icmpv6) = parsed.upper().and_then(UpperLayerPacket::get_icmpv6) {
-                    match icmpv6.icmpv6_type {
-                        Icmpv6Types::NeighborSolicit => {
-                            let res = create_response_to_icmpv6_neighbor_solicitation(&parsed, CLIENT_MAC_ADDR, *IPV6_LINK_LOCAL_ADDR).ok_or({
-                                Error::illegal_argument(format!("Could not calculate return package for an incoming icmpv6 message:\n{:?}", parsed))
-                            })?;
-                            self.send(&res);
-                            package_logger(Direction::Outgoing(res));
-                        }
-                        Icmpv6Types::RouterSolicit => {
-                            let res = create_response_to_icmpv6_router_solicitation(&parsed, CLIENT_MAC_ADDR, *IPV6_LINK_LOCAL_ADDR).ok_or({
-                                Error::illegal_argument(format!("Could not calculate return package for an incoming icmpv6 message:\n{:?}", parsed))
-                            })?;
-                            self.send(&res);
-                            package_logger(Direction::Outgoing(res));
-                        }
-                        _ => {
-                            log::debug!(
-                            "Received icmpv6 package of type other than NeighborSolicit or RouterSolicit of upper type {:?}",
-                            icmpv6.icmpv6_type
-                        );
-                        }
-                    }
-                } else {
-                    log::info!(
-                        "Received weird (i.e. non-icmpv6) package during setup: {:?}",
-                        parsed
-                    );
-                }
                 package_logger(Direction::Incoming(p));
+                if let Some(res) = Self::respond_manually(parsed) {
+                    match res {
+                        Ok(response) => {
+                            self.send(&response);
+                            package_logger(Direction::Outgoing(response));
+                        }
+                        Err(e) => return Err(e),
+                    }
+                }
             }
             sleep(Duration::from_millis(5));
         }

@@ -20,8 +20,8 @@ pattern = re.compile(
             "objectives:\s*(\d+)",
             "executions:\s*(\d+)",
             "exec/sec:\s*([\d.]+k?)",
-            "state-observer:\s*([\d.]+)%",
             "coverage-observer:\s*([\d.]+)%",
+            "state-observer:\s*([\d.]+)%",
         ]
     )
 )
@@ -30,7 +30,7 @@ pattern = re.compile(
 def extract(line: str) -> Optional[Tuple[int, int, int, int, float, float]]:
     m = pattern.search(line)
     if m:
-        h, m, s, clients, corpus, objectives, executions, execs_s, state, coverage = (
+        h, m, s, clients, corpus, objectives, executions, execs_s, coverage, state = (
             m.groups()
         )
         time = int(h) * 3600 + int(m) * 60 + int(s)

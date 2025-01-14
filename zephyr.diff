@@ -552,40 +552,32 @@ index 33729784d8e..3c17a6df83b 100644
 +# Coverage config
 +CONFIG_SHMEM_COVERAGE=y
 diff --git a/samples/net/sockets/echo/src/socket_echo.c b/samples/net/sockets/echo/src/socket_echo.c
-index c8aad2bb068..cb72bf3e2e4 100644
+index c8aad2bb068..846e24e99c7 100644
 --- a/samples/net/sockets/echo/src/socket_echo.c
 +++ b/samples/net/sockets/echo/src/socket_echo.c
 @@ -19,6 +19,7 @@
  
  #include <zephyr/net/socket.h>
  #include <zephyr/kernel.h>
-+// #include "coverage.h"
++#include "coverage.h"
  
  #endif
  
-@@ -35,6 +36,7 @@ int main(void)
- 		.sin6_port = htons(BIND_PORT),
- 	};
- 	static int counter;
-+	// init_coverage();
- 
- 	serv = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
- 	if (serv < 0) {
-@@ -70,6 +72,8 @@ int main(void)
+@@ -70,6 +71,8 @@ int main(void)
  
  	printf("Single-threaded TCP echo server waits for a connection on "
  	       "port %d...\n", BIND_PORT);
-+	// k_sleep(K_MSEC(200)); // wait until all setup code is done, to ensure consistent coverage
-+	// reset_coverage();
++	k_sleep(K_MSEC(200)); // wait until all setup code is done, to ensure consistent coverage
++	reset_coverage();
  
  	while (1) {
  		struct sockaddr_in6 client_addr;
 diff --git a/scripts/native_simulator/common/src/coverage.c b/scripts/native_simulator/common/src/coverage.c
 new file mode 100644
-index 00000000000..2091015da13
+index 00000000000..33c4b502e08
 --- /dev/null
 +++ b/scripts/native_simulator/common/src/coverage.c
-@@ -0,0 +1,111 @@
+@@ -0,0 +1,117 @@
 +#include <stdio.h>
 +#include <stdlib.h>
 +#include <string.h>
@@ -595,11 +587,16 @@ index 00000000000..2091015da13
 +#include <sys/stat.h>
 +#include <unistd.h>
 +#include <stdbool.h>
++#include <stdarg.h>
 +
 +#include "coverage.h"
 +
-+void custom_panic(const char* message) {
-+	fprintf(stderr, "PANIC in zephyr: %s\n", message);
++void custom_panic(const char* format, ...) {
++	va_list args;
++	va_start(args, format);
++	fprintf(stderr, "PANIC in zephyr: ");
++	vfprintf(stderr, format, args);
++	va_end(args);
 +	int* ptr = 0;
 +	*ptr = 0;
 +	exit(1);
@@ -628,8 +625,7 @@ index 00000000000..2091015da13
 +		if (guard_stop == 0) custom_panic("Coverage guards not initialized when initing coverage shmem");
 +		uint32_t required_size = (guard_stop - guard_start) * 4;
 +		if (cov_shmem_size != required_size) {
-+			printf("Received shmem of size %d, needed shmem of size %d\n", cov_shmem_size, required_size);
-+			custom_panic("Coverage shared memory has wrong size.");
++			custom_panic("Received shmem of size %d, needed shmem of size %d\n", cov_shmem_size, required_size);
 +		}
 +
 +		// Open shared memory object
@@ -671,6 +667,8 @@ index 00000000000..2091015da13
 +
 +  memset(guard_start, 0, guard_stop - guard_start);
 +
++  init_coverage();
++
 +  MY_LOG("Done with initialization\n");
 +}
 +
@@ -699,17 +697,17 @@ index 00000000000..2091015da13
 +}
 diff --git a/scripts/native_simulator/common/src/include/coverage.h b/scripts/native_simulator/common/src/include/coverage.h
 new file mode 100644
-index 00000000000..866214c6404
+index 00000000000..28714ecdec1
 --- /dev/null
 +++ b/scripts/native_simulator/common/src/include/coverage.h
 @@ -0,0 +1,12 @@
 +#ifndef COVERAGE_H
 +#define COVERAGE_H  
 +
-+// #define MY_LOG(...) //;
-+#define MY_LOG(...) printf(__VA_ARGS__);
++#define MY_LOG(...)
++// #define MY_LOG(...) printf(__VA_ARGS__);
 +
-+void custom_panic(const char* message);
++void custom_panic(const char* format, ...);
 +
 +void init_coverage(void);
 +void reset_coverage(void);
