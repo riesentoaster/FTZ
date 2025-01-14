@@ -39,3 +39,10 @@ monitor_none = []
 stability = []
 hashes = ["stability"]
 multipart_input = []
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "parse_eth"
+harness = false

@@ -1,20 +1,4 @@
-#![recursion_limit = "1024"] // too complex types in mutators
-
-#[allow(unused_imports)]
-use runner::{connect_to_zephyr, fuzz};
-
-mod cli;
-mod direction;
-mod layers;
-mod packets;
-mod pcap;
-mod runner;
-mod shmem;
-mod smoltcp;
-
-pub const NETWORK_SHMEM_SIZE: usize = 1600;
-pub const COV_SHMEM_SIZE: usize = 26612; // manually extracted
-pub const PCAP_PATH: &str = "./pcap.pcap";
+use fuzzer::runner::fuzz;
 
 fn main() {
     env_logger::builder()
@@ -39,9 +23,4 @@ fn main() {
     //     &mut pcap_file,
     // )
     // .unwrap();
-}
-
-#[allow(unused)]
-fn wait_for_newline() {
-    std::io::stdin().read_line(&mut String::new()).unwrap();
 }

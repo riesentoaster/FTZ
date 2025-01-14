@@ -56,6 +56,12 @@ impl PacketObserver {
     }
 }
 
+impl Default for PacketObserver {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<I, S> Observer<I, S> for PacketObserver {
     fn pre_exec(&mut self, _state: &mut S, _input: &I) -> Result<(), Error> {
         self.packets = vec![];
