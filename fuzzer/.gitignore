@@ -2,6 +2,7 @@
 *.pcap
 *.log
 monitor.toml
+monitor.json
 solutions
 corpus*
 *.tmp
