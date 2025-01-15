@@ -1,8 +1,7 @@
 /target
 *.pcap
 *.log
-monitor.toml
-monitor.json
+monitor.*
 solutions
 corpus*
 *.tmp
