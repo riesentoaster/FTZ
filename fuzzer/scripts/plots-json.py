@@ -98,30 +98,29 @@ def main():
 
             config = {
                 "y": values,
-                "ylabel": f"{field.replace('_', ' ').title()} [{' %' if is_percent else 'count'}]",
+                "ylabel": f"{field} [{' %' if is_percent else 'count'}]",
             }
 
             if is_percent:
                 config["format_str"] = "%.3f"
 
             configs.append(config)
-
-            # Add last hour view for percentage fields
-            if is_percent:
-                last_hour_indices = [
-                    i for i, t in enumerate(times) if max_time - t < 3600
-                ]
-                if last_hour_indices:
-                    last_hour_times = [times[i] for i in last_hour_indices]
-                    last_hour_values = [values[i] for i in last_hour_indices]
-                    configs.append(
-                        {
-                            "y": last_hour_values,
-                            "ylabel": f"Last Hour {field.replace('_', ' ').title()} [%]",
-                            "format_str": "%.3f",
-                            "times": last_hour_times,
-                        }
-                    )
+            min_time = min(times)
+            if (max_time - min_time) < 3600:
+                recent_indices = [i for i, t in enumerate(times) if t > max_time / 4]
+            else:
+                recent_indices = [i for i, t in enumerate(times) if max_time - t < 3600]
+            if recent_indices:
+                recent_times = [times[i] for i in recent_indices]
+                recent_values = [values[i] for i in recent_indices]
+                configs.append(
+                    {
+                        "y": recent_values,
+                        "ylabel": f"Recent {field} [{' %' if is_percent else 'count'}]",
+                        "format_str": "%.3f",
+                        "times": recent_times,
+                    }
+                )
 
     plt_height = math.ceil(math.sqrt(len(configs)))
     plt_width = math.ceil(len(configs) / plt_height)

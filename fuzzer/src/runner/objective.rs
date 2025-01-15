@@ -43,7 +43,11 @@ impl<EM, I, OT, S> Feedback<EM, I, OT, S> for CrashLoggingFeedback {
         exit_kind: &ExitKind,
     ) -> Result<bool, Error> {
         self.exit_kind = Some(*exit_kind);
-        Ok(matches!(exit_kind, ExitKind::Crash))
+        let res = matches!(exit_kind, ExitKind::Crash);
+        if res {
+            log::info!("Crash detected");
+        }
+        Ok(res)
     }
 
     fn append_metadata(

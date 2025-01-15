@@ -10,6 +10,8 @@ pub enum PacketState {
     NoUpper,
     Icmpv6,
     Tcp(u8),
+    // No previous state
+    Nothing,
 }
 
 impl From<&UpperLayerPacket> for PacketState {
@@ -41,22 +43,24 @@ impl From<&PacketState> for u16 {
             PacketState::NoUpper => 0x1 << 8,
             PacketState::Icmpv6 => 0x2 << 8,
             PacketState::ParseError(packet_parse_error) => match packet_parse_error {
-                PacketParseError::MalformedEthernet(_) => 0x3 << 8,
-                PacketParseError::MalformedIpv4(_) => 0x4 << 8,
-                PacketParseError::MalformedIpv6(_) => 0x5 << 8,
-                PacketParseError::MalformedArp(_) => 0x6 << 8,
-                PacketParseError::MalformedTcp(_) => 0x7 << 8,
-                PacketParseError::MalformedIcmpv6(_) => 0x8 << 8,
-                PacketParseError::MalformedHopopt(_) => 0x9 << 8,
-                PacketParseError::UnknownLayer3(_) => 0xa << 8,
-                PacketParseError::UnknownLayer4(_) => 0xb << 8,
+                PacketParseError::MalformedEthernet => 0x3 << 8,
+                PacketParseError::MalformedIpv4 => 0x4 << 8,
+                PacketParseError::MalformedIpv6 => 0x5 << 8,
+                PacketParseError::MalformedArp => 0x6 << 8,
+                PacketParseError::MalformedTcp => 0x7 << 8,
+                PacketParseError::MalformedIcmpv6 => 0x8 << 8,
+                PacketParseError::MalformedHopopt => 0x9 << 8,
+                PacketParseError::UnknownLayer3 => 0xa << 8,
+                PacketParseError::UnknownLayer4 => 0xb << 8,
             },
+            PacketState::Nothing => 0x0c << 8,
         }
     }
 }
 
 impl PacketState {
-    pub const fn max_numeric_value() -> u16 {
-        0xb << 8
+    pub const fn array_size() -> usize {
+        // max value + 1
+        (0xc << 8) + 1
     }
 }

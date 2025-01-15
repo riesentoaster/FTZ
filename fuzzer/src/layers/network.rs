@@ -85,12 +85,12 @@ impl NetworkLayerPacket {
 
 pub fn parse_ipv6(packet: &[u8]) -> Result<NetworkLayerPacket, PacketParseError> {
     let ipv6 = Ipv6Packet::new(packet)
-        .ok_or(PacketParseError::MalformedIpv6(packet.to_vec()))?
+        .ok_or(PacketParseError::MalformedIpv6)?
         .from_packet();
     let upper = match ipv6.next_header {
         IpNextHeaderProtocols::Icmpv6 => parse_icmpv6(&ipv6.payload),
         IpNextHeaderProtocols::Hopopt => parse_hopopt(&ipv6.payload), // not sure if this is correct?
-        _ => Err(PacketParseError::UnknownLayer4(packet.to_vec())),
+        _ => Err(PacketParseError::UnknownLayer4),
     }?;
     Ok(NetworkLayerPacket {
         net: NetworkLayerPacketType::Ipv6(ipv6),
@@ -99,11 +99,11 @@ pub fn parse_ipv6(packet: &[u8]) -> Result<NetworkLayerPacket, PacketParseError>
 }
 pub fn parse_ipv4(packet: &[u8]) -> Result<NetworkLayerPacket, PacketParseError> {
     let ipv4 = Ipv4Packet::new(packet)
-        .ok_or(PacketParseError::MalformedIpv4(packet.to_vec()))?
+        .ok_or(PacketParseError::MalformedIpv4)?
         .from_packet();
     let upper = match ipv4.next_level_protocol {
         IpNextHeaderProtocols::Tcp => parse_tcp(&ipv4.payload),
-        _ => Err(PacketParseError::UnknownLayer4(packet.to_vec())),
+        _ => Err(PacketParseError::UnknownLayer4),
     }?;
     Ok(NetworkLayerPacket {
         net: NetworkLayerPacketType::Ipv4(ipv4),
@@ -112,7 +112,7 @@ pub fn parse_ipv4(packet: &[u8]) -> Result<NetworkLayerPacket, PacketParseError>
 }
 
 pub fn parse_arp(packet: &[u8]) -> Result<NetworkLayerPacket, PacketParseError> {
-    let packet = ArpPacket::new(packet).ok_or(PacketParseError::MalformedArp(packet.to_vec()))?;
+    let packet = ArpPacket::new(packet).ok_or(PacketParseError::MalformedArp)?;
     let packet = packet.from_packet();
     Ok(NetworkLayerPacket {
         net: NetworkLayerPacketType::Arp(packet),

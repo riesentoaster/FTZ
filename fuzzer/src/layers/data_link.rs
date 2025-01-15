@@ -62,14 +62,14 @@ impl DataLinkLayerPacket {
 
 pub fn parse_eth(input: &[u8]) -> Result<DataLinkLayerPacket, PacketParseError> {
     let eth = EthernetPacket::new(input)
-        .ok_or(PacketParseError::MalformedEthernet(input.to_vec()))?
+        .ok_or(PacketParseError::MalformedEthernet)?
         .from_packet();
 
     let net = match eth.ethertype {
         EtherTypes::Ipv4 => parse_ipv4(&eth.payload),
         EtherTypes::Ipv6 => parse_ipv6(&eth.payload),
         EtherTypes::Arp => parse_arp(&eth.payload),
-        _ => Err(PacketParseError::UnknownLayer3(input.to_vec())),
+        _ => Err(PacketParseError::UnknownLayer3),
     }?;
 
     let (net, upper) = net.contents();

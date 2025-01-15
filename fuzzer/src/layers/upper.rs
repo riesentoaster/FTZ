@@ -63,8 +63,7 @@ impl UpperLayerPacket {
 }
 
 pub fn parse_hopopt(packet: &[u8]) -> Result<UpperLayerPacket, PacketParseError> {
-    let ext_packet =
-        HopByHopPacket::new(packet).ok_or(PacketParseError::MalformedHopopt(packet.to_vec()))?;
+    let ext_packet = HopByHopPacket::new(packet).ok_or(PacketParseError::MalformedHopopt)?;
     let ext_packet = ext_packet.from_packet();
     match ext_packet.next_header {
         IpNextHeaderProtocols::Icmpv6 => {
@@ -74,18 +73,17 @@ pub fn parse_hopopt(packet: &[u8]) -> Result<UpperLayerPacket, PacketParseError>
             let next_packet = parse_icmpv6(next_packet_buffer)?;
             Ok(UpperLayerPacket::Hopopt(ext_packet, Box::new(next_packet)))
         }
-        _ => Err(PacketParseError::MalformedHopopt(packet.to_vec())),
+        _ => Err(PacketParseError::MalformedHopopt),
     }
 }
 pub fn parse_icmpv6(packet: &[u8]) -> Result<UpperLayerPacket, PacketParseError> {
-    let packet =
-        Icmpv6Packet::new(packet).ok_or(PacketParseError::MalformedIcmpv6(packet.to_vec()))?;
+    let packet = Icmpv6Packet::new(packet).ok_or(PacketParseError::MalformedIcmpv6)?;
     let packet = packet.from_packet();
     Ok(UpperLayerPacket::Icmpv6(packet))
 }
 
 pub fn parse_tcp(packet: &[u8]) -> Result<UpperLayerPacket, PacketParseError> {
-    let packet = TcpPacket::new(packet).ok_or(PacketParseError::MalformedTcp(packet.to_vec()))?;
+    let packet = TcpPacket::new(packet).ok_or(PacketParseError::MalformedTcp)?;
     let packet = packet.from_packet();
     let s = match String::from_utf8(packet.payload.clone()) {
         Ok(s) => format!("[{: >5x}]: '{}'", s.len(), s.escape_debug()),

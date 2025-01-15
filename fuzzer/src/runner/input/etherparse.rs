@@ -85,7 +85,7 @@ impl TryFrom<&[u8]> for EtherparseInput {
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         let res: Packet = match PacketHeaders::from_ethernet_slice(value) {
             Ok(e) => Ok(e.into()),
-            Err(e) => Err(PacketParseError::from_slice_error(e, value)),
+            Err(e) => Err(PacketParseError::from_slice_error(e)),
         }?;
         let tcp = res.transport.unwrap().tcp().unwrap();
         let (ip, ipv4_extensions) = match res.net.unwrap() {

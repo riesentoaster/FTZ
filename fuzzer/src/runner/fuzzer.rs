@@ -4,7 +4,6 @@ use crate::{
     runner::{
         input::{FixedZephyrInputGenerator, ZephyrInput, ZephyrInputType},
         objective::CrashLoggingFeedback,
-        observer::state::PacketState,
         PacketMetadataFeedback, PacketObserver, ZepyhrExecutor,
     },
     shmem::get_shmem,
@@ -21,7 +20,7 @@ use libafl::{
     feedbacks::{ConstFeedback, MaxMapFeedback, TimeFeedback},
     monitors::OnDiskJsonAggregateMonitor,
     mutators::StdMOptMutator,
-    observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, TimeObserver},
+    observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, StdMapObserver, TimeObserver},
     schedulers::{powersched::PowerSchedule, StdWeightedScheduler},
     stages::StdMutationalStage,
     state::{HasCorpus as _, StdState},
@@ -72,16 +71,15 @@ pub fn fuzz() {
             let cov_observer = HitcountsMapObserver::new(cov_raw_observer).track_indices();
             let time_observer = TimeObserver::new("time-observer");
 
-            let mut packet_observer = PacketObserver::new();
+            let mut packet_observer = PacketObserver::new(opt.state_diff());
             let packet_observer_handle = packet_observer.handle().clone();
 
             let state_map = packet_observer.get_states_mut();
             let state_observer_raw = unsafe {
-                ConstMapObserver::from_mut_ptr(
+                StdMapObserver::from_mut_ptr(
                     "state-observer",
-                    NonNull::new(state_map.as_mut_ptr())
-                        .expect("map ptr is null")
-                        .cast::<[u8; PacketState::max_numeric_value() as usize + 1]>(),
+                    state_map.as_mut_ptr(),
+                    state_map.len(),
                 )
             };
 
@@ -90,7 +88,7 @@ pub fn fuzz() {
 
             let cov_feedback = MaxMapFeedback::new(&cov_observer);
 
-            #[allow(unused_mut)] // if monitor_memory is not enabled, feedback needs to be mutable
+            #[cfg(not(feature = "monitor_memory"))]
             let mut feedback = feedback_or_fast!(
                 TimeFeedback::new(&time_observer),
                 PacketMetadataFeedback::new(packet_observer_handle.clone()),
@@ -100,7 +98,14 @@ pub fn fuzz() {
             );
 
             #[cfg(feature = "monitor_memory")]
-            let mut feedback = feedback_or_fast!(MemoryPseudoFeedback, feedback);
+            let mut feedback = feedback_or_fast!(
+                MemoryPseudoFeedback,
+                TimeFeedback::new(&time_observer),
+                PacketMetadataFeedback::new(packet_observer_handle.clone()),
+                // CovLogFeedback::new(cov_observer.handle(), client_description.id()),
+                feedback_and!(cov_feedback, ConstFeedback::new(false)),
+                state_feedback
+            );
 
             let mut objective = feedback_or_fast!(
                 TimeFeedback::new(&time_observer),
@@ -126,6 +131,8 @@ pub fn fuzz() {
 
             let mutator =
                 StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);
+
+            let mut stages = tuple_list!(mutator);
 
             let scheduler = StdWeightedScheduler::with_schedule(
                 &mut state,
@@ -175,12 +182,10 @@ pub fn fuzz() {
                 manager.send_exiting()?;
                 return Err(Error::shutting_down());
             } else if opt.fuzz_one() {
-                let mut stages = tuple_list!(mutator);
                 fuzzer.fuzz_one(&mut stages, &mut executor, &mut state, &mut manager)?;
                 manager.send_exiting()?;
                 return Err(Error::shutting_down());
             } else {
-                let mut stages = tuple_list!(mutator);
                 fuzzer.fuzz_loop(&mut stages, &mut executor, &mut state, &mut manager)?;
             }
             Ok(())
@@ -200,19 +205,20 @@ pub fn fuzz() {
     #[cfg(feature = "monitor_none")]
     let monitor = NopMonitor::new();
 
-    let monitor = OnDiskJsonAggregateMonitor::with_interval(
-        format!("{}.json", opt.monitor()),
-        monitor,
-        Duration::from_secs(1),
-    );
+    let monitor_path = format!("{}.json", opt.monitor());
+    if std::path::Path::new(&monitor_path).exists() {
+        println!("Monitor file already exists: {}, exiting", monitor_path);
+        return;
+    }
 
-    let cores = if opt.fuzz_one() {
-        Cores::from_cmdline("1").unwrap()
+    let monitor =
+        OnDiskJsonAggregateMonitor::with_interval(monitor_path, monitor, Duration::from_secs(1));
+
+    let (cores, overcommit) = if opt.fuzz_one() || opt.load_only() {
+        (Cores::from_cmdline("1").unwrap(), 1)
     } else {
-        opt.cores().clone()
+        (opt.cores().clone(), opt.overcommit())
     };
-
-    let overcommit = if opt.fuzz_one() { 1 } else { opt.overcommit() };
 
     match CentralizedLauncher::builder()
         .shmem_provider(StdShMemProvider::new().expect("Failed to init shared memory"))

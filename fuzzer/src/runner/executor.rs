@@ -102,7 +102,7 @@ where
         *state.executions_mut() += 1;
 
         self.observers.pre_exec_child_all(state, input)?;
-        let packets_observer = self
+        let packet_observer = self
             .observers
             .get_mut(&self.packet_observer)
             .ok_or(Error::illegal_argument(
@@ -137,7 +137,7 @@ where
             .map_err(|e| Error::unknown(format!("Could not start command: {e:?}")))?;
 
         self.device
-            .init_zephyr(|packet| packets_observer.add_packet(packet.inner()))?;
+            .init_zephyr(|packet| packet_observer.add_packet(packet.inner()))?;
 
         let packets = input.to_packets();
 
@@ -145,19 +145,19 @@ where
 
         for e in packets {
             self.device.send(&e);
-            packets_observer.add_packet(e);
+            packet_observer.add_packet(e);
             let mut last_packet_time = Instant::now();
             while last_packet_time.elapsed() < INTER_SEND_WAIT {
                 if let Some(incoming) = self.device.try_recv() {
                     let parsed = parse_eth(&incoming)
                         .map_err(|e| Error::illegal_argument(format!("{e:?}")))?;
-                    packets_observer.add_packet(incoming);
+                    packet_observer.add_packet(incoming);
                     if let Some(manual_response_res) = ShmemNetworkDevice::respond_manually(parsed)
                     {
                         match manual_response_res {
                             Ok(manual_response) => {
                                 self.device.send(&manual_response);
-                                packets_observer.add_packet(manual_response);
+                                packet_observer.add_packet(manual_response);
                             }
                             Err(e) => return Err(e),
                         }

@@ -80,6 +80,15 @@ pub struct Cli {
         default_value = "monitor"
     )]
     monitor: String,
+
+    #[arg(
+        short,
+        long,
+        action,
+        help = "Calculate state transitions.",
+        name = "STATE_DIFF"
+    )]
+    state_diff: bool,
 }
 
 impl Cli {
@@ -117,5 +126,9 @@ impl Cli {
 
     pub fn monitor(&self) -> &str {
         &self.monitor
+    }
+
+    pub fn state_diff(&self) -> bool {
+        self.state_diff
     }
 }

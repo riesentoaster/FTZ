@@ -280,12 +280,12 @@ impl TryFrom<&[u8]> for ParsedZephyrInput {
 
         let ip = net
             .get_ipv4_owned()
-            .ok_or(PacketParseError::UnknownLayer3(value.to_vec()))?;
+            .ok_or(PacketParseError::UnknownLayer3)?;
 
         let tcp = upper
-            .ok_or(PacketParseError::UnknownLayer4(value.to_vec()))?
+            .ok_or(PacketParseError::UnknownLayer4)?
             .get_tcp_owned()
-            .ok_or(PacketParseError::UnknownLayer4(value.to_vec()))?;
+            .ok_or(PacketParseError::UnknownLayer4)?;
         Ok(Self { eth, ip, tcp })
     }
 }
