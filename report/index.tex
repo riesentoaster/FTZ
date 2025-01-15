@@ -3,7 +3,7 @@
 \usepackage{csquotes}
 \usepackage[vmargin=25mm, hmargin=20mm]{geometry}
 \usepackage{lipsum}
-% \usepackage{xcolor}
+\usepackage{xcolor}
 % \usepackage{graphicx}
 % \usepackage{float}
 % \usepackage{pgfplots}
@@ -11,22 +11,23 @@
 % \pgfplotsset{compat = 1.18} 
 % \usetikzlibrary{pgfplots.statistics, pgfplots.colorbrewer} 
 % \usepackage{pgfplotstable}
-% \usepackage{listings}
-% \lstset{
-%     backgroundcolor=\color[RGB]{240, 240, 240},   
-%     basicstyle=\ttfamily\footnotesize,
-%     breakatwhitespace=false,
-%     breaklines=true,
-%     keepspaces=true,
-%     numbers=left,
-%     numbersep=5pt,
-%     showspaces=false,
-%     showstringspaces=false,
-%     showtabs=false,
-%     tabsize=4,
-%     postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
-%     aboveskip=10pt
-% }
+\usepackage{listings}
+\lstset{
+    backgroundcolor=\color[RGB]{240, 240, 240},   
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+    aboveskip=10pt
+}
+\usepackage{listings-rust}
 
 \usepackage[
     backend=biber,
@@ -109,24 +110,95 @@
 
   \section{Introduction}
 
-  \subsection{Stateful Fuzzing}
+  \begin{itemize}
+    \item Fuzzing is a widely used strategy to find software defects
+    \item Overview: How does fuzzing work?
+  \end{itemize}
+
+  \subsection{Zephyr}
+
+  \begin{itemize}
+    \item Zephyr is an open-source RTOS developed by the Linux Foundation.
+    \item Overview: Where is Zephyr used?
+    \item The TCP/IP stack in Zephyr is particularly critical for the security of many products Zephyr is used in.
+  \end{itemize}
+
+  \subsection{Fuzzing Network Stacks Is Hard}
+
+  \subsubsection{Deep integration with OS}
+  \begin{itemize}
+    \item Environment/Hardware modelling necessary
+    \item Usually, whole system needs to be run, which is a performance issue
+    \item Instrumentation (Coverage, Sanitizers) is hard
+  \end{itemize}
+
+  \subsubsection{Network packets are highly structured}
+  \begin{itemize}
+    \item Dependencies between data (length fields, checksums, etc.)
+    \item Dependencies between packages (state in TCP)
+  \end{itemize}
+
+  \subsubsection{TCP Stacks Have an Internal State}
+  \begin{itemize}
+    \item A certain packet results in different behavior depending on previous activity
+  \end{itemize}
+
+
+  \subsection{Quotes, TODO: Integrate}
+
   \citeauthor{StatefulReview} introduce a taxonomy of stateful fuzzing in which they define a stateful system as \textquote{a system that takes a sequence of messages as input, producing outputs along the way,and where each input may result in an internal state change}\cite{StatefulReview}.
 
   \textquote{To avoid confusion, we reserve the term message or input message for the individual input that the System Under Test (SUT) consumes at each step and the term trace for a sequence of such messages that make up the entire input.}\cite{StatefulReview}
 
   \textquote{The input language of a stateful system consists of two levels: (1) the language of the individual messages, which we will refer to as the message format, and (2) the language of traces, built on top of that. A description or specification of such an input language will usually come in two parts, one for each of the levels: for example, a context-free grammar for the message format and a finite state machine describing sequences of these messages. We will call the latter the state model or, if it is described as a state machine, the protocol state machine.}\cite{StatefulReview}
 
-  \textquote{the internal state changes increase the state space that we try to explore: it may be hard for a fuzzer to reach 'deeper' states. Indeed, fuzzing stateful systems is listed as one of the challenges in fuzzing by \Citeauthor{ChallengesAndReflections}\cite{ChallengesAndReflections}}\cite{StatefulReview}.
+  \textquote{the internal state changes increase the state space that we try to explore: it may be hard for a fuzzer to reach 'deeper' states. Indeed, fuzzing stateful systems is listed as one of the challenges in fuzzing by \citeauthor{ChallengesAndReflections}\cite{ChallengesAndReflections}}\cite{StatefulReview}.
 
   \subsubsection{TCP/IP}
   Checksums such as in TCP/IP are challenging.\cite{StateOfTheArt} Approaches to deal with this include removing the program sections from the target program\cite{TFuzz}.
 
-  \subsection{Zephyr}
-
-  \subsection{Contributions of this Paper}
+  \subsection{Contributions of this Project}
+  A fuzzer that targets the TCP/IP stack of Zephyr, which
+  \begin{itemize}
+    \item employs a framework that allows running Zephyr as a native executable, removing the necessity of an emulation or translation layer,
+    \item introduces a custom ethernet driver based on shared memory to make fuzzing parallelizable and performant,
+    \item guides mutation based on coverage information and a heuristic to infer the state of the TCP state machine based on flags in the TCP header of responses from the server
+  \end{itemize}
+  This project further
+  \begin{itemize}
+    \item evaluates how different ways of using the feedback described above influence fuzzer performance,
+    \item evaluates different ways of modelling the packets passed to the fuzzer,
+    \item evaluates different approaches to mutating those, and
+    \item introduces various performance optimizations to LibAFL
+  \end{itemize}
 
   \section{Related Works}
-  \subsection{Read}
+  \begin{itemize}
+    \item Focus on Network Protocol Fuzzing
+  \end{itemize}
+
+  \subsection{Protocol Fuzzing}
+  \subsubsection{Observing State}
+  \begin{itemize}
+    \item Manual annotation
+    \item Automatic annotation
+    \item Other greybox approaches
+    \item Heuristics
+  \end{itemize}
+
+  \subsubsection{Use of State Information}
+  \begin{itemize}
+    \item Feedback/Maximization
+    \item Scheduling
+  \end{itemize}
+
+  \subsubsection{Input Modelling and Mutation}
+
+
+  \subsection{Snapshotting}
+
+
+  \subsection{Data, TODO: Integrate}
   \begin{itemize}
     \item \citetitle{StatefulGreybox}\cite{StatefulGreybox}: \textquote{In this paper, we argue that protocols are often explicitly encoded using state variables that are assigned and compared to named constants […] More specifically, using pattern matching, we identify state variables using enumerated types (enums). An enumerated type is a group of named constants that specifies all possible values for a variable of that type. Our instrumentation injects a call to our runtime at every program location where a state variable is assigned to a new value. Our runtime efficiently constructs the state transition tree (STT). The STT captures the sequence of values assigned to state variables across all fuzzer-generated input sequences, and as a global data structure, it is shared with the fuzzer.}\cite{StatefulGreybox} Built on LibFuzzer
     \item \citetitle{StateAFL}\cite{StateAFL}: compile-time probes observing memory allocation and I/O operations; state inference based on fuzzy hashing of long-lived memory areas.
@@ -157,63 +229,148 @@
     \item \citetitle{StateMachine}\cite{StateMachine} calculate a directed graph from the measured state variables, and schedule mutations based on a formula incorporating state depth, coverage, number of transitions, and number of mutations based on this state.
   \end{itemize}
 
-  \subsection{ToDo}
+  \subsubsection{TODO: Read}
   \begin{itemize}
     \item \citetitle{Survey}\cite{Survey}
   \end{itemize}
 
-  \section{Approach and Implementation}
+  \section{Implementation}
 
   \subsection{NativeSim}
+  \subsection{Network Interfaces}
+  \begin{itemize}
+    \item Custom ethernet driver
+    \item No changes to code, just added code, and includes in config/build system
+    \item Shared memory layout/inner workings
+    \item Manual Responses
+  \end{itemize}
 
-  \subsection{Layer 1 Mocking}
+  \subsection{Coverage Information}
+  \begin{itemize}
+    \item LLVM pass: \code{trace-pc-guard}
+    \item Added code/includes to build system
+    \item Reset before input execution to improve reliability: Only code change
+  \end{itemize}
 
-  \subsection{Feedback}
+  \subsection{State Inference Heuristic}
+  \begin{itemize}
+    \item Based on responses by server
+    \item Parsing, different non-TCP responses classified
+    \item On TCP packets, the header flags are used
+  \end{itemize}
 
-  \subsubsection{Coverage}
-  \subsubsection{State}
+  \subsection{Input Modelling and Mutation}
+
+  \subsubsection{Mutation Target}
+  \begin{itemize}
+    \item Random (Multipart)
+    \item ReplayingStateful
+    \item Seeding
+  \end{itemize}
+
+  \subsubsection{Input Modelling}
+  \begin{itemize}
+    \item Byte array vs. parsed structure
+  \end{itemize}
+
+  \subsubsection{Mutators}
+  \begin{itemize}
+    \item \code[Rust]{havoc_mutations()}
+    \item TCP only, certain fixed values
+    \item Full stack, certain fixed values
+    \item Full stack, fixing mutators
+    \item Appending
+  \end{itemize}
+
+  \subsection{Implementation Details}
+  \subsubsection{LibAFL Structure}
+  \begin{itemize}
+    \item Input Scheduling Algorithm
+    \item Mutation Scheduling Algorithm
+    \item Oracles
+    \item MapObserver/-Feedback
+    \item Executor
+  \end{itemize}
+
+  \subsubsection{Helper Functionality}
+  \begin{itemize}
+    \item Manual connection
+    \item PCAP
+    \item Scripting
+  \end{itemize}
 
   \subsection{LibAFL}
-  \subsubsection{Snapshotting}
   \subsubsection{Overcommit}
-  \subsubsection{MappingMutators}
+  \subsubsection{Numeric Mutators}
+  \subsubsection{Mapping Mutators}
+  \subsubsection{TODO: others}
 
-  \section{Evaluation and Results}
+  \section{Results}
+  \subsection{Throughput and Overcommit}
 
+  \subsection{Input Modelling and Mutation}
+  With fixed feedback:
 
-  \subsection{Consistency}
-  \subsection{Performance}
-
-  \subsubsection{Overcommit}
-
-  \subsection{Mutation Strategies}
-
-  \subsubsection{Naïve \texttt{havoc\_mutations}}
-
-  \subsubsection{Fixed Header Checksums}
+  \begin{itemize}
+    \item \code[Rust]{MultipartInput} and \code[Rust]{havoc_mutations()}
+    \item \code[Rust]{ReplayingStatefulInput} and \code[Rust]{havoc_mutations()}
+    \item \code[Rust]{ReplayingStatefulInput} and parsed structure with different mutators
+  \end{itemize}
 
   \subsection{Feedback}
-
-  \subsubsection{Coverage}
-
-  \subsection{States Visited}
-
-  \subsubsection{States Counted}
-
-  \subsubsection{State Combinations}
+  \begin{itemize}
+    \item Coverage (repeatability!)
+    \item State marking
+    \item State diff marking
+  \end{itemize}
 
   \section{Discussion}
 
-  \subsection{Contributions}
-
+  \subsection{Feedback}
+  \begin{itemize}
+    \item How effective do different improvements seem to be
+  \end{itemize}
+  \subsection{Input Modelling and Mutation}
+  \begin{itemize}
+    \item How effective do different improvements seem to be
+  \end{itemize}
   \subsection{Future Work}
+  \subsubsection{Improved Performance}
+  \begin{itemize}
+    \item This was not prioritized further because memory was the limiting factor
+    \item Semaphores instead of busy waiting
+  \end{itemize}
+  \subsubsection{Alternate Targets}
+  \begin{itemize}
+    \item Other OS network stacks
+    \item Userland network stacks
+  \end{itemize}
+  \subsubsection{Improved Oracles}
+  \begin{itemize}
+    \item e.g. Differential Fuzzing
+    \item Sanitizers
+  \end{itemize}
+  \subsubsection{Improved Scheduling Based on State Feedback}
+  \subsubsection{Generilazation of Techniques}
+  \subsubsection{Extended Evaluation}
+  \begin{itemize}
+    \item System calls
+    \item IPv6
+    \item Other network protocols
+    \item Comparison to other fuzzers (not done because none were applicable without extensive engineering work to ensure compatibility with target)
+  \end{itemize}
+
+  \subsection{Contributions}
+  \begin{itemize}
+    \item Summary of paper
+  \end{itemize}
 
 \end{multicols}
 \vspace{30px}
 \begin{center}
   \begin{minipage}{0.65\textwidth}
     \centering
-    In the interest of open science, the source code of this project is publicly available and released under an open-source license. During development, thousands of lines of code have been introduced to upstream projects.
+    In the interest of open science, the source code of this project is publicly available and released under an open-source license. During development, thousands of lines of code have been introduced to multiple upstream projects.
 
     All artifacts produced for this project are available at
 
