@@ -6,8 +6,8 @@ use libafl_bolts::shmem::ShMemDescription;
 use smoltcp::wire::IpAddress;
 
 mod client;
-mod cov_log_feedback;
 mod executor;
+pub mod feedback;
 mod fuzzer;
 mod input;
 mod objective;

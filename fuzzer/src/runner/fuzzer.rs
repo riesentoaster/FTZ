@@ -19,7 +19,7 @@ use libafl::{
     },
     feedback_and, feedback_or_fast,
     feedbacks::{ConstFeedback, MaxMapFeedback, TimeFeedback},
-    monitors::OnDiskTomlMonitor,
+    monitors::OnDiskJsonAggregateMonitor,
     mutators::StdMOptMutator,
     observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, TimeObserver},
     schedulers::{powersched::PowerSchedule, StdWeightedScheduler},
@@ -35,6 +35,8 @@ use libafl_bolts::{
 };
 use std::{path::PathBuf, ptr::NonNull, time::Duration};
 
+#[cfg(feature = "monitor_memory")]
+use crate::runner::feedback::memory::MemoryPseudoFeedback;
 #[cfg(feature = "monitor_tui")]
 use libafl::monitors::tui::TuiMonitor;
 #[cfg(feature = "monitor_stdout")]
@@ -88,6 +90,7 @@ pub fn fuzz() {
 
             let cov_feedback = MaxMapFeedback::new(&cov_observer);
 
+            #[allow(unused_mut)] // if monitor_memory is not enabled, feedback needs to be mutable
             let mut feedback = feedback_or_fast!(
                 TimeFeedback::new(&time_observer),
                 PacketMetadataFeedback::new(packet_observer_handle.clone()),
@@ -95,6 +98,9 @@ pub fn fuzz() {
                 feedback_and!(cov_feedback, ConstFeedback::new(false)),
                 state_feedback
             );
+
+            #[cfg(feature = "monitor_memory")]
+            let mut feedback = feedback_or_fast!(MemoryPseudoFeedback, feedback);
 
             let mut objective = feedback_or_fast!(
                 TimeFeedback::new(&time_observer),
@@ -182,21 +188,22 @@ pub fn fuzz() {
     };
 
     #[cfg(feature = "monitor_tui")]
-    let base_monitor = {
+    let monitor = {
         TuiMonitor::builder()
             .title("Zephyr TCP/IP Stack Fuzzer")
             .build()
     };
 
     #[cfg(feature = "monitor_stdout")]
-    let base_monitor = MultiMonitor::new(|m| println!("{m}"));
-    #[cfg(feature = "monitor_none")]
-    let base_monitor = NopMonitor::new();
+    let monitor = MultiMonitor::new(|m| println!("{m}"));
 
-    let monitor = OnDiskTomlMonitor::with_update_interval(
-        "./monitor.toml",
-        base_monitor,
-        Duration::from_secs(10),
+    #[cfg(feature = "monitor_none")]
+    let monitor = NopMonitor::new();
+
+    let monitor = OnDiskJsonAggregateMonitor::with_interval(
+        format!("{}.json", opt.monitor()),
+        monitor,
+        Duration::from_secs(1),
     );
 
     let cores = if opt.fuzz_one() {

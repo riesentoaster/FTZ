@@ -30,15 +30,17 @@ base64 = "0.22.1"
 hex = "0.4.3"
 serde_json = "1.0.133"
 etherparse = { path = "../etherparse/etherparse", features = ["serde"] }
+sys-info = "0.9.1"
 
 [features]
-default = ["monitor_stdout", "multipart_input"]
+default = ["monitor_none", "multipart_input", "monitor_memory"]
 monitor_tui = ["libafl/tui_monitor"]
 monitor_stdout = []
 monitor_none = []
 stability = []
 hashes = ["stability"]
 multipart_input = []
+monitor_memory = []
 
 [dev-dependencies]
 criterion = "0.5"

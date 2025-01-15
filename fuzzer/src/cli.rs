@@ -71,6 +71,15 @@ pub struct Cli {
 
     #[arg(short, long, help = "Set the stderr path", name = "STDERR")]
     stderr: Option<PathBuf>,
+
+    #[arg(
+        short,
+        long,
+        help = "Set the monitor path",
+        name = "MONITOR",
+        default_value = "monitor"
+    )]
+    monitor: String,
 }
 
 impl Cli {
@@ -104,5 +113,9 @@ impl Cli {
 
     pub fn zephyr_out_dir(&self) -> Option<&PathBuf> {
         self.zephyr_out_dir.as_ref()
+    }
+
+    pub fn monitor(&self) -> &str {
+        &self.monitor
     }
 }

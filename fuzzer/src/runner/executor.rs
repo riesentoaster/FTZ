@@ -82,7 +82,7 @@ impl<'a, S, OT, II> ZepyhrExecutor<'a, S, OT, II> {
     }
 }
 
-impl<'a, EM, Z, S, OT, I, II> Executor<EM, Z> for ZepyhrExecutor<'a, S, OT, II>
+impl<'a, EM, Z, S, OT, I, II> Executor<EM, I, S, Z> for ZepyhrExecutor<'a, S, OT, II>
 where
     EM: UsesState<State = S>,
     S: State<Input = I> + HasExecutions,
@@ -94,9 +94,9 @@ where
     fn run_target(
         &mut self,
         _fuzzer: &mut Z,
-        state: &mut Self::State,
+        state: &mut S,
         _mgr: &mut EM,
-        input: &Self::Input,
+        input: &I,
     ) -> Result<ExitKind, Error> {
         log::debug!("Starting input run #{} on target", state.executions());
         *state.executions_mut() += 1;
