@@ -5,7 +5,9 @@ use libafl::Error;
 use libafl_bolts::shmem::ShMemDescription;
 use smoltcp::wire::IpAddress;
 
+#[cfg(feature = "coverage_stability")]
 pub mod calibration_log_stage;
+
 mod client;
 mod executor;
 pub mod feedback;

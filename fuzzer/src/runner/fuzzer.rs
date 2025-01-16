@@ -2,7 +2,6 @@ use crate::{
     cli::Cli,
     packets::outgoing_tcp_packets,
     runner::{
-        calibration_log_stage::CalibrationLogStage,
         feedback::sparse::SparseMapFeedback,
         input::{FixedZephyrInputGenerator, ZephyrInput, ZephyrInputType},
         objective::CrashLoggingFeedback,
@@ -22,8 +21,7 @@ use libafl::{
     monitors::OnDiskJsonAggregateMonitor,
     mutators::StdMOptMutator,
     observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, TimeObserver},
-    schedulers::{powersched::PowerSchedule, StdScheduler, StdWeightedScheduler},
-    stages::{CalibrationStage, StdMutationalStage},
+    stages::StdMutationalStage,
     state::{HasCorpus as _, StdState},
     Error, Fuzzer as _, StdFuzzer,
 };
@@ -43,6 +41,13 @@ use libafl::monitors::tui::TuiMonitor;
 use libafl::monitors::MultiMonitor;
 #[cfg(feature = "monitor_none")]
 use libafl::monitors::NopMonitor;
+#[cfg(not(feature = "coverage_stability"))]
+use libafl::schedulers::{powersched::PowerSchedule, StdWeightedScheduler};
+#[cfg(feature = "coverage_stability")]
+use {
+    crate::runner::calibration_log_stage::CalibrationLogStage,
+    libafl::{schedulers::StdScheduler, stages::CalibrationStage},
+};
 
 pub fn fuzz() {
     log::info!("Initializing fuzzer");
@@ -78,6 +83,7 @@ pub fn fuzz() {
             let state_feedback = SparseMapFeedback::new(&packet_observer, "state-observer");
 
             let cov_feedback = MaxMapFeedback::new(&cov_observer);
+            #[cfg(feature = "coverage_stability")]
             let stability = CalibrationStage::new(&cov_feedback);
 
             #[cfg(not(feature = "monitor_memory"))]
@@ -124,16 +130,22 @@ pub fn fuzz() {
             let mutator =
                 StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);
 
+            #[cfg(feature = "coverage_stability")]
             let unstable_coverage_log_stage = CalibrationLogStage::new("unstable-coverage.txt");
-
+            #[cfg(feature = "coverage_stability")]
             let mut stages = tuple_list!(stability, unstable_coverage_log_stage, mutator);
+            #[cfg(not(feature = "coverage_stability"))]
+            let mut stages = tuple_list!(mutator);
 
-            // let scheduler = StdWeightedScheduler::with_schedule(
-            //     &mut state,
-            //     &packet_observer,
+            #[cfg(not(feature = "coverage_stability"))]
+            let scheduler = StdWeightedScheduler::with_schedule(
+                &mut state,
+                &packet_observer,
+                Some(PowerSchedule::fast()),
+            );
 
-            // );
-
+            // StdWeightedScheduler is not compatible with CalibrationStage
+            #[cfg(feature = "coverage_stability")]
             let scheduler = StdScheduler::new();
 
             let mut fuzzer = StdFuzzer::new(scheduler, feedback, objective);
