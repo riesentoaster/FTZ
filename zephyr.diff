@@ -590,10 +590,10 @@ index c8aad2bb068..5257815a153 100644
  				out_len = send(client, p, len, 0);
 diff --git a/scripts/native_simulator/common/src/coverage.c b/scripts/native_simulator/common/src/coverage.c
 new file mode 100644
-index 00000000000..49cbef8033a
+index 00000000000..61989947260
 --- /dev/null
 +++ b/scripts/native_simulator/common/src/coverage.c
-@@ -0,0 +1,136 @@
+@@ -0,0 +1,120 @@
 +#include <stdio.h>
 +#include <stdlib.h>
 +#include <string.h>
@@ -688,12 +688,13 @@ index 00000000000..49cbef8033a
 +  MY_LOG("Done with initialization\n");
 +}
 +
++#if defined(COVERAGE_LOG_TO_FILE)
 +static int fd = 0;
-+
++#endif
 +
 +void __sanitizer_cov_trace_pc_guard(uint32_t *guard)
 +{
-+	#ifdef COVERAGE_LOG
++#if defined(COVERAGE_LOG_TO_FILE)
 +	if (!fd) {
 +		fd = open("./sanitizer_cov.txt", O_WRONLY | O_CREAT | O_APPEND, 0644);
 +		if (fd == -1) {
@@ -707,39 +708,22 @@ index 00000000000..49cbef8033a
 +	if (len > 0) {
 +		write(fd, buf, len);
 +	}
-+	#endif
++#endif
 +
 +	if (!cov_shmem_init) return; // ignore coverage before initialization
-+	// switch (guard - guard_start) {
-+	// 	case 21444:
-+	// 	{
-+	// 	    void *caller_address = __builtin_return_address(0);
-+	// 		FILE *file = fopen("./sanitizer_cov.txt", "a");
-+	// 		if (file == NULL) {
-+	// 			perror("fopen");
-+	// 		}
-+	// 		else {
-+	// 			fprintf(file, "%d: %p\n", guard-guard_start, caller_address);
-+	// 			fclose(file);
-+	// 		};
-+	// 	}
-+	// 		break;
-+	// 	default:
-+	// 		break;
-+	// }
-+
++	
 +	*(guard - guard_start + cov_shmem_ptr) = 1;
 +}
 diff --git a/scripts/native_simulator/common/src/include/coverage.h b/scripts/native_simulator/common/src/include/coverage.h
 new file mode 100644
-index 00000000000..73487a13a07
+index 00000000000..8e82a11b9c4
 --- /dev/null
 +++ b/scripts/native_simulator/common/src/include/coverage.h
 @@ -0,0 +1,14 @@
 +#ifndef COVERAGE_H
 +#define COVERAGE_H  
 +
-+#define COVERAGE_LOG 1
++// #define COVERAGE_LOG_TO_FILE 1
 +
 +#define MY_LOG(...)
 +// #define MY_LOG(...) printf(__VA_ARGS__);
