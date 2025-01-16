@@ -3,7 +3,7 @@ use std::hash::Hash;
 
 use libafl::{
     corpus::CorpusId,
-    inputs::{HasMutatorBytes, Input},
+    inputs::{HasMutatorBytes, HasMutatorResizableBytes, Input},
     mutators::{MutationResult, Mutator},
     Error,
 };
@@ -79,7 +79,12 @@ where
     fn bytes_mut(&mut self) -> &mut [u8] {
         self.last_or_insert_empty().bytes_mut()
     }
+}
 
+impl<I> HasMutatorResizableBytes for ReplayingStatefulInput<I>
+where
+    I: HasMutatorResizableBytes + Default + From<Vec<u8>>,
+{
     fn resize(&mut self, new_len: usize, value: u8) {
         self.last_or_insert_empty().resize(new_len, value);
     }

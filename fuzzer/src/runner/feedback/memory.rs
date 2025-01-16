@@ -3,7 +3,6 @@ use std::{borrow::Cow, marker::PhantomData};
 use libafl::{
     events::{Event, EventFirer},
     feedbacks::{Feedback, StateInitializer},
-    inputs::UsesInput,
     monitors::{AggregatorOps, UserStats, UserStatsValue},
     Error, HasNamedMetadata,
 };
@@ -16,8 +15,8 @@ pub struct MemoryPseudoFeedback;
 
 impl<EM, I, OT, S> Feedback<EM, I, OT, S> for MemoryPseudoFeedback
 where
-    S: HasNamedMetadata + UsesInput,
-    EM: EventFirer<State = S>,
+    S: HasNamedMetadata,
+    EM: EventFirer<I, S>,
 {
     fn append_metadata(
         &mut self,

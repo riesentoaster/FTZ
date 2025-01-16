@@ -5,6 +5,7 @@ use libafl::Error;
 use libafl_bolts::shmem::ShMemDescription;
 use smoltcp::wire::IpAddress;
 
+pub mod calibration_log_stage;
 mod client;
 mod executor;
 pub mod feedback;
@@ -23,8 +24,8 @@ pub use {
 pub const ZEPHYR_IP: IpAddress = IpAddress::v4(192, 0, 2, 1);
 pub const ZEPHYR_PORT: u16 = 4242;
 pub const CLIENT_PORT: u16 = 13377;
-pub const SETUP_TIMEOUT: Duration = Duration::from_millis(100 + 200); // time waited until client attempts to send data, the second is taken from the zephyr startup wait time
-pub const INTER_SEND_WAIT: Duration = Duration::from_millis(50);
+pub const SETUP_TIMEOUT: Duration = Duration::from_millis(300 + 200); // time waited until client attempts to send data, the second is taken from the zephyr startup wait time
+pub const INTER_SEND_WAIT: Duration = Duration::from_millis(200);
 
 pub static IPV6_LINK_LOCAL_ADDR: LazyLock<IpAddress> = LazyLock::new(|| {
     IpAddress::v6(

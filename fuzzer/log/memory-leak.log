@@ -1,0 +1,340 @@
+^C[?2004l[?2004h[?2004l
+[?2004h[01;32mubuntu@mt-huberval[00m:[01;34m~/fuzzing-zephyr-network-stack/fuzzer[00m$ ^C[?2004l[?2004h[?2004l
+[?2004h[01;32mubuntu@mt-huberval[00m:[01;34m~/fuzzing-zephyr-network-stack/fuzzer[00m$ RUST_LOG=warn cargo make run --state-diff --cores all --overcommit 10[A[01;32mubuntu@mt-huberval[00m:[01;34m~/fuzzing-zephyr-network-stack/fuzzer[00m$ [5Prm -rf screen.log monitor.* corpus
+[K[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C solutions/
+[?2004l[?2004h[01;32mubuntu@mt-huberval[00m:[01;34m~/fuzzing-zephyr-network-stack/fuzzer[00m$ rm -rf screen.log monitor.* corpus solutions/[A[01;32mubuntu@mt-huberval[00m:[01;34m~/fuzzing-zephyr-network-stack/fuzzer[00m$ RUST_LOG=warn cargo make run --state-diff --cores all --overcommit 10
+[?2004l[[1mcargo-make[0m] [1;32mINFO[0m - cargo make 0.37.23
+[[1mcargo-make[0m] [1;32mINFO[0m - 
+[[1mcargo-make[0m] [1;32mINFO[0m - Project: fuzzer
+[[1mcargo-make[0m] [1;32mINFO[0m - Build File: Makefile.toml
+[[1mcargo-make[0m] [1;32mINFO[0m - Task: run
+[[1mcargo-make[0m] [1;32mINFO[0m - Profile: development
+[[1mcargo-make[0m] [1;32mINFO[0m - Execute Command: "cargo" "build" "--profile" "release"
+[1m[32m    Finished[0m ]8;;https://doc.rust-lang.org/cargo/reference/profiles.html#default-profiles\`release` profile [optimized + debuginfo]]8;;\ target(s) in 0.20s
+[[1mcargo-make[0m] [1;32mINFO[0m - Running Task: build_zephyr
+Testing for changes in zephyr compared to diff file
+[33mWarning: Not recompiling Zephyr, no changes compared to ../zephyr.diff[0m
+[[1mcargo-make[0m] [1;32mINFO[0m - Running Task: clear_shmem
+[[1mcargo-make[0m] [1;32mINFO[0m - Running Task: run
+Killed
+Error while executing command, exit code: 137
+[?2004h[01;32mubuntu@mt-huberval[00m:[01;34m~/fuzzing-zephyr-network-stack/fuzzer[00m$ [90m[[0m2025-01-16T08:10:31Z [1m[31mERROR[0m libafl::events::llmp::mgr[90m][0m Connection refused.
+thread 'main' panicked at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/llmp/restarting.rs:601:21:
+Fuzzer-respawner: Storing state in crashed fuzzer instance did not work, no point to spawn the next client! This can happen if the child calls `exit()`, in that case make sure it uses `abort()`, if it got killed unrecoverable (OOM), or if there is a bug in the fuzzer itself. (Child exited with: 0)
+stack backtrace:
+   0:     0x55d03ab0c27a - std::backtrace_rs::backtrace::libunwind::trace::h99efb0985cae5d78
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/../../backtrace/src/backtrace/libunwind.rs:116:5
+   1:     0x55d03ab0c27a - std::backtrace_rs::backtrace::trace_unsynchronized::he2c1aa63b3f7fad8
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
+   2:     0x55d03ab0c27a - std::sys::backtrace::_print_fmt::h8a221d40f5e0f88b
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:66:9
+   3:     0x55d03ab0c27a - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::h304520fd6a30aa07
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:39:26
+   4:     0x55d03ab35aeb - core::fmt::rt::Argument::fmt::h5da9c218ec984eaf
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/fmt/rt.rs:177:76
+   5:     0x55d03ab35aeb - core::fmt::write::hf5713710ce10ff22
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/fmt/mod.rs:1178:21
+   6:     0x55d03ab08a43 - std::io::Write::write_fmt::hda708db57927dacf
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/io/mod.rs:1823:15
+   7:     0x55d03ab0d5c2 - std::sys::backtrace::BacktraceLock::print::hbcdbec4d97c91528
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:42:9
+   8:     0x55d03ab0d5c2 - std::panicking::default_hook::{{closure}}::he1ad87607d0c11c5
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:266:22
+   9:     0x55d03ab0d22e - std::panicking::default_hook::h81c8cd2e7c59ee33
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:293:9
+  10:     0x55d03ab0ddbf - std::panicking::rust_panic_with_hook::had2118629c312a4a
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:797:13
+  11:     0x55d03ab0db37 - std::panicking::begin_panic_handler::{{closure}}::h7fa5985d111bafa2
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:671:13
+  12:     0x55d03ab0c759 - std::sys::backtrace::__rust_end_short_backtrace::h704d151dbefa09c5
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:170:18
+  13:     0x55d03ab0d7c4 - rust_begin_unwind
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:662:5
+  14:     0x55d03a76d5c3 - core::panicking::panic_fmt::h3eea515d05f7a35e
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/panicking.rs:74:14
+  15:     0x55d03a85b30e - libafl::events::llmp::restarting::RestartingMgr<EMH,MT,S,SP>::launch::h8d5ff2c1a0eafaf1
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/llmp/restarting.rs:601:21
+  16:     0x55d03a85b30e - libafl::events::launcher::CentralizedLauncher<CF,MF,MT,SP>::launch::{{closure}}::h8bd4b4b777c6abd7
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/launcher.rs:662:17
+  17:     0x55d03a85b30e - core::ops::function::FnOnce::call_once::h3c3f324bd3a7ef4c
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/ops/function.rs:250:5
+  18:     0x55d03a85ef33 - libafl::events::launcher::CentralizedLauncher<CF,MF,MT,SP>::launch_generic::h23ea334f8c2b03ad
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/launcher.rs:798:52
+  19:     0x55d03a792178 - libafl::events::launcher::CentralizedLauncher<CF,MF,MT,SP>::launch::h54f916a3bd816dcd
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/launcher.rs:665:9
+  20:     0x55d03a792178 - fuzzer::runner::fuzzer::fuzz::h8d0afaf1fdb682cd
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/fuzzer/src/runner/fuzzer.rs:225:10
+  21:     0x55d03a773266 - fuzzer::main::h741fa5a053675300
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/fuzzer/src/main.rs:8:5
+  22:     0x55d03a7721d3 - core::ops::function::FnOnce::call_once::hb89c1b02424cc26d
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/ops/function.rs:250:5
+  23:     0x55d03a7721d3 - std::sys::backtrace::__rust_begin_short_backtrace::h782d15968b620320
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:154:18
+  24:     0x55d03a7721c9 - std::rt::lang_start::{{closure}}::h839c0a3a6a9e1074
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/rt.rs:164:18
+  25:     0x55d03ab02990 - core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once::h08ecba131ab90ec4
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/ops/function.rs:284:13
+  26:     0x55d03ab02990 - std::panicking::try::do_call::hf33a59fd8ce953f4
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:554:40
+  27:     0x55d03ab02990 - std::panicking::try::h5005ce80ce949fd8
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:518:19
+  28:     0x55d03ab02990 - std::panic::catch_unwind::hfbae19e2e2c5b7ed
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panic.rs:345:14
+  29:     0x55d03ab02990 - std::rt::lang_start_internal::{{closure}}::ha0331c3690741813
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/rt.rs:143:48
+  30:     0x55d03ab02990 - std::panicking::try::do_call::hcdcbdb616b4d0295
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:554:40
+  31:     0x55d03ab02990 - std::panicking::try::h3f2f1725a07d2256
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:518:19
+  32:     0x55d03ab02990 - std::panic::catch_unwind::h51869e04b56b2dc3
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panic.rs:345:14
+  33:     0x55d03ab02990 - std::rt::lang_start_internal::h4d90db0530245041
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/rt.rs:143:20
+  34:     0x55d03a7732bc - main
+  35:     0x7f1c88572d90 - __libc_start_call_main
+                               at ./csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+  36:     0x7f1c88572e40 - __libc_start_main_impl
+                               at ./csu/../csu/libc-start.c:392:3
+  37:     0x55d03a7720f5 - _start
+  38:                0x0 - <unknown>
+[90m[[0m2025-01-16T08:35:14Z [1m[31mERROR[0m libafl::events::llmp::mgr[90m][0m Connection refused.
+thread 'main' panicked at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/llmp/restarting.rs:601:21:
+Fuzzer-respawner: Storing state in crashed fuzzer instance did not work, no point to spawn the next client! This can happen if the child calls `exit()`, in that case make sure it uses `abort()`, if it got killed unrecoverable (OOM), or if there is a bug in the fuzzer itself. (Child exited with: 0)
+stack backtrace:
+   0:     0x55d03ab0c27a - std::backtrace_rs::backtrace::libunwind::trace::h99efb0985cae5d78
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/../../backtrace/src/backtrace/libunwind.rs:116:5
+   1:     0x55d03ab0c27a - std::backtrace_rs::backtrace::trace_unsynchronized::he2c1aa63b3f7fad8
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
+   2:     0x55d03ab0c27a - std::sys::backtrace::_print_fmt::h8a221d40f5e0f88b
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:66:9
+   3:     0x55d03ab0c27a - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::h304520fd6a30aa07
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:39:26
+   4:     0x55d03ab35aeb - core::fmt::rt::Argument::fmt::h5da9c218ec984eaf
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/fmt/rt.rs:177:76
+   5:     0x55d03ab35aeb - core::fmt::write::hf5713710ce10ff22
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/fmt/mod.rs:1178:21
+   6:     0x55d03ab08a43 - std::io::Write::write_fmt::hda708db57927dacf
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/io/mod.rs:1823:15
+   7:     0x55d03ab0d5c2 - std::sys::backtrace::BacktraceLock::print::hbcdbec4d97c91528
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:42:9
+   8:     0x55d03ab0d5c2 - std::panicking::default_hook::{{closure}}::he1ad87607d0c11c5
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:266:22
+   9:     0x55d03ab0d22e - std::panicking::default_hook::h81c8cd2e7c59ee33
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:293:9
+  10:     0x55d03ab0ddbf - std::panicking::rust_panic_with_hook::had2118629c312a4a
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:797:13
+  11:     0x55d03ab0db37 - std::panicking::begin_panic_handler::{{closure}}::h7fa5985d111bafa2
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:671:13
+  12:     0x55d03ab0c759 - std::sys::backtrace::__rust_end_short_backtrace::h704d151dbefa09c5
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:170:18
+  13:     0x55d03ab0d7c4 - rust_begin_unwind
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:662:5
+  14:     0x55d03a76d5c3 - core::panicking::panic_fmt::h3eea515d05f7a35e
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/panicking.rs:74:14
+  15:     0x55d03a85b30e - libafl::events::llmp::restarting::RestartingMgr<EMH,MT,S,SP>::launch::h8d5ff2c1a0eafaf1
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/llmp/restarting.rs:601:21
+  16:     0x55d03a85b30e - libafl::events::launcher::CentralizedLauncher<CF,MF,MT,SP>::launch::{{closure}}::h8bd4b4b777c6abd7
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/launcher.rs:662:17
+  17:     0x55d03a85b30e - core::ops::function::FnOnce::call_once::h3c3f324bd3a7ef4c
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/ops/function.rs:250:5
+  18:     0x55d03a85ef33 - libafl::events::launcher::CentralizedLauncher<CF,MF,MT,SP>::launch_generic::h23ea334f8c2b03ad
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/launcher.rs:798:52
+  19:     0x55d03a792178 - libafl::events::launcher::CentralizedLauncher<CF,MF,MT,SP>::launch::h54f916a3bd816dcd
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/launcher.rs:665:9
+  20:     0x55d03a792178 - fuzzer::runner::fuzzer::fuzz::h8d0afaf1fdb682cd
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/fuzzer/src/runner/fuzzer.rs:225:10
+  21:     0x55d03a773266 - fuzzer::main::h741fa5a053675300
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/fuzzer/src/main.rs:8:5
+  22:     0x55d03a7721d3 - core::ops::function::FnOnce::call_once::hb89c1b02424cc26d
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/ops/function.rs:250:5
+  23:     0x55d03a7721d3 - std::sys::backtrace::__rust_begin_short_backtrace::h782d15968b620320
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:154:18
+  24:     0x55d03a7721c9 - std::rt::lang_start::{{closure}}::h839c0a3a6a9e1074
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/rt.rs:164:18
+  25:     0x55d03ab02990 - core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once::h08ecba131ab90ec4
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/ops/function.rs:284:13
+  26:     0x55d03ab02990 - std::panicking::try::do_call::hf33a59fd8ce953f4
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:554:40
+  27:     0x55d03ab02990 - std::panicking::try::h5005ce80ce949fd8
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:518:19
+  28:     0x55d03ab02990 - std::panic::catch_unwind::hfbae19e2e2c5b7ed
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panic.rs:345:14
+  29:     0x55d03ab02990 - std::rt::lang_start_internal::{{closure}}::ha0331c3690741813
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/rt.rs:143:48
+  30:     0x55d03ab02990 - std::panicking::try::do_call::hcdcbdb616b4d0295
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:554:40
+  31:     0x55d03ab02990 - std::panicking::try::h3f2f1725a07d2256
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:518:19
+  32:     0x55d03ab02990 - std::panic::catch_unwind::h51869e04b56b2dc3
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panic.rs:345:14
+  33:     0x55d03ab02990 - std::rt::lang_start_internal::h4d90db0530245041
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/rt.rs:143:20
+  34:     0x55d03a7732bc - main
+  35:     0x7f1c88572d90 - __libc_start_call_main
+                               at ./csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+  36:     0x7f1c88572e40 - __libc_start_main_impl
+                               at ./csu/../csu/libc-start.c:392:3
+  37:     0x55d03a7720f5 - _start
+  38:                0x0 - <unknown>
+[90m[[0m2025-01-16T09:08:57Z [1m[31mERROR[0m libafl::events::llmp::mgr[90m][0m Connection refused.
+thread 'main' panicked at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/llmp/restarting.rs:601:21:
+Fuzzer-respawner: Storing state in crashed fuzzer instance did not work, no point to spawn the next client! This can happen if the child calls `exit()`, in that case make sure it uses `abort()`, if it got killed unrecoverable (OOM), or if there is a bug in the fuzzer itself. (Child exited with: 0)
+stack backtrace:
+   0:     0x55d03ab0c27a - std::backtrace_rs::backtrace::libunwind::trace::h99efb0985cae5d78
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/../../backtrace/src/backtrace/libunwind.rs:116:5
+   1:     0x55d03ab0c27a - std::backtrace_rs::backtrace::trace_unsynchronized::he2c1aa63b3f7fad8
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
+   2:     0x55d03ab0c27a - std::sys::backtrace::_print_fmt::h8a221d40f5e0f88b
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:66:9
+   3:     0x55d03ab0c27a - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::h304520fd6a30aa07
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:39:26
+   4:     0x55d03ab35aeb - core::fmt::rt::Argument::fmt::h5da9c218ec984eaf
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/fmt/rt.rs:177:76
+   5:     0x55d03ab35aeb - core::fmt::write::hf5713710ce10ff22
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/fmt/mod.rs:1178:21
+   6:     0x55d03ab08a43 - std::io::Write::write_fmt::hda708db57927dacf
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/io/mod.rs:1823:15
+   7:     0x55d03ab0d5c2 - std::sys::backtrace::BacktraceLock::print::hbcdbec4d97c91528
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:42:9
+   8:     0x55d03ab0d5c2 - std::panicking::default_hook::{{closure}}::he1ad87607d0c11c5
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:266:22
+   9:     0x55d03ab0d22e - std::panicking::default_hook::h81c8cd2e7c59ee33
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:293:9
+  10:     0x55d03ab0ddbf - std::panicking::rust_panic_with_hook::had2118629c312a4a
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:797:13
+  11:     0x55d03ab0db37 - std::panicking::begin_panic_handler::{{closure}}::h7fa5985d111bafa2
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:671:13
+  12:     0x55d03ab0c759 - std::sys::backtrace::__rust_end_short_backtrace::h704d151dbefa09c5
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:170:18
+  13:     0x55d03ab0d7c4 - rust_begin_unwind
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:662:5
+  14:     0x55d03a76d5c3 - core::panicking::panic_fmt::h3eea515d05f7a35e
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/panicking.rs:74:14
+  15:     0x55d03a85b30e - libafl::events::llmp::restarting::RestartingMgr<EMH,MT,S,SP>::launch::h8d5ff2c1a0eafaf1
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/llmp/restarting.rs:601:21
+  16:     0x55d03a85b30e - libafl::events::launcher::CentralizedLauncher<CF,MF,MT,SP>::launch::{{closure}}::h8bd4b4b777c6abd7
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/launcher.rs:662:17
+  17:     0x55d03a85b30e - core::ops::function::FnOnce::call_once::h3c3f324bd3a7ef4c
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/ops/function.rs:250:5
+  18:     0x55d03a85ef33 - libafl::events::launcher::CentralizedLauncher<CF,MF,MT,SP>::launch_generic::h23ea334f8c2b03ad
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/launcher.rs:798:52
+  19:     0x55d03a792178 - libafl::events::launcher::CentralizedLauncher<CF,MF,MT,SP>::launch::h54f916a3bd816dcd
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/launcher.rs:665:9
+  20:     0x55d03a792178 - fuzzer::runner::fuzzer::fuzz::h8d0afaf1fdb682cd
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/fuzzer/src/runner/fuzzer.rs:225:10
+  21:     0x55d03a773266 - fuzzer::main::h741fa5a053675300
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/fuzzer/src/main.rs:8:5
+  22:     0x55d03a7721d3 - core::ops::function::FnOnce::call_once::hb89c1b02424cc26d
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/ops/function.rs:250:5
+  23:     0x55d03a7721d3 - std::sys::backtrace::__rust_begin_short_backtrace::h782d15968b620320
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:154:18
+  24:     0x55d03a7721c9 - std::rt::lang_start::{{closure}}::h839c0a3a6a9e1074
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/rt.rs:164:18
+  25:     0x55d03ab02990 - core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once::h08ecba131ab90ec4
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/ops/function.rs:284:13
+  26:     0x55d03ab02990 - std::panicking::try::do_call::hf33a59fd8ce953f4
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:554:40
+  27:     0x55d03ab02990 - std::panicking::try::h5005ce80ce949fd8
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:518:19
+  28:     0x55d03ab02990 - std::panic::catch_unwind::hfbae19e2e2c5b7ed
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panic.rs:345:14
+  29:     0x55d03ab02990 - std::rt::lang_start_internal::{{closure}}::ha0331c3690741813
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/rt.rs:143:48
+  30:     0x55d03ab02990 - std::panicking::try::do_call::hcdcbdb616b4d0295
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:554:40
+  31:     0x55d03ab02990 - std::panicking::try::h3f2f1725a07d2256
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:518:19
+  32:     0x55d03ab02990 - std::panic::catch_unwind::h51869e04b56b2dc3
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panic.rs:345:14
+  33:     0x55d03ab02990 - std::rt::lang_start_internal::h4d90db0530245041
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/rt.rs:143:20
+  34:     0x55d03a7732bc - main
+  35:     0x7f1c88572d90 - __libc_start_call_main
+                               at ./csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+  36:     0x7f1c88572e40 - __libc_start_main_impl
+                               at ./csu/../csu/libc-start.c:392:3
+  37:     0x55d03a7720f5 - _start
+  38:                0x0 - <unknown>
+[90m[[0m2025-01-16T09:38:33Z [1m[31mERROR[0m libafl::events::llmp::mgr[90m][0m Connection refused.
+thread 'main' panicked at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/llmp/restarting.rs:601:21:
+Fuzzer-respawner: Storing state in crashed fuzzer instance did not work, no point to spawn the next client! This can happen if the child calls `exit()`, in that case make sure it uses `abort()`, if it got killed unrecoverable (OOM), or if there is a bug in the fuzzer itself. (Child exited with: 0)
+stack backtrace:
+   0:     0x55d03ab0c27a - std::backtrace_rs::backtrace::libunwind::trace::h99efb0985cae5d78
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/../../backtrace/src/backtrace/libunwind.rs:116:5
+   1:     0x55d03ab0c27a - std::backtrace_rs::backtrace::trace_unsynchronized::he2c1aa63b3f7fad8
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
+   2:     0x55d03ab0c27a - std::sys::backtrace::_print_fmt::h8a221d40f5e0f88b
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:66:9
+   3:     0x55d03ab0c27a - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::h304520fd6a30aa07
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:39:26
+   4:     0x55d03ab35aeb - core::fmt::rt::Argument::fmt::h5da9c218ec984eaf
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/fmt/rt.rs:177:76
+   5:     0x55d03ab35aeb - core::fmt::write::hf5713710ce10ff22
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/fmt/mod.rs:1178:21
+   6:     0x55d03ab08a43 - std::io::Write::write_fmt::hda708db57927dacf
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/io/mod.rs:1823:15
+   7:     0x55d03ab0d5c2 - std::sys::backtrace::BacktraceLock::print::hbcdbec4d97c91528
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:42:9
+   8:     0x55d03ab0d5c2 - std::panicking::default_hook::{{closure}}::he1ad87607d0c11c5
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:266:22
+   9:     0x55d03ab0d22e - std::panicking::default_hook::h81c8cd2e7c59ee33
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:293:9
+  10:     0x55d03ab0ddbf - std::panicking::rust_panic_with_hook::had2118629c312a4a
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:797:13
+  11:     0x55d03ab0db37 - std::panicking::begin_panic_handler::{{closure}}::h7fa5985d111bafa2
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:671:13
+  12:     0x55d03ab0c759 - std::sys::backtrace::__rust_end_short_backtrace::h704d151dbefa09c5
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:170:18
+  13:     0x55d03ab0d7c4 - rust_begin_unwind
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:662:5
+  14:     0x55d03a76d5c3 - core::panicking::panic_fmt::h3eea515d05f7a35e
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/panicking.rs:74:14
+  15:     0x55d03a85b30e - libafl::events::llmp::restarting::RestartingMgr<EMH,MT,S,SP>::launch::h8d5ff2c1a0eafaf1
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/llmp/restarting.rs:601:21
+  16:     0x55d03a85b30e - libafl::events::launcher::CentralizedLauncher<CF,MF,MT,SP>::launch::{{closure}}::h8bd4b4b777c6abd7
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/launcher.rs:662:17
+  17:     0x55d03a85b30e - core::ops::function::FnOnce::call_once::h3c3f324bd3a7ef4c
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/ops/function.rs:250:5
+  18:     0x55d03a85ed80 - libafl::events::launcher::CentralizedLauncher<CF,MF,MT,SP>::launch_generic::h23ea334f8c2b03ad
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/launcher.rs:767:52
+  19:     0x55d03a792178 - libafl::events::launcher::CentralizedLauncher<CF,MF,MT,SP>::launch::h54f916a3bd816dcd
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/LibAFL/libafl/src/events/launcher.rs:665:9
+  20:     0x55d03a792178 - fuzzer::runner::fuzzer::fuzz::h8d0afaf1fdb682cd
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/fuzzer/src/runner/fuzzer.rs:225:10
+  21:     0x55d03a773266 - fuzzer::main::h741fa5a053675300
+                               at /home/ubuntu/fuzzing-zephyr-network-stack/fuzzer/src/main.rs:8:5
+  22:     0x55d03a7721d3 - core::ops::function::FnOnce::call_once::hb89c1b02424cc26d
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/ops/function.rs:250:5
+  23:     0x55d03a7721d3 - std::sys::backtrace::__rust_begin_short_backtrace::h782d15968b620320
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/sys/backtrace.rs:154:18
+  24:     0x55d03a7721c9 - std::rt::lang_start::{{closure}}::h839c0a3a6a9e1074
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/rt.rs:164:18
+  25:     0x55d03ab02990 - core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once::h08ecba131ab90ec4
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/core/src/ops/function.rs:284:13
+  26:     0x55d03ab02990 - std::panicking::try::do_call::hf33a59fd8ce953f4
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:554:40
+  27:     0x55d03ab02990 - std::panicking::try::h5005ce80ce949fd8
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:518:19
+  28:     0x55d03ab02990 - std::panic::catch_unwind::hfbae19e2e2c5b7ed
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panic.rs:345:14
+  29:     0x55d03ab02990 - std::rt::lang_start_internal::{{closure}}::ha0331c3690741813
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/rt.rs:143:48
+  30:     0x55d03ab02990 - std::panicking::try::do_call::hcdcbdb616b4d0295
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:554:40
+  31:     0x55d03ab02990 - std::panicking::try::h3f2f1725a07d2256
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panicking.rs:518:19
+  32:     0x55d03ab02990 - std::panic::catch_unwind::h51869e04b56b2dc3
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/panic.rs:345:14
+  33:     0x55d03ab02990 - std::rt::lang_start_internal::h4d90db0530245041
+                               at /rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14/library/std/src/rt.rs:143:20
+  34:     0x55d03a7732bc - main
+  35:     0x7f1c88572d90 - __libc_start_call_main
+                               at ./csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+  36:     0x7f1c88572e40 - __libc_start_main_impl
+                               at ./csu/../csu/libc-start.c:392:3
+  37:     0x55d03a7720f5 - _start
+  38:                0x0 - <unknown>
+[K[01;32mubuntu@mt-huberval[00m:[01;34m~/fuzzing-zephyr-network-stack/fuzzer[00m$ ^C[?2004l[?2004h[?2004l
+[?2004h[01;32mubuntu@mt-huberval[00m:[01;34m~/fuzzing-zephyr-network-stack/fuzzer[00m$ [?2004l
+exit
+k 

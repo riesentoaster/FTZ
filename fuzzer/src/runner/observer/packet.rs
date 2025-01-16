@@ -1,5 +1,6 @@
-use crate::{layers::data_link::parse_eth, pcap::write_pcap};
+use crate::{pcap::write_pcap, runner::feedback::sparse::SparseMapFeedbackObserver};
 use base64::prelude::*;
+use core::hash::{Hash, Hasher};
 use libafl::{
     corpus::Testcase,
     executors::ExitKind,
@@ -8,14 +9,14 @@ use libafl::{
     Error, HasMetadata, SerdeAny,
 };
 use libafl_bolts::{
+    generic_hash_std,
     tuples::{Handle, MatchNameRef},
     Named,
 };
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "hashes")]
-use std::hash::{DefaultHasher, Hash as _, Hasher};
 use std::{
     borrow::Cow,
+    collections::HashSet,
     time::{Duration, SystemTime},
 };
 
@@ -27,23 +28,17 @@ const MAX_PACKETS: usize = 100;
 pub struct PacketObserver {
     packets: Vec<(Duration, Vec<u8>)>,
     states: Vec<PacketState>,
-    state_map: Vec<u8>,
+    state_indices: HashSet<usize>,
     start_time: SystemTime,
     use_state_diffs: bool,
 }
 
 impl PacketObserver {
     pub fn new(use_state_diffs: bool) -> Self {
-        let state_map_size = if use_state_diffs {
-            PacketState::array_size().pow(2)
-        } else {
-            PacketState::array_size()
-        };
-
         Self {
             packets: vec![],
             states: vec![],
-            state_map: vec![0; state_map_size],
+            state_indices: HashSet::new(),
             start_time: SystemTime::now(),
             use_state_diffs,
         }
@@ -53,8 +48,8 @@ impl PacketObserver {
         &self.packets
     }
 
-    pub fn get_states_mut(&mut self) -> &mut Vec<u8> {
-        &mut self.state_map
+    pub fn get_states_mut(&mut self) -> &mut HashSet<usize> {
+        &mut self.state_indices
     }
 
     pub fn add_packet(&mut self, packet: Vec<u8>) {
@@ -72,7 +67,7 @@ impl PacketObserver {
             state_idx
         };
 
-        self.state_map[offset] = 1;
+        self.state_indices.insert(offset);
         self.states.push(state);
     }
 
@@ -84,7 +79,7 @@ impl PacketObserver {
 impl<I, S> Observer<I, S> for PacketObserver {
     fn pre_exec(&mut self, _state: &mut S, _input: &I) -> Result<(), Error> {
         self.packets = vec![];
-        self.state_map.fill(0);
+        self.state_indices.clear();
         Ok(())
     }
 }
@@ -97,10 +92,8 @@ impl Named for PacketObserver {
 
 #[derive(SerdeAny, Serialize, Deserialize, Debug)]
 pub struct PacketMetadata {
-    #[cfg(feature = "hashes")]
     hash: u64,
     pcap: String,
-    packets: Vec<(Duration, String)>,
 }
 
 /// Feedback adding packets captured by a [`PacketObserver`] to a metadata field.
@@ -135,23 +128,7 @@ where
             "Could not retrieve PacketObserver, make sure you pass it to the executor in the OT.",
         ))?;
 
-        let packets = observer
-            .get_packets()
-            .iter()
-            .map(|(timestamp, packet)| {
-                (
-                    *timestamp,
-                    match parse_eth(packet) {
-                        Ok(p) => format!("{:?}", p),
-                        Err(p) => format!(
-                            "Error when parsing packet: {:?}.\n original data: 0x{:?}",
-                            p,
-                            hex::encode(packet)
-                        ),
-                    },
-                )
-            })
-            .collect();
+        let hash = generic_hash_std(observer.get_packets());
 
         let mut writer = Vec::new();
         write_pcap(
@@ -164,24 +141,7 @@ where
         )?;
         let pcap = BASE64_STANDARD.encode(writer);
 
-        #[cfg(feature = "hashes")]
-        let hash = {
-            let mut hasher = DefaultHasher::new();
-            observer
-                .get_packets()
-                .iter()
-                .map(|(_, p)| p.clone())
-                .collect::<Vec<_>>()
-                .hash(&mut hasher);
-            hasher.finish()
-        };
-
-        testcase.add_metadata(PacketMetadata {
-            packets,
-            pcap,
-            #[cfg(feature = "hashes")]
-            hash,
-        });
+        testcase.add_metadata(PacketMetadata { hash, pcap });
         Ok(())
     }
 
@@ -200,6 +160,38 @@ where
 impl Named for PacketMetadataFeedback {
     fn name(&self) -> &Cow<'static, str> {
         &Cow::Borrowed("PacketFeedback")
+    }
+}
+
+impl Hash for PacketObserver {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.state_indices.iter().for_each(|i| i.hash(state));
+    }
+}
+
+impl SparseMapFeedbackObserver for PacketObserver {
+    fn values(&self) -> impl Iterator<Item = &usize> {
+        self.state_indices.iter()
+    }
+
+    fn len(&self) -> usize {
+        if self.use_state_diffs {
+            PacketState::array_size() * PacketState::array_size()
+        } else {
+            PacketState::array_size()
+        }
+    }
+}
+
+impl AsRef<Self> for PacketObserver {
+    fn as_ref(&self) -> &Self {
+        self
+    }
+}
+
+impl AsMut<Self> for PacketObserver {
+    fn as_mut(&mut self) -> &mut Self {
+        self
     }
 }
 

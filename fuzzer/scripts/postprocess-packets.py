@@ -27,7 +27,7 @@ def extract_pcap(args: tuple[Path, Path, int]) -> None:
             )
             if pcap_base64:
                 output_path = output_dir / metadata_file.parent.relative_to(
-                    metadata_file.parent.parent
+                    metadata_file.parent
                 )
                 output_path.mkdir(parents=True, exist_ok=True)
                 (output_path / f"{index}.pcap").write_bytes(
@@ -48,23 +48,26 @@ def copy_files(args: tuple[Path, Path, Path, int]) -> None:
         print(f"Error copying {metadata_file}: {e}")
 
 
-def extract_packets(metadata_file: Path) -> tuple[Path, tuple[str, ...]]:
+def get_hash(metadata_file: Path) -> tuple[Path, int | None]:
     try:
         with metadata_file.open() as f:
             data = json.load(f)
-            packets = [
-                p[1]
-                for entry in data["metadata"]["map"].values()
-                if isinstance(entry, list)
-                and len(entry) > 1
-                and isinstance(entry[1], dict)
-                for p in entry[1].get("packets", [])
-                if isinstance(p, list) and len(p) == 2
-            ]
-            return metadata_file, tuple(packets)
+            hash_value = next(
+                (
+                    entry[1].get("hash")
+                    for entry in data["metadata"]["map"].values()
+                    if isinstance(entry, list)
+                    and len(entry) > 1
+                    and isinstance(entry[1], dict)
+                    and entry[1].get("hash")
+                ),
+                None,
+            )
+
+            return metadata_file, int(hash_value)
     except Exception as e:
         print(f"Error processing {metadata_file}: {e}")
-        return metadata_file, tuple()
+        return metadata_file, None
 
 
 def main():
@@ -96,11 +99,11 @@ def main():
     with Pool(processes=cpu_count()) as pool:
         # Deduplicate files based on packet content
         unique_files = []
-        seen_packets = set()
-        for metadata_file, packets in pool.map(extract_packets, metadata_files):
-            if packets and packets not in seen_packets:
+        seen_hashes = set()
+        for metadata_file, hash_value in pool.map(get_hash, metadata_files):
+            if hash_value and hash_value not in seen_hashes:
                 unique_files.append(metadata_file)
-                seen_packets.add(packets)
+                seen_hashes.add(hash_value)
 
         print(
             f"Found {len(unique_files)} unique files out of {len(metadata_files)} total"

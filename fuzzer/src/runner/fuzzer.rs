@@ -2,6 +2,8 @@ use crate::{
     cli::Cli,
     packets::outgoing_tcp_packets,
     runner::{
+        calibration_log_stage::CalibrationLogStage,
+        feedback::sparse::SparseMapFeedback,
         input::{FixedZephyrInputGenerator, ZephyrInput, ZephyrInputType},
         objective::CrashLoggingFeedback,
         PacketMetadataFeedback, PacketObserver, ZepyhrExecutor,
@@ -13,16 +15,15 @@ use clap::Parser as _;
 use libafl::{
     corpus::{Corpus, OnDiskCorpus},
     events::{
-        CentralizedEventManager, CentralizedLauncher, ClientDescription, EventConfig,
-        EventRestarter,
+        CentralizedEventManager, CentralizedLauncher, ClientDescription, EventConfig, ManagerExit,
     },
     feedback_and, feedback_or_fast,
     feedbacks::{ConstFeedback, MaxMapFeedback, TimeFeedback},
     monitors::OnDiskJsonAggregateMonitor,
     mutators::StdMOptMutator,
-    observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, StdMapObserver, TimeObserver},
-    schedulers::{powersched::PowerSchedule, StdWeightedScheduler},
-    stages::StdMutationalStage,
+    observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, TimeObserver},
+    schedulers::{powersched::PowerSchedule, StdScheduler, StdWeightedScheduler},
+    stages::{CalibrationStage, StdMutationalStage},
     state::{HasCorpus as _, StdState},
     Error, Fuzzer as _, StdFuzzer,
 };
@@ -71,22 +72,13 @@ pub fn fuzz() {
             let cov_observer = HitcountsMapObserver::new(cov_raw_observer).track_indices();
             let time_observer = TimeObserver::new("time-observer");
 
-            let mut packet_observer = PacketObserver::new(opt.state_diff());
+            let packet_observer = PacketObserver::new(opt.state_diff());
             let packet_observer_handle = packet_observer.handle().clone();
 
-            let state_map = packet_observer.get_states_mut();
-            let state_observer_raw = unsafe {
-                StdMapObserver::from_mut_ptr(
-                    "state-observer",
-                    state_map.as_mut_ptr(),
-                    state_map.len(),
-                )
-            };
-
-            let state_observer = HitcountsMapObserver::new(state_observer_raw).track_indices();
-            let state_feedback = MaxMapFeedback::new(&state_observer);
+            let state_feedback = SparseMapFeedback::new(&packet_observer, "state-observer");
 
             let cov_feedback = MaxMapFeedback::new(&cov_observer);
+            let stability = CalibrationStage::new(&cov_feedback);
 
             #[cfg(not(feature = "monitor_memory"))]
             let mut feedback = feedback_or_fast!(
@@ -132,18 +124,21 @@ pub fn fuzz() {
             let mutator =
                 StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);
 
-            let mut stages = tuple_list!(mutator);
+            let unstable_coverage_log_stage = CalibrationLogStage::new("unstable-coverage.txt");
 
-            let scheduler = StdWeightedScheduler::with_schedule(
-                &mut state,
-                &state_observer,
-                Some(PowerSchedule::fast()),
-            );
+            let mut stages = tuple_list!(stability, unstable_coverage_log_stage, mutator);
+
+            // let scheduler = StdWeightedScheduler::with_schedule(
+            //     &mut state,
+            //     &packet_observer,
+
+            // );
+
+            let scheduler = StdScheduler::new();
 
             let mut fuzzer = StdFuzzer::new(scheduler, feedback, objective);
 
-            let mut observers =
-                tuple_list!(cov_observer, time_observer, packet_observer, state_observer);
+            let mut observers = tuple_list!(cov_observer, time_observer, packet_observer);
 
             let mut executor = ZepyhrExecutor::new(
                 &mut observers,
@@ -164,16 +159,18 @@ pub fn fuzz() {
                     "Generating inputs from fixed trace, expecting {} packets",
                     outgoing_packets_len
                 );
-                state.generate_initial_inputs(
+
+                state.generate_initial_inputs_forced(
                     &mut fuzzer,
                     &mut executor,
                     &mut generator,
                     &mut manager,
                     outgoing_packets_len,
                 )?;
+
                 log::info!("Generated {} inputs", state.corpus().count());
             } else {
-                log::info!("Did not need to load initial inputs");
+                log::warn!("Did not need to load initial inputs");
             }
 
             log::info!("Starting Fuzzing");
@@ -205,14 +202,13 @@ pub fn fuzz() {
     #[cfg(feature = "monitor_none")]
     let monitor = NopMonitor::new();
 
-    let monitor_path = format!("{}.json", opt.monitor());
-    if std::path::Path::new(&monitor_path).exists() {
-        println!("Monitor file already exists: {}, exiting", monitor_path);
+    let json_path = format!("{}.json", opt.monitor());
+    if std::path::Path::new(&json_path).exists() {
+        println!("Monitor file already exists: {}, exiting", json_path);
         return;
     }
-
     let monitor =
-        OnDiskJsonAggregateMonitor::with_interval(monitor_path, monitor, Duration::from_secs(1));
+        OnDiskJsonAggregateMonitor::with_interval(json_path, monitor, Duration::from_secs(1));
 
     let (cores, overcommit) = if opt.fuzz_one() || opt.load_only() {
         (Cores::from_cmdline("1").unwrap(), 1)

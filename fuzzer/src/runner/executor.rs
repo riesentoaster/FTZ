@@ -1,6 +1,7 @@
 use std::{
     fmt::Debug,
     fs::OpenOptions,
+    io::Write as _,
     marker::PhantomData,
     os::unix::process::ExitStatusExt as _,
     path::PathBuf,
@@ -8,16 +9,11 @@ use std::{
     thread::sleep,
     time::Instant,
 };
-#[cfg(feature = "hashes")]
-use std::{
-    hash::{DefaultHasher, Hash, Hasher},
-    io::Write,
-};
 
 use libafl::{
     executors::{Executor, ExitKind, HasObservers},
     observers::ObserversTuple,
-    state::{HasExecutions, State, UsesState},
+    state::HasExecutions,
     Error,
 };
 use libafl_bolts::{
@@ -84,8 +80,7 @@ impl<'a, S, OT, II> ZepyhrExecutor<'a, S, OT, II> {
 
 impl<'a, EM, Z, S, OT, I, II> Executor<EM, I, S, Z> for ZepyhrExecutor<'a, S, OT, II>
 where
-    EM: UsesState<State = S>,
-    S: State<Input = I> + HasExecutions,
+    S: HasExecutions,
     OT: Debug + MatchName + MatchNameRef + ObserversTuple<I, S>,
     I: ZephyrInput<II>,
     II: ZephyrInputPart,
@@ -117,11 +112,12 @@ where
             .zephyr_out_path
             .as_ref()
             .map(|path| {
-                let file = OpenOptions::new()
+                let mut file = OpenOptions::new()
                     .create(true)
                     .append(true)
                     .open(path)
                     .expect("Failed to open file");
+                writeln!(file, "----------------------------------------").unwrap();
                 (
                     Stdio::from(file.try_clone().expect("Could not clone zephyr outfile")),
                     Stdio::from(file),
@@ -169,24 +165,6 @@ where
             }
         }
 
-        #[cfg(feature = "hashes")]
-        {
-            let mut hasher = DefaultHasher::new();
-            packets_observer
-                .get_packets()
-                .iter()
-                .map(|(_, p)| p.clone())
-                .collect::<Vec<_>>()
-                .hash(&mut hasher);
-            OpenOptions::new()
-                .append(true)
-                .create(true)
-                .open("hashes.txt")
-                .unwrap()
-                .write_all(format!("{}\n", hasher.finish()).as_bytes())
-                .unwrap();
-        }
-
         let res = child.try_wait().unwrap();
         child.kill().unwrap();
         child.wait().unwrap();
@@ -203,13 +181,6 @@ where
 
         Ok(res)
     }
-}
-
-impl<'a, S, OT, II> UsesState for ZepyhrExecutor<'a, S, OT, II>
-where
-    S: State,
-{
-    type State = S;
 }
 
 impl<'a, S, OT, II> HasObservers for ZepyhrExecutor<'a, S, OT, II> {

@@ -13,7 +13,7 @@ pub mod shmem;
 pub mod smoltcp;
 
 pub const NETWORK_SHMEM_SIZE: usize = 1600;
-pub const COV_SHMEM_SIZE: usize = 26612; // manually extracted
+pub const COV_SHMEM_SIZE: usize = 26696; // manually extracted
 pub const PCAP_PATH: &str = "./pcap.pcap";
 
 #[allow(unused)]

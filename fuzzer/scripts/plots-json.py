@@ -113,14 +113,14 @@ def main():
             if recent_indices:
                 recent_times = [times[i] for i in recent_indices]
                 recent_values = [values[i] for i in recent_indices]
-                configs.append(
-                    {
-                        "y": recent_values,
-                        "ylabel": f"Recent {field} [{' %' if is_percent else 'count'}]",
-                        "format_str": "%.3f",
-                        "times": recent_times,
-                    }
-                )
+                config = {
+                    "y": recent_values,
+                    "ylabel": f"Recent {field} [{' %' if is_percent else 'count'}]",
+                    "times": recent_times,
+                }
+                if is_percent:
+                    config["format_str"] = "%.3f"
+                configs.append(config)
 
     plt_height = math.ceil(math.sqrt(len(configs)))
     plt_width = math.ceil(len(configs) / plt_height)
@@ -138,7 +138,7 @@ def main():
     base = ".".join(args.input.split(".")[:-1]) if "." in args.input else args.input
     fig.suptitle(base.split("/")[-1])
     fig.tight_layout()
-    fig.savefig(f"{base}.png", dpi=200)
+    fig.savefig(f"{base}.png", dpi=100)
 
 
 if __name__ == "__main__":

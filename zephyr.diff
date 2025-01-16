@@ -32,10 +32,6 @@ index 8c46147bc0a..27f56fbb176 100644
  	zephyr_library_compile_definitions(_POSIX_C_SOURCE=200809L _XOPEN_SOURCE=600 _XOPEN_SOURCE_EXTENDED)
  else()
  	zephyr_library_sources(
-diff --git a/capture.pcap b/capture.pcap
-new file mode 100644
-index 00000000000..3f4773ec70c
-Binary files /dev/null and b/capture.pcap differ
 diff --git a/drivers/ethernet/CMakeLists.txt b/drivers/ethernet/CMakeLists.txt
 index 65ce8a45332..b98650d2fd5 100644
 --- a/drivers/ethernet/CMakeLists.txt
@@ -527,7 +523,7 @@ index 00000000000..89d55b57a04
 +
 +#endif /* ETH_SHMEM_PRIV_H */
 diff --git a/samples/net/sockets/echo/prj.conf b/samples/net/sockets/echo/prj.conf
-index 33729784d8e..3c17a6df83b 100644
+index 33729784d8e..028d82dbc8e 100644
 --- a/samples/net/sockets/echo/prj.conf
 +++ b/samples/net/sockets/echo/prj.conf
 @@ -12,6 +12,9 @@ CONFIG_NET_IPV4_MAPPING_TO_IPV6=y
@@ -540,7 +536,7 @@ index 33729784d8e..3c17a6df83b 100644
  
  # Network address config
  CONFIG_NET_CONFIG_SETTINGS=y
-@@ -21,3 +24,10 @@ CONFIG_NET_CONFIG_MY_IPV4_ADDR="192.0.2.1"
+@@ -21,3 +24,12 @@ CONFIG_NET_CONFIG_MY_IPV4_ADDR="192.0.2.1"
  CONFIG_NET_CONFIG_PEER_IPV4_ADDR="192.0.2.2"
  CONFIG_NET_CONFIG_MY_IPV6_ADDR="2001:db8::1"
  CONFIG_NET_CONFIG_PEER_IPV6_ADDR="2001:db8::2"
@@ -551,8 +547,11 @@ index 33729784d8e..3c17a6df83b 100644
 +
 +# Coverage config
 +CONFIG_SHMEM_COVERAGE=y
++
++CONFIG_ASAN=y
+\ No newline at end of file
 diff --git a/samples/net/sockets/echo/src/socket_echo.c b/samples/net/sockets/echo/src/socket_echo.c
-index c8aad2bb068..846e24e99c7 100644
+index c8aad2bb068..5257815a153 100644
 --- a/samples/net/sockets/echo/src/socket_echo.c
 +++ b/samples/net/sockets/echo/src/socket_echo.c
 @@ -19,6 +19,7 @@
@@ -572,12 +571,29 @@ index c8aad2bb068..846e24e99c7 100644
  
  	while (1) {
  		struct sockaddr_in6 client_addr;
+@@ -99,6 +102,16 @@ int main(void)
+ 				break;
+ 			}
+ 
++			printf("Received TCP payload (%d bytes): ", len);
++			for (int i = 0; i < len; i++) {
++				printf("%c", buf[i]);  // Print as ASCII
++			}
++			printf(" with bytes: ");
++			for (int i = 0; i < len; i++) {
++				printf("%02x ", (unsigned char) buf[i]);  // Print as hex
++			}
++			printf("\n");
++
+ 			p = buf;
+ 			do {
+ 				out_len = send(client, p, len, 0);
 diff --git a/scripts/native_simulator/common/src/coverage.c b/scripts/native_simulator/common/src/coverage.c
 new file mode 100644
-index 00000000000..33c4b502e08
+index 00000000000..49cbef8033a
 --- /dev/null
 +++ b/scripts/native_simulator/common/src/coverage.c
-@@ -0,0 +1,117 @@
+@@ -0,0 +1,136 @@
 +#include <stdio.h>
 +#include <stdlib.h>
 +#include <string.h>
@@ -672,8 +688,27 @@ index 00000000000..33c4b502e08
 +  MY_LOG("Done with initialization\n");
 +}
 +
++static int fd = 0;
++
++
 +void __sanitizer_cov_trace_pc_guard(uint32_t *guard)
 +{
++	#ifdef COVERAGE_LOG
++	if (!fd) {
++		fd = open("./sanitizer_cov.txt", O_WRONLY | O_CREAT | O_APPEND, 0644);
++		if (fd == -1) {
++			custom_panic("Failed to open sanitizer_cov.txt file\n");
++		}
++	}
++	
++	void *caller_address = __builtin_return_address(0);
++	char buf[128];
++	int len = snprintf(buf, sizeof(buf), "%d: %p\n", (int)(guard - guard_start), caller_address);
++	if (len > 0) {
++		write(fd, buf, len);
++	}
++	#endif
++
 +	if (!cov_shmem_init) return; // ignore coverage before initialization
 +	// switch (guard - guard_start) {
 +	// 	case 21444:
@@ -697,12 +732,14 @@ index 00000000000..33c4b502e08
 +}
 diff --git a/scripts/native_simulator/common/src/include/coverage.h b/scripts/native_simulator/common/src/include/coverage.h
 new file mode 100644
-index 00000000000..28714ecdec1
+index 00000000000..73487a13a07
 --- /dev/null
 +++ b/scripts/native_simulator/common/src/include/coverage.h
-@@ -0,0 +1,12 @@
+@@ -0,0 +1,14 @@
 +#ifndef COVERAGE_H
 +#define COVERAGE_H  
++
++#define COVERAGE_LOG 1
 +
 +#define MY_LOG(...)
 +// #define MY_LOG(...) printf(__VA_ARGS__);
