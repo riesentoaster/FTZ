@@ -9,8 +9,8 @@ from pathlib import Path
 from multiprocessing import Pool, cpu_count
 
 
-def extract_pcap(args: tuple[Path, Path, int]) -> None:
-    metadata_file, output_dir, index = args
+def extract_pcap(args: tuple[Path, Path, int, bool]) -> None:
+    metadata_file, output_dir, index, no_rename = args
     try:
         with metadata_file.open() as f:
             data = json.load(f)
@@ -30,20 +30,24 @@ def extract_pcap(args: tuple[Path, Path, int]) -> None:
                     metadata_file.parent
                 )
                 output_path.mkdir(parents=True, exist_ok=True)
-                (output_path / f"{index}.pcap").write_bytes(
+                output_filename = metadata_file.stem if no_rename else str(index)
+                (output_path / f"{output_filename}.pcap").write_bytes(
                     base64.b64decode(pcap_base64)
                 )
     except Exception as e:
         print(f"Error processing {metadata_file}: {e}")
 
 
-def copy_files(args: tuple[Path, Path, Path, int]) -> None:
-    metadata_file, input_dir, output_dir, index = args
+def copy_files(args: tuple[Path, Path, Path, int, bool]) -> None:
+    metadata_file, input_dir, output_dir, index, no_rename = args
     try:
         output_path = output_dir / metadata_file.parent.relative_to(input_dir)
         output_path.mkdir(parents=True, exist_ok=True)
         for file in metadata_file.parent.glob(f"{metadata_file.stem}*"):
-            shutil.copy2(file, output_path / f"{index}{file.suffix}")
+            if no_rename:
+                shutil.copy2(file, output_path / file.name)
+            else:
+                shutil.copy2(file, output_path / f"{index}{file.suffix}")
     except Exception as e:
         print(f"Error copying {metadata_file}: {e}")
 
@@ -80,6 +84,9 @@ def main():
     parser.add_argument(
         "--pcap-only", action="store_true", help="Only extract PCAP files"
     )
+    parser.add_argument(
+        "--no-rename", action="store_true", help="Preserve original filenames instead of using incrementing numbers"
+    )
 
     args = parser.parse_args()
     input_dir = Path(args.input).resolve()
@@ -110,13 +117,13 @@ def main():
         )
 
         # Process files
-        file_indices = [(f, output_dir, i) for i, f in enumerate(unique_files)]
+        file_indices = [(f, output_dir, i, args.no_rename) for i, f in enumerate(unique_files)]
         pool.map(extract_pcap, file_indices)
 
         if not args.pcap_only:
             pool.map(
                 copy_files,
-                [(f, input_dir, output_dir, i) for i, f in enumerate(unique_files)],
+                [(f, input_dir, output_dir, i, args.no_rename) for i, f in enumerate(unique_files)],
             )
             print(f"Processed {len(unique_files)} unique files to {output_dir}")
         else:

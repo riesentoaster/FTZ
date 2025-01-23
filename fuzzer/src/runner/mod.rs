@@ -26,8 +26,15 @@ pub use {
 pub const ZEPHYR_IP: IpAddress = IpAddress::v4(192, 0, 2, 1);
 pub const ZEPHYR_PORT: u16 = 4242;
 pub const CLIENT_PORT: u16 = 13377;
+#[cfg(feature = "coverage_stability")]
 pub const SETUP_TIMEOUT: Duration = Duration::from_millis(300 + 200); // time waited until client attempts to send data, the second is taken from the zephyr startup wait time
+#[cfg(feature = "coverage_stability")]
 pub const INTER_SEND_WAIT: Duration = Duration::from_millis(200);
+
+#[cfg(not(feature = "coverage_stability"))]
+pub const SETUP_TIMEOUT: Duration = Duration::from_millis(100 + 200); // time waited until client attempts to send data, the second is taken from the zephyr startup wait time
+#[cfg(not(feature = "coverage_stability"))]
+pub const INTER_SEND_WAIT: Duration = Duration::from_millis(100);
 
 pub static IPV6_LINK_LOCAL_ADDR: LazyLock<IpAddress> = LazyLock::new(|| {
     IpAddress::v6(

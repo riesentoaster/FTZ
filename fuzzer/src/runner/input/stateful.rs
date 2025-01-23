@@ -21,7 +21,11 @@ pub struct ReplayingStatefulInput<I> {
 
 impl<I: Input + Hash> Input for ReplayingStatefulInput<I> {
     fn generate_name(&self, _id: Option<CorpusId>) -> String {
-        format!("ReplayingStatefulInput<{}>", generic_hash_std(&self.parts))
+        format!(
+            "ReplayingStatefulInput<{},{}>",
+            generic_hash_std(&self.parts),
+            self.parts.len()
+        )
     }
 }
 

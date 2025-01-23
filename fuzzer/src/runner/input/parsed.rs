@@ -1,5 +1,4 @@
 use crate::layers::{data_link::parse_eth, PacketParseError};
-use libafl::{corpus::CorpusId, inputs::Input};
 
 use pnet::packet::{
     ethernet::{Ethernet, MutableEthernetPacket},
@@ -198,8 +197,7 @@ impl ParsedZephyrInput {
 
 impl Hash for ParsedZephyrInput {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        let vec: Vec<u8> = self.clone().into();
-        vec.hash(state)
+        serde_json::to_string(self).unwrap().hash(state)
     }
 }
 
@@ -221,12 +219,6 @@ impl<'a> Deserialize<'a> for ParsedZephyrInput {
         <Vec<u8>>::deserialize(deserializer)
             .map(|e| Self::try_from(&e as &[u8]))
             .map(Result::unwrap)
-    }
-}
-
-impl Input for ParsedZephyrInput {
-    fn generate_name(&self, id: Option<CorpusId>) -> String {
-        format!("{:16x}", id.map(|e| e.0).unwrap_or(0))
     }
 }
 

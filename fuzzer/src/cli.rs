@@ -66,6 +66,24 @@ pub struct Cli {
     )]
     zephyr_out_dir: Option<PathBuf>,
 
+    #[arg(
+        short,
+        long,
+        help = "Set the corpus directory",
+        name = "CORPUS_DIR",
+        default_value = "corpus"
+    )]
+    corpus_dir: PathBuf,
+
+    #[arg(
+        short,
+        long,
+        help = "Set the solutions directory",
+        name = "SOLUTIONS_DIR",
+        default_value = "solutions"
+    )]
+    solutions_dir: PathBuf,
+
     #[arg(short, long, help = "Set the stdout path", name = "STDOUT")]
     stdout: Option<PathBuf>,
 
@@ -130,5 +148,13 @@ impl Cli {
 
     pub fn state_diff(&self) -> bool {
         self.state_diff
+    }
+
+    pub fn corpus_dir(&self) -> &PathBuf {
+        &self.corpus_dir
+    }
+
+    pub fn solutions_dir(&self) -> &PathBuf {
+        &self.solutions_dir
     }
 }

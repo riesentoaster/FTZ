@@ -6,6 +6,7 @@ use libafl::{
     executors::ExitKind,
     feedbacks::{Feedback, StateInitializer},
     observers::Observer,
+    stages::calibrate::SerializeObserver,
     Error, HasMetadata, SerdeAny,
 };
 use libafl_bolts::{
@@ -29,6 +30,7 @@ pub struct PacketObserver {
     packets: Vec<(Duration, Vec<u8>)>,
     states: Vec<PacketState>,
     state_indices: HashSet<usize>,
+    state_map: Option<Vec<u8>>,
     start_time: SystemTime,
     use_state_diffs: bool,
 }
@@ -39,23 +41,46 @@ impl PacketObserver {
             packets: vec![],
             states: vec![],
             state_indices: HashSet::new(),
+            state_map: None,
             start_time: SystemTime::now(),
             use_state_diffs,
         }
+    }
+
+    pub fn with_state_map(use_state_diffs: bool) -> Self {
+        let state_map_size = if use_state_diffs {
+            PacketState::array_size() * PacketState::array_size()
+        } else {
+            PacketState::array_size()
+        };
+
+        Self {
+            packets: vec![],
+            states: vec![],
+            state_indices: HashSet::new(),
+            state_map: Some(vec![0; state_map_size]),
+            start_time: SystemTime::now(),
+            use_state_diffs,
+        }
+    }
+
+    pub fn get_state_map(&mut self) -> Option<&mut Vec<u8>> {
+        self.state_map.as_mut()
     }
 
     pub fn get_packets(&self) -> &Vec<(Duration, Vec<u8>)> {
         &self.packets
     }
 
-    pub fn get_states_mut(&mut self) -> &mut HashSet<usize> {
-        &mut self.state_indices
-    }
-
     pub fn add_packet(&mut self, packet: Vec<u8>) {
         let state = PacketState::from(&packet as &[u8]);
         self.packets
             .push((self.start_time.elapsed().unwrap(), packet));
+
+        // ignore icmpv6 packets because they're inconsistent
+        if matches!(state, PacketState::Icmpv6) {
+            return;
+        }
 
         let state_idx = u16::from(&state) as usize;
 
@@ -66,6 +91,10 @@ impl PacketObserver {
         } else {
             state_idx
         };
+
+        if let Some(state_map) = self.state_map.as_mut() {
+            state_map[offset] = 1;
+        }
 
         self.state_indices.insert(offset);
         self.states.push(state);
@@ -78,8 +107,27 @@ impl PacketObserver {
 
 impl<I, S> Observer<I, S> for PacketObserver {
     fn pre_exec(&mut self, _state: &mut S, _input: &I) -> Result<(), Error> {
-        self.packets = vec![];
+        self.packets.clear();
+        self.states.clear();
         self.state_indices.clear();
+        if let Some(m) = self.state_map.as_mut() {
+            m.fill(0);
+        }
+        self.start_time = SystemTime::now();
+
+        Ok(())
+    }
+
+    fn pre_exec_child(&mut self, state: &mut S, input: &I) -> Result<(), Error> {
+        self.pre_exec(state, input)
+    }
+
+    fn post_exec_child(
+        &mut self,
+        _state: &mut S,
+        _input: &I,
+        _exit_kind: &ExitKind,
+    ) -> Result<(), Error> {
         Ok(())
     }
 }
@@ -192,6 +240,59 @@ impl AsRef<Self> for PacketObserver {
 impl AsMut<Self> for PacketObserver {
     fn as_mut(&mut self) -> &mut Self {
         self
+    }
+}
+
+#[derive(Serialize)]
+struct SerializedPacketObserver {
+    pcap: String,
+    states: Vec<String>,
+    state_indices: String,
+    state_map: Option<String>,
+    use_state_diffs: bool,
+}
+
+impl SerializeObserver for PacketObserver {
+    fn serialize_observer(&self) -> String {
+        let mut writer = Vec::new();
+        write_pcap(
+            &self
+                .get_packets()
+                .iter()
+                .map(|(d, p)| (d, p))
+                .collect::<Vec<_>>(),
+            &mut writer,
+        )
+        .unwrap();
+        let pcap = BASE64_STANDARD.encode(writer);
+
+        let states = self
+            .states
+            .iter()
+            .map(|s| format!("{:?}", s))
+            .collect::<Vec<_>>();
+
+        let mut state_indices = self.state_indices.iter().collect::<Vec<_>>();
+        state_indices.sort();
+        let state_indices = state_indices
+            .iter()
+            .map(|i| i.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        let state_map = self
+            .state_map
+            .as_ref()
+            .map(|s| s.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(""));
+
+        let serialized = SerializedPacketObserver {
+            pcap,
+            states,
+            state_indices,
+            state_map,
+            use_state_diffs: self.use_state_diffs,
+        };
+        serde_json::to_string_pretty(&serialized).unwrap()
     }
 }
 

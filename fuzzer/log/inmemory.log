@@ -1,0 +1,20 @@
+
+[?2004l[[1mcargo-make[0m] [1;32mINFO[0m - cargo make 0.37.24
+[[1mcargo-make[0m] [1;32mINFO[0m - 
+[[1mcargo-make[0m] [1;32mINFO[0m - Project: fuzzer
+[[1mcargo-make[0m] [1;32mINFO[0m - Build File: Makefile.toml
+[[1mcargo-make[0m] [1;32mINFO[0m - Task: run
+[[1mcargo-make[0m] [1;32mINFO[0m - Profile: development
+[[1mcargo-make[0m] [1;32mINFO[0m - Execute Command: "cargo" "build" "--profile" "release"
+[1m[32m   Compiling[0m fuzzer v0.1.0 (/home/ubuntu/fuzzing-zephyr-network-stack/fuzzer)
+[1m[36m    Building[0m [=======================> ] 215/217: fuzzer                                                              [1m[36m    Building[0m [=======================> ] 216/217: fuzzer(bin)                                                         [K[1m[32m    Finished[0m ]8;;https://doc.rust-lang.org/cargo/reference/profiles.html#default-profiles\`release` profile [optimized + debuginfo]]8;;\ target(s) in 16.54s
+[[1mcargo-make[0m] [1;32mINFO[0m - Running Task: build_zephyr
+Testing for changes in zephyr compared to diff file
+[33mWarning: Not recompiling Zephyr, no changes compared to ../zephyr.diff[0m
+[[1mcargo-make[0m] [1;32mINFO[0m - Running Task: clear_shmem
+[[1mcargo-make[0m] [1;32mINFO[0m - Running Task: run
+[90m[[0m2025-01-22T12:51:23Z [33mWARN [0m fuzzer::runner::fuzzer[90m][0m Client ClientDescription { id: 640, overcommit_id: 9, core_id: CoreId(63) } gets gated feedbacks
+^C
+[?2004h[01;32mubuntu@mt-huberval[00m:[01;34m~/fuzzing-zephyr-network-stack/fuzzer[00m$ ^C[?2004l[?2004h[?2004l
+[?2004h[01;32mubuntu@mt-huberval[00m:[01;34m~/fuzzing-zephyr-network-stack/fuzzer[00m$ ^C[?2004l[?2004h[?2004l
+[?2004h[01;32mubuntu@mt-huberval[00m:[01;34m~/fuzzing-zephyr-network-stack/fuzzer[00m$ 

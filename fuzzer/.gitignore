@@ -3,9 +3,10 @@
 *.log
 monitor.*
 solutions
-corpus*
+corpus*/
 *.tmp
 hashes*.txt
 profile.json
 !log/*
 cov-*
+duplicate

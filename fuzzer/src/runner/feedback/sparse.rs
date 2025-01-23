@@ -46,7 +46,7 @@ libafl_bolts::impl_serdeany!(SparseMapFeedbackMetadata);
 /// A feedback that tracks coverage sparsely, only storing indices that were hit
 pub struct SparseMapFeedback<O> {
     name: Cow<'static, str>,
-    monitor_name: Cow<'static, str>,
+    monitor_name: &'static str,
     len: usize,
     observer_handle: Handle<O>,
 }
@@ -72,7 +72,6 @@ where
     pub fn new(observer: &O, monitor_name: &'static str) -> Self {
         let len = observer.len();
         let name = Cow::Owned(format!("SparseMapFeedback<{}>", observer.name()));
-        let monitor_name = Cow::Borrowed(monitor_name);
         Self {
             name,
             monitor_name,
@@ -143,7 +142,7 @@ where
         manager.fire(
             state,
             Event::UpdateUserStats {
-                name: self.monitor_name.clone(),
+                name: Cow::Borrowed(self.monitor_name),
                 value: UserStats::new(
                     UserStatsValue::Ratio(covered as u64, self.len as u64),
                     AggregatorOps::Avg,
