@@ -11,7 +11,6 @@ use libafl_bolts::shmem::{MmapShMem, ShMemDescription};
 use pnet::packet::icmpv6::Icmpv6Types;
 
 use crate::{
-    direction::Direction,
     layers::{
         data_link::{parse_eth, DataLinkLayerPacket},
         interactive::{
@@ -105,21 +104,18 @@ impl ShmemNetworkDevice {
             None
         }
     }
-    pub fn init_zephyr(
-        &mut self,
-        mut package_logger: impl FnMut(Direction<Vec<u8>>),
-    ) -> Result<(), Error> {
+    pub fn init_zephyr(&mut self, mut package_logger: impl FnMut(Vec<u8>)) -> Result<(), Error> {
         let start = Instant::now();
         while start.elapsed() < SETUP_TIMEOUT {
             if let Some(p) = self.try_recv() {
                 let parsed =
                     parse_eth(&p).map_err(|e| Error::illegal_argument(format!("{e:?}")))?;
-                package_logger(Direction::Incoming(p));
+                package_logger(p);
                 if let Some(res) = Self::respond_manually(parsed) {
                     match res {
                         Ok(response) => {
                             self.send(&response);
-                            package_logger(Direction::Outgoing(response));
+                            package_logger(response);
                         }
                         Err(e) => return Err(e),
                     }

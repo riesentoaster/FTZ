@@ -2,10 +2,7 @@ use crate::{
     cli::Cli,
     packets::outgoing_tcp_packets,
     runner::{
-        feedback::{
-            corpus_dir_count::CorpusDirCountFeedback, memory::MemoryPseudoFeedback,
-            sparse::SparseMapFeedback,
-        },
+        feedback::{corpus_dir_count::CorpusDirCountFeedback, memory::MemoryPseudoFeedback},
         input::{FixedZephyrInputGenerator, ZephyrInput, ZephyrInputType},
         objective::CrashLoggingFeedback,
         PacketMetadataFeedback, PacketObserver, ZepyhrExecutor,
@@ -35,7 +32,6 @@ use libafl_bolts::{
     rands::StdRand,
     shmem::{ShMem, ShMemProvider as _, StdShMemProvider},
     tuples::{tuple_list, Handled},
-    AsSliceMut as _,
 };
 use std::{path::PathBuf, ptr::NonNull, time::Duration};
 
@@ -84,7 +80,7 @@ pub fn fuzz() {
             // let packet_observer = PacketObserver::new(opt.state_diff());
             let mut packet_observer = PacketObserver::with_state_map(opt.state_diff());
             let mut state_map = packet_observer.get_state_map();
-            let mut state_map_observer = unsafe {
+            let state_map_observer = unsafe {
                 let state_map_len = state_map.as_mut().unwrap().len();
                 StdMapObserver::from_mut_ptr(
                     "state-map-observer",
@@ -92,11 +88,9 @@ pub fn fuzz() {
                     state_map_len,
                 )
             };
-            let state_map_feedback = MaxMapFeedback::new(&state_map_observer);
-            let stability = CalibrationStage::new(&state_map_feedback, packet_observer.handle());
+            let state_feedback = MaxMapFeedback::new(&state_map_observer);
+            let stability = CalibrationStage::new(&state_feedback, packet_observer.handle());
             let packet_observer_handle = packet_observer.handle();
-
-            // let state_feedback = SparseMapFeedback::new(&packet_observer, "state-observer");
 
             let cov_feedback = MaxMapFeedback::new(&cov_observer);
             #[cfg(feature = "coverage_stability")]
@@ -118,13 +112,11 @@ pub fn fuzz() {
             );
 
             let mut feedback = feedback_or_fast!(
-                // gated_feedbacks,
-                // TimeFeedback::new(&time_observer),
-                // PacketMetadataFeedback::new(packet_observer_handle.clone()),
-                // CovLogFeedback::new(cov_observer.handle(), client_description.id()),
-                // feedback_and!(cov_feedback, ConstFeedback::new(false)),
-                // state_feedback,
-                state_map_feedback
+                gated_feedbacks,
+                TimeFeedback::new(&time_observer),
+                PacketMetadataFeedback::new(packet_observer_handle.clone()),
+                feedback_and!(cov_feedback, ConstFeedback::new(false)),
+                state_feedback
             );
 
             let mut objective = feedback_or_fast!(

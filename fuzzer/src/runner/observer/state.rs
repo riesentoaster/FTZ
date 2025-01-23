@@ -40,20 +40,20 @@ impl From<&PacketState> for u16 {
     fn from(val: &PacketState) -> Self {
         match val {
             PacketState::Tcp(flags) => (*flags).into(),
-            PacketState::NoUpper => 0x1 << 8,
-            PacketState::Icmpv6 => 0x2 << 8,
+            PacketState::NoUpper => 0x100,
+            PacketState::Icmpv6 => 0x101,
             PacketState::ParseError(packet_parse_error) => match packet_parse_error {
-                PacketParseError::MalformedEthernet => 0x3 << 8,
-                PacketParseError::MalformedIpv4 => 0x4 << 8,
-                PacketParseError::MalformedIpv6 => 0x5 << 8,
-                PacketParseError::MalformedArp => 0x6 << 8,
-                PacketParseError::MalformedTcp => 0x7 << 8,
-                PacketParseError::MalformedIcmpv6 => 0x8 << 8,
-                PacketParseError::MalformedHopopt => 0x9 << 8,
-                PacketParseError::UnknownLayer3 => 0xa << 8,
-                PacketParseError::UnknownLayer4 => 0xb << 8,
+                PacketParseError::MalformedEthernet => 0x102,
+                PacketParseError::MalformedIpv4 => 0x103,
+                PacketParseError::MalformedIpv6 => 0x104,
+                PacketParseError::MalformedArp => 0x105,
+                PacketParseError::MalformedTcp => 0x106,
+                PacketParseError::MalformedIcmpv6 => 0x107,
+                PacketParseError::MalformedHopopt => 0x108,
+                PacketParseError::UnknownLayer3 => 0x109,
+                PacketParseError::UnknownLayer4 => 0x10a,
             },
-            PacketState::Nothing => 0x0c << 8,
+            PacketState::Nothing => 0x10b,
         }
     }
 }
@@ -61,6 +61,6 @@ impl From<&PacketState> for u16 {
 impl PacketState {
     pub const fn array_size() -> usize {
         // max value + 1
-        (0xc << 8) + 1
+        0x10c
     }
 }

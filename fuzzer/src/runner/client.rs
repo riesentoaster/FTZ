@@ -114,12 +114,7 @@ pub fn connect_to_zephyr(
     let packets = Arc::new(Mutex::new(Vec::new()));
     let packets_clone = packets.clone();
 
-    device.init_zephyr(|p| {
-        packets
-            .lock()
-            .unwrap()
-            .push((start_time.elapsed(), p.inner()));
-    })?;
+    device.init_zephyr(|p| packets.lock().unwrap().push((start_time.elapsed(), p)))?;
 
     let mut device = SmoltcpShmemNetworkDevice::new(device, move |packet| {
         let elapsed = start_time.elapsed();

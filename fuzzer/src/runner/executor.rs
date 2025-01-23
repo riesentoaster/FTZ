@@ -108,7 +108,7 @@ where
 
         self.device.reset();
 
-        let stdio = self
+        let (stdout, stderr) = self
             .zephyr_out_path
             .as_ref()
             .map(|path| {
@@ -126,14 +126,13 @@ where
             .unwrap_or((Stdio::null(), Stdio::null()));
 
         let mut child = Command::new(self.zephyr_exec_path.clone())
-            .stdout(stdio.0)
-            .stderr(stdio.1)
-            .envs(self.envs.to_owned())
+            .stdout(stdout)
+            .stderr(stderr)
+            .envs(self.envs.clone())
             .spawn()
             .map_err(|e| Error::unknown(format!("Could not start command: {e:?}")))?;
 
-        self.device
-            .init_zephyr(|packet| packet_observer.add_packet(packet.inner()))?;
+        self.device.init_zephyr(|p| packet_observer.add_packet(p))?;
 
         let packets = input.to_packets();
 
@@ -150,13 +149,9 @@ where
                     packet_observer.add_packet(incoming);
                     if let Some(manual_response_res) = ShmemNetworkDevice::respond_manually(parsed)
                     {
-                        match manual_response_res {
-                            Ok(manual_response) => {
-                                self.device.send(&manual_response);
-                                packet_observer.add_packet(manual_response);
-                            }
-                            Err(e) => return Err(e),
-                        }
+                        let manual_response = manual_response_res?;
+                        self.device.send(&manual_response);
+                        packet_observer.add_packet(manual_response);
                     }
 
                     last_packet_time = Instant::now();
