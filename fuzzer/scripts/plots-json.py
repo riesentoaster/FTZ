@@ -162,8 +162,8 @@ def main():
 
     base = ".".join(args.input.split(".")[:-1]) if "." in args.input else args.input
     fig.suptitle(base.split("/")[-1])
-    fig.tight_layout()
-    fig.savefig(f"{base}.png", dpi=100)
+    # fig.tight_layout()
+    fig.savefig(f"{base}.svg", dpi=100)
 
 
 if __name__ == "__main__":
