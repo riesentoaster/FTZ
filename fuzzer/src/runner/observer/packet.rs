@@ -77,13 +77,14 @@ impl PacketObserver {
         let current_idx = u16::from(&*current_state) as usize;
 
         let offset = if self.use_state_diffs {
-            let prev_state = match self.states.last() {
-                // don't set a state map entry if two packets in a row are from the client
-                // otherwise adding packets to the end always fills the state map
-                Some(Source::Client(_p)) if matches!(current_state, Source::Client(..)) => None,
-                Some(p) => Some(p.deref()),
-                None => Some(&PacketState::Nothing),
-            };
+            // only update states on incoming packets, otherwise any flag combination in front of nothing is a new combo.
+            let prev_state = matches!(current_state, Source::Server(..)).then(|| {
+                self.states
+                    .last()
+                    .map(Source::deref)
+                    .unwrap_or(&PacketState::Nothing)
+            });
+
             let prev_idx = prev_state.map(|p| u16::from(p) as usize);
             prev_idx.map(|p| Self::calculate_combined_offset(p, current_idx))
         } else {
