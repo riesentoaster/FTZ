@@ -9,4 +9,4 @@ hashes*.txt
 profile.json
 !log/*
 cov-*
-duplicate
+/duplicate*

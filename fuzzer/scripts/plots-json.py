@@ -14,7 +14,10 @@ def is_numeric(value: Any) -> bool:
 
 
 def extract_numeric_fields(
-    data: Dict[str, Any], prefix: str = "", percent_fields: set = None
+    data: Dict[str, Any],
+    prefix: str = "",
+    percent_fields: set = None,
+    float_format_fields: set = None,
 ) -> Dict[str, float]:
     """Recursively extract all numeric fields from a JSON object."""
     result = {}
@@ -26,18 +29,36 @@ def extract_numeric_fields(
             if "Number" in value:
                 # Use the Number value directly
                 result[field_name] = float(value["Number"])
+            elif "Float" in value:
+                # Use the Float value directly
+                result[field_name] = float(value["Float"])
+                if float_format_fields is not None:
+                    float_format_fields.add(field_name)
             elif "Percent" in value:
                 result[field_name] = float(value["Percent"]) * 100
                 if percent_fields is not None:
                     percent_fields.add(field_name)
+                if float_format_fields is not None:
+                    float_format_fields.add(field_name)
             else:
                 result.update(
-                    extract_numeric_fields(value, f"{field_name}.", percent_fields)
+                    extract_numeric_fields(
+                        value,
+                        f"{field_name}.",
+                        percent_fields,
+                        float_format_fields,
+                    )
                 )
     return result
 
 
-def plot(times: List[int], y: List[Any], ax: axis.Axis, ylabel: str, format_str=None):
+def plot(
+    times: List[int],
+    y: List[Any],
+    ax: axis.Axis,
+    ylabel: str,
+    format_str=None,
+):
     ax.plot(times, y)
     ax.set_xlabel("Time [s]")
     ax.set_ylabel(ylabel)
@@ -64,6 +85,7 @@ def main():
         data_points = []
         fields = set()
         percent_fields = set()
+        float_format_fields = set()
 
         # Process all lines
         for line in lines:
@@ -71,7 +93,9 @@ def main():
                 continue
             json_data = json.loads(line)
             numeric_fields = extract_numeric_fields(
-                json_data, percent_fields=percent_fields
+                json_data,
+                percent_fields=percent_fields,
+                float_format_fields=float_format_fields,
             )
             data_points.append(numeric_fields)
             fields.update(numeric_fields.keys())
@@ -95,13 +119,14 @@ def main():
 
             # Determine if the field represents a percentage
             is_percent = field in percent_fields
+            use_float_format = field in float_format_fields
 
             config = {
                 "y": values,
                 "ylabel": f"{field} [{' %' if is_percent else 'count'}]",
             }
 
-            if is_percent:
+            if use_float_format:
                 config["format_str"] = "%.3f"
 
             configs.append(config)
@@ -118,7 +143,7 @@ def main():
                     "ylabel": f"Recent {field} [{' %' if is_percent else 'count'}]",
                     "times": recent_times,
                 }
-                if is_percent:
+                if use_float_format:
                     config["format_str"] = "%.3f"
                 configs.append(config)
 

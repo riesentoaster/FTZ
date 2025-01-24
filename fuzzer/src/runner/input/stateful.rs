@@ -1,9 +1,9 @@
+use core::hash::{Hash, Hasher};
 use std::borrow::Cow;
-use std::hash::Hash;
 
 use libafl::{
     corpus::CorpusId,
-    inputs::{HasMutatorBytes, HasMutatorResizableBytes, Input},
+    inputs::{HasMutatorBytes, Input, ResizableMutator},
     mutators::{MutationResult, Mutator},
     Error,
 };
@@ -26,6 +26,12 @@ impl<I: Input + Hash> Input for ReplayingStatefulInput<I> {
             generic_hash_std(&self.parts),
             self.parts.len()
         )
+    }
+}
+
+impl<I: Hash> Hash for ReplayingStatefulInput<I> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.parts.hash(state);
     }
 }
 
@@ -76,18 +82,18 @@ impl<I> HasMutatorBytes for ReplayingStatefulInput<I>
 where
     I: HasMutatorBytes + Default + From<Vec<u8>>,
 {
-    fn bytes(&self) -> &[u8] {
+    fn mutator_bytes(&self) -> &[u8] {
         &[]
     }
 
-    fn bytes_mut(&mut self) -> &mut [u8] {
-        self.last_or_insert_empty().bytes_mut()
+    fn mutator_bytes_mut(&mut self) -> &mut [u8] {
+        self.last_or_insert_empty().mutator_bytes_mut()
     }
 }
 
-impl<I> HasMutatorResizableBytes for ReplayingStatefulInput<I>
+impl<I> ResizableMutator<u8> for ReplayingStatefulInput<I>
 where
-    I: HasMutatorResizableBytes + Default + From<Vec<u8>>,
+    I: ResizableMutator<u8> + Default + From<Vec<u8>>,
 {
     fn resize(&mut self, new_len: usize, value: u8) {
         self.last_or_insert_empty().resize(new_len, value);

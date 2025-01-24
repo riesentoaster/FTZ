@@ -1,9 +1,10 @@
+use serde::{Deserialize, Serialize};
 use std::{
     iter::{Filter, Map},
     ops::{Deref, DerefMut},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Source<T> {
     Client(T),
     Server(T),
@@ -34,6 +35,24 @@ impl<T> DerefMut for Source<T> {
         match self {
             Source::Client(e) => e,
             Source::Server(e) => e,
+        }
+    }
+}
+
+impl<T> Source<T> {
+    pub fn map<U>(&self, mapper: impl Fn(&T) -> U) -> Source<U> {
+        match self {
+            Source::Client(e) => Source::Client(mapper(e)),
+            Source::Server(e) => Source::Server(mapper(e)),
+        }
+    }
+}
+
+impl<T> From<Source<T>> for Direction<T> {
+    fn from(source: Source<T>) -> Self {
+        match source {
+            Source::Client(e) => Direction::Outgoing(e),
+            Source::Server(e) => Direction::Incoming(e),
         }
     }
 }

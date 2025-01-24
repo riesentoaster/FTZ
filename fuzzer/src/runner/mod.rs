@@ -34,7 +34,7 @@ pub const INTER_SEND_WAIT: Duration = Duration::from_millis(200);
 #[cfg(not(feature = "coverage_stability"))]
 pub const SETUP_TIMEOUT: Duration = Duration::from_millis(100 + 200); // time waited until client attempts to send data, the second is taken from the zephyr startup wait time
 #[cfg(not(feature = "coverage_stability"))]
-pub const INTER_SEND_WAIT: Duration = Duration::from_millis(100);
+pub const INTER_SEND_WAIT: Duration = Duration::from_millis(80);
 
 pub static IPV6_LINK_LOCAL_ADDR: LazyLock<IpAddress> = LazyLock::new(|| {
     IpAddress::v6(

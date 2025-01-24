@@ -1,6 +1,7 @@
 use core::str;
 use std::{
     fs::OpenOptions,
+    ops::Deref as _,
     path::PathBuf,
     process::{Child, Command, Stdio},
     sync::{Arc, Mutex},
@@ -19,6 +20,7 @@ use smoltcp::{
 };
 
 use crate::{
+    direction::Source,
     runner::{
         get_path, CLIENT_MAC_ADDR, CLIENT_PORT, IPV6_LINK_LOCAL_ADDR, ZEPHYR_IP, ZEPHYR_PORT,
     },
@@ -118,10 +120,11 @@ pub fn connect_to_zephyr(
 
     let mut device = SmoltcpShmemNetworkDevice::new(device, move |packet| {
         let elapsed = start_time.elapsed();
-        packets_clone
-            .lock()
-            .unwrap()
-            .push((elapsed, packet.inner()));
+        let packet = match packet {
+            crate::direction::Direction::Outgoing(e) => Source::Client(e),
+            crate::direction::Direction::Incoming(e) => Source::Server(e),
+        };
+        packets_clone.lock().unwrap().push((elapsed, packet));
     });
 
     // Setup network interface
@@ -199,8 +202,13 @@ pub fn connect_to_zephyr(
     log::info!("Socket no longer active, shutting down");
     child.kill().unwrap();
     child.wait().unwrap();
-    let res = Ok(packets.lock().unwrap().clone());
-    res
+    let packets = packets
+        .lock()
+        .unwrap()
+        .iter()
+        .map(|(t, p)| (*t, Source::deref(p).clone()))
+        .collect();
+    Ok(packets)
 }
 
 fn create_iface(

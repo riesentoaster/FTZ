@@ -835,7 +835,7 @@ dependencies = [
 
 [[package]]
 name = "libafl"
-version = "0.14.1"
+version = "0.15.0"
 dependencies = [
  "ahash",
  "arbitrary-int",
@@ -872,7 +872,7 @@ dependencies = [
 
 [[package]]
 name = "libafl_bolts"
-version = "0.14.1"
+version = "0.15.0"
 dependencies = [
  "ahash",
  "backtrace",
@@ -903,7 +903,7 @@ dependencies = [
 
 [[package]]
 name = "libafl_derive"
-version = "0.14.1"
+version = "0.15.0"
 dependencies = [
  "proc-macro2",
  "quote",

@@ -22,6 +22,7 @@ use libafl_bolts::{
 };
 
 use crate::{
+    direction::Source,
     layers::data_link::parse_eth,
     runner::{get_path, INTER_SEND_WAIT},
 };
@@ -78,7 +79,7 @@ impl<'a, S, OT, II> ZepyhrExecutor<'a, S, OT, II> {
     }
 }
 
-impl<'a, EM, Z, S, OT, I, II> Executor<EM, I, S, Z> for ZepyhrExecutor<'a, S, OT, II>
+impl<EM, Z, S, OT, I, II> Executor<EM, I, S, Z> for ZepyhrExecutor<'_, S, OT, II>
 where
     S: HasExecutions,
     OT: Debug + MatchName + MatchNameRef + ObserversTuple<I, S>,
@@ -140,18 +141,18 @@ where
 
         for e in packets {
             self.device.send(&e);
-            packet_observer.add_packet(e);
+            packet_observer.add_packet(Source::Client(e));
             let mut last_packet_time = Instant::now();
             while last_packet_time.elapsed() < INTER_SEND_WAIT {
                 if let Some(incoming) = self.device.try_recv() {
                     let parsed = parse_eth(&incoming)
                         .map_err(|e| Error::illegal_argument(format!("{e:?}")))?;
-                    packet_observer.add_packet(incoming);
+                    packet_observer.add_packet(Source::Server(incoming));
                     if let Some(manual_response_res) = ShmemNetworkDevice::respond_manually(parsed)
                     {
                         let manual_response = manual_response_res?;
                         self.device.send(&manual_response);
-                        packet_observer.add_packet(manual_response);
+                        packet_observer.add_packet(Source::Client(manual_response));
                     }
 
                     last_packet_time = Instant::now();
@@ -178,7 +179,7 @@ where
     }
 }
 
-impl<'a, S, OT, II> HasObservers for ZepyhrExecutor<'a, S, OT, II> {
+impl<S, OT, II> HasObservers for ZepyhrExecutor<'_, S, OT, II> {
     type Observers = OT;
 
     fn observers(&self) -> RefIndexable<&Self::Observers, Self::Observers> {

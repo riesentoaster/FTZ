@@ -28,11 +28,13 @@ impl SmoltcpShmemNetworkDevice {
 }
 
 impl Device for SmoltcpShmemNetworkDevice {
-    type RxToken<'a> = RxToken
+    type RxToken<'a>
+        = RxToken
     where
         Self: 'a;
 
-    type TxToken<'a> = TxToken<'a>
+    type TxToken<'a>
+        = TxToken<'a>
     where
         Self: 'a;
 
@@ -92,7 +94,7 @@ pub struct TxToken<'a> {
     packet_logger: &'a dyn Fn(Direction<Vec<u8>>),
 }
 
-impl<'a> phy::TxToken for TxToken<'a> {
+impl phy::TxToken for TxToken<'_> {
     fn consume<R, F>(mut self, len: usize, f: F) -> R
     where
         F: FnOnce(&mut [u8]) -> R,

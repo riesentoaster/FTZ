@@ -1,9 +1,4 @@
-use std::{
-    cell::RefCell,
-    rc::Rc,
-    thread::sleep,
-    time::{Duration, Instant},
-};
+use std::{cell::RefCell, rc::Rc, thread::sleep, time::Instant};
 
 use libafl::Error;
 use libafl_bolts::shmem::{MmapShMem, ShMemDescription};
@@ -11,6 +6,7 @@ use libafl_bolts::shmem::{MmapShMem, ShMemDescription};
 use pnet::packet::icmpv6::Icmpv6Types;
 
 use crate::{
+    direction::Source,
     layers::{
         data_link::{parse_eth, DataLinkLayerPacket},
         interactive::{
@@ -19,7 +15,7 @@ use crate::{
         },
         upper::UpperLayerPacket,
     },
-    runner::{CLIENT_MAC_ADDR, IPV6_LINK_LOCAL_ADDR, SETUP_TIMEOUT},
+    runner::{CLIENT_MAC_ADDR, INTER_SEND_WAIT, IPV6_LINK_LOCAL_ADDR, SETUP_TIMEOUT},
     shmem::get_shmem,
 };
 
@@ -104,24 +100,30 @@ impl ShmemNetworkDevice {
             None
         }
     }
-    pub fn init_zephyr(&mut self, mut package_logger: impl FnMut(Vec<u8>)) -> Result<(), Error> {
+    pub fn init_zephyr(
+        &mut self,
+        mut package_logger: impl FnMut(Source<Vec<u8>>),
+    ) -> Result<(), Error> {
         let start = Instant::now();
-        while start.elapsed() < SETUP_TIMEOUT {
+        let mut last_packet_time = Instant::now();
+        while start.elapsed() < SETUP_TIMEOUT || last_packet_time.elapsed() < INTER_SEND_WAIT {
             if let Some(p) = self.try_recv() {
-                let parsed =
-                    parse_eth(&p).map_err(|e| Error::illegal_argument(format!("{e:?}")))?;
-                package_logger(p);
+                let parsed = parse_eth(&p)
+                    .map_err(|e| format!("{e:?}"))
+                    .map_err(Error::illegal_argument)?;
+                package_logger(Source::Server(p));
                 if let Some(res) = Self::respond_manually(parsed) {
                     match res {
                         Ok(response) => {
                             self.send(&response);
-                            package_logger(response);
+                            package_logger(Source::Client(response));
                         }
                         Err(e) => return Err(e),
                     }
                 }
+                last_packet_time = Instant::now();
             }
-            sleep(Duration::from_millis(5));
+            sleep(INTER_SEND_WAIT / 5);
         }
         Ok(())
     }
