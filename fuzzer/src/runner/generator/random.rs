@@ -1,8 +1,8 @@
-use etherparse::{Ethernet2Header, IpNumber, Ipv4Extensions, Ipv4Header, Payload, TcpHeader};
+use etherparse::{PacketBuilder, PacketHeaders, TcpOptionElement, TcpOptions};
 use libafl::{generators::Generator, nonzero, state::HasRand, Error};
 use libafl_bolts::rands::Rand;
 
-use crate::runner::input::{EtherparseInput, ZephyrInputPart};
+use crate::{packets::outgoing_tcp_packets, runner::input::ZephyrInputPart};
 
 pub struct RandomTcpZephyrInputPartGenerator;
 
@@ -16,40 +16,116 @@ where
         let rand = state.rand_mut();
 
         let payload_len = rand.below(nonzero!(1000));
-        let payload_raw = (0..payload_len)
+        let payload = (0..payload_len)
             .map(|_| rand.next() as u8)
             .collect::<Vec<u8>>();
 
-        let payload = Payload::Tcp(payload_raw);
-        let tcp = TcpHeader::new(
-            rand.next() as u16,
-            rand.next() as u16,
-            rand.next() as u32,
-            rand.next() as u16,
-        );
+        let outgoing_packets = outgoing_tcp_packets();
+        let blueprint = PacketHeaders::from_ethernet_slice(&outgoing_packets[0]).unwrap();
+        let eth = blueprint.link.unwrap().ethernet2().unwrap();
+        let net = blueprint.net.unwrap();
+        let (ipv4, _ipv4_extensions) = net.ipv4_ref().unwrap();
 
-        // +CONFIG_ETH_NATIVE_POSIX_MAC_ADDR="02:00:5e:00:53:31"
+        let builder = PacketBuilder::ethernet2(eth.source, eth.destination)
+            .ipv4(ipv4.source, ipv4.destination, rand.next() as u8)
+            .tcp(
+                rand.next() as u16,
+                rand.next() as u16,
+                rand.next() as u32,
+                rand.next() as u16,
+            );
 
-        let ip = Ipv4Header::new(
-            0, // is calculated automatically,
-            rand.next() as u8,
-            IpNumber::TCP,
-            [192, 0, 2, 2],
-            [192, 0, 2, 1],
-        )
-        .map_err(|e| Error::illegal_argument(format!("Could not create Ipv4Header: {}", e)))?;
+        let builder = if rand.coinflip(0.5) {
+            builder.ns()
+        } else {
+            builder
+        };
 
-        let ipv4_extensions = Ipv4Extensions::from_slice_lax(IpNumber(0), &[]).0;
-        let eth_raw = [
-            0x02, 0x00, 0x5e, 0x00, 0x53, 0x31, 0x00, 0x00, 0x5e, 0x00, 0x53, 0xff, 0x08, 0x00,
-        ];
-        let eth = Ethernet2Header::from_slice(&eth_raw)
-            .map_err(|e| {
-                Error::illegal_argument(format!("Could not create Ethernet2Header: {}", e))
-            })?
-            .0;
-        let parsed = EtherparseInput::new(tcp, ip, ipv4_extensions, eth, payload);
-        let bytes: Vec<u8> = parsed.into();
+        let builder = if rand.coinflip(0.5) {
+            builder.ack(rand.next() as u32)
+        } else {
+            builder
+        };
+
+        let builder = if rand.coinflip(0.5) {
+            builder.urg(rand.next() as u16)
+        } else {
+            builder
+        };
+
+        let builder = if rand.coinflip(0.5) {
+            builder.psh()
+        } else {
+            builder
+        };
+
+        let builder = if rand.coinflip(0.5) {
+            builder.rst()
+        } else {
+            builder
+        };
+
+        let builder = if rand.coinflip(0.5) {
+            builder.syn()
+        } else {
+            builder
+        };
+
+        let builder = if rand.coinflip(0.5) {
+            builder.fin()
+        } else {
+            builder
+        };
+
+        let builder = if rand.coinflip(0.5) {
+            builder.ece()
+        } else {
+            builder
+        };
+
+        let builder = if rand.coinflip(0.5) {
+            builder.cwr()
+        } else {
+            builder
+        };
+
+        let options = (0..rand.below(nonzero!(5)))
+            .map(|_| match rand.below(nonzero!(6)) {
+                0 => TcpOptionElement::MaximumSegmentSize(rand.next() as u16),
+                1 => TcpOptionElement::WindowScale(rand.next() as u8),
+                2 => TcpOptionElement::SelectiveAcknowledgementPermitted,
+                3 => {
+                    let mut acks = [None; 3];
+                    if rand.coinflip(0.5) {
+                        acks[0] = Some((rand.next() as u32, rand.next() as u32));
+                    }
+                    if rand.coinflip(0.5) {
+                        acks[1] = Some((rand.next() as u32, rand.next() as u32));
+                    }
+                    if rand.coinflip(0.5) {
+                        acks[2] = Some((rand.next() as u32, rand.next() as u32));
+                    }
+                    TcpOptionElement::SelectiveAcknowledgement(
+                        (rand.next() as u32, rand.next() as u32),
+                        acks,
+                    )
+                }
+                4 => TcpOptionElement::Timestamp(rand.next() as u32, rand.next() as u32),
+                5 => TcpOptionElement::Noop,
+                _ => panic!("Something is rotten in the state of Denmark"),
+            })
+            .collect::<Vec<_>>();
+
+        let builder = if TcpOptions::try_from_elements(&options).is_ok() && rand.coinflip(0.5) {
+            builder.options(&options).unwrap()
+        } else {
+            builder
+        };
+
+        let mut bytes = Vec::<u8>::with_capacity(builder.size(payload.len()));
+        builder.write(&mut bytes, &payload).unwrap();
+
         Ok(bytes.into())
     }
 }
+
