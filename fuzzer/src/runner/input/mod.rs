@@ -1,5 +1,11 @@
-use etherparse::{EtherparseInput, TcpMutators};
-use generator::FixedZephyrInputPartGenerator;
+use crate::runner::{
+    generator::fixed::FixedZephyrInputGenerator,
+    input::{
+        appending::ToAppendingMutatorWrapper,
+        stateful::{ReplayingStatefulInput, ToReplayingStatefulMutator},
+    },
+};
+use etherparse::TcpMutators;
 use libafl::{
     corpus::{CorpusId, Testcase},
     generators::RandBytesGenerator,
@@ -14,15 +20,11 @@ use libafl_bolts::{
 };
 use serde::Serialize;
 
-mod appending;
-mod bool;
-mod etherparse;
-mod generator;
-mod parsed;
-mod stateful;
-pub use stateful::{ReplayingStatefulInput, ToReplayingStatefulMutator};
-
-use crate::packets::outgoing_tcp_packets;
+pub mod appending;
+pub mod bool;
+pub mod etherparse;
+pub mod parsed;
+pub mod stateful;
 
 type HavocStatefulInput = ReplayingStatefulInput<BytesInput>;
 type HavocMultipartInput = MultipartInput<BytesInput>;
@@ -32,51 +34,50 @@ type EtherparseStatefulInput = ReplayingStatefulInput<EtherparseInput>;
 
 pub type ZephyrInputType = EtherparseStatefulInput;
 
-pub use {
-    appending::AppendingMutator, generator::FixedZephyrInputGenerator, parsed::ParsedZephyrInput,
-};
+pub use {etherparse::EtherparseInput, parsed::ParsedZephyrInput};
 
 pub trait ZephyrInputPart: Sized
 where
     Vec<u8>: From<Self>,
 {
     type Mutators;
-    type Generator;
+    type Generators;
     fn mutators() -> Self::Mutators;
-    fn generator() -> Self::Generator;
+    fn generator() -> Self::Generators;
 }
 
 impl ZephyrInputPart for BytesInput {
     type Mutators = HavocMutationsType;
-    type Generator = RandBytesGenerator;
+    type Generators = tuple_list_type!(RandBytesGenerator);
 
     fn mutators() -> Self::Mutators {
         havoc_mutations()
     }
-    fn generator() -> Self::Generator {
-        RandBytesGenerator::new(nonzero!(50))
+    fn generator() -> Self::Generators {
+        tuple_list!(RandBytesGenerator::new(nonzero!(50)))
     }
 }
 
 impl ZephyrInputPart for ParsedZephyrInput {
     type Mutators = ();
-    type Generator = FixedZephyrInputPartGenerator<Self>;
+    type Generators = tuple_list_type!();
 
     fn mutators() -> Self::Mutators {}
-    fn generator() -> Self::Generator {
-        FixedZephyrInputPartGenerator::new(outgoing_tcp_packets(), true)
+    fn generator() -> Self::Generators {
+        tuple_list!()
     }
 }
 
 impl ZephyrInputPart for EtherparseInput {
     type Mutators = TcpMutators;
-    type Generator = FixedZephyrInputPartGenerator<Self>;
+    type Generators = tuple_list_type!();
 
     fn mutators() -> Self::Mutators {
         EtherparseInput::mutators()
     }
-    fn generator() -> Self::Generator {
-        FixedZephyrInputPartGenerator::new(outgoing_tcp_packets(), true)
+
+    fn generator() -> Self::Generators {
+        tuple_list!()
     }
 }
 
@@ -132,19 +133,20 @@ impl<I> ZephyrInput<I> for ReplayingStatefulInput<I>
 where
     I: ZephyrInputPart + for<'a> TryFrom<&'a [u8]> + Clone,
     I::Mutators: Map<ToReplayingStatefulMutator>,
-    <I::Mutators as Map<ToReplayingStatefulMutator>>::MapResult:
-        Merge<tuple_list_type!(AppendingMutator<I::Generator>)>,
+    I::Generators: Map<ToAppendingMutatorWrapper>,
+    map_tuple_list_type!(I::Mutators, ToReplayingStatefulMutator):
+        Merge<map_tuple_list_type!(I::Generators, ToAppendingMutatorWrapper)>,
     Vec<u8>: From<I>,
 {
     type Mutators = merge_tuple_list_type!(
         map_tuple_list_type!(I::Mutators, ToReplayingStatefulMutator),
-        tuple_list_type!(AppendingMutator<I::Generator>)
+        map_tuple_list_type!(I::Generators, ToAppendingMutatorWrapper)
     );
 
     fn mutators() -> Self::Mutators {
         I::mutators()
             .map(ToReplayingStatefulMutator)
-            .merge(tuple_list!(AppendingMutator::new(I::generator())))
+            .merge(I::generator().map(ToAppendingMutatorWrapper))
     }
 
     fn parse(input: &[Vec<u8>]) -> Self {
@@ -200,20 +202,19 @@ mod tests {
 
     use crate::{
         packets::outgoing_tcp_packets,
-        runner::input::{
-            etherparse::EtherparseInput, generator::FixedZephyrInputPartGenerator,
-            AppendingMutator, EtherparseStatefulInput, FixedZephyrInputGenerator, ZephyrInput,
-            ZephyrInputPart,
+        runner::{
+            generator::fixed::FixedZephyrInputPartGenerator,
+            input::{
+                appending::AppendingMutator, etherparse::EtherparseInput, EtherparseStatefulInput,
+                FixedZephyrInputGenerator, ReplayingStatefulInput, ZephyrInput, ZephyrInputPart,
+            },
         },
     };
 
     #[test]
     fn generate_etherparse() {
-        type I = EtherparseStatefulInput;
         type II = EtherparseInput;
-        let mut generator = II::generator();
-        let g: &mut dyn Generator<II, _> = &mut generator;
-        let _i: II = g.generate(&mut StdRand::new()).unwrap();
+        type I = ReplayingStatefulInput<II>;
 
         let mut generator = FixedZephyrInputGenerator::new(outgoing_tcp_packets(), true);
         let g: &mut dyn Generator<I, _> = &mut generator;
@@ -222,7 +223,7 @@ mod tests {
 
     #[test]
     fn appending_mutator_etherparse() {
-        let input = EtherparseStatefulInput::parse(&outgoing_tcp_packets());
+        let input = ReplayingStatefulInput::<EtherparseInput>::parse(&outgoing_tcp_packets());
         fn take_zephyr_input<I: ZephyrInput<II>, II>(input: I) -> I
         where
             Vec<u8>: From<II>,
@@ -230,7 +231,7 @@ mod tests {
         {
             input
         }
-        let _input = take_zephyr_input(input);
+        let _input = take_zephyr_input::<_, EtherparseInput>(input);
         let mut generator = FixedZephyrInputGenerator::new(outgoing_tcp_packets(), true);
         let mut state: NopState<EtherparseStatefulInput> = NopState::new();
         let input = generator.generate(&mut state).unwrap();

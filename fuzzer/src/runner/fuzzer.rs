@@ -3,7 +3,11 @@ use crate::{
     packets::outgoing_tcp_packets,
     runner::{
         feedback::{corpus_dir_count::CorpusDirCountFeedback, memory::MemoryPseudoFeedback},
-        input::{FixedZephyrInputGenerator, ZephyrInput, ZephyrInputType},
+        generator::{
+            fixed::{FixedZephyrInputGenerator, FixedZephyrInputPartGenerator},
+            random::RandomTcpZephyrInputPartGenerator,
+        },
+        input::{appending::ToAppendingMutatorWrapper, ZephyrInput, ZephyrInputType},
         objective::CrashLoggingFeedback,
         PacketMetadataFeedback, PacketObserver, ZepyhrExecutor,
     },
@@ -12,7 +16,7 @@ use crate::{
 };
 use clap::Parser as _;
 use libafl::{
-    corpus::{Corpus, InMemoryCorpus, OnDiskCorpus},
+    corpus::{Corpus, OnDiskCorpus},
     events::{
         CentralizedEventManager, CentralizedLauncher, ClientDescription, EventConfig,
         SendExiting as _,
@@ -32,7 +36,7 @@ use libafl_bolts::{
     core_affinity::Cores,
     rands::StdRand,
     shmem::{ShMem, ShMemProvider as _, StdShMemProvider},
-    tuples::{tuple_list, Handled},
+    tuples::{tuple_list, Handled as _, Map as _, Merge as _},
 };
 use std::{path::PathBuf, ptr::NonNull, time::Duration};
 
@@ -138,7 +142,13 @@ pub fn fuzz() {
                 .expect("Could not create state")
             });
 
-            let mutations = ZephyrInputType::mutators();
+            let mutations = ZephyrInputType::mutators().merge(
+                tuple_list!(
+                    FixedZephyrInputPartGenerator::new(outgoing_tcp_packets(), true),
+                    RandomTcpZephyrInputPartGenerator
+                )
+                .map(ToAppendingMutatorWrapper),
+            );
 
             let mutator =
                 StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);

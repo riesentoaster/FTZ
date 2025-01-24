@@ -6,7 +6,7 @@ use libafl::{
     mutators::{MutationResult, Mutator},
     Error,
 };
-use libafl_bolts::Named;
+use libafl_bolts::{tuples::MappingFunctor, Named};
 
 use super::stateful::ReplayingStatefulInput;
 
@@ -54,6 +54,16 @@ where
 impl<G> Named for AppendingMutator<G> {
     fn name(&self) -> &Cow<'static, str> {
         &Cow::Borrowed("AppendingMutator")
+    }
+}
+
+pub struct ToAppendingMutatorWrapper;
+
+impl<G> MappingFunctor<G> for ToAppendingMutatorWrapper {
+    type Output = AppendingMutator<G>;
+
+    fn apply(&mut self, from: G) -> Self::Output {
+        AppendingMutator::new(from)
     }
 }
 

@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use libafl::{generators::Generator, Error};
 
-use super::{ZephyrInput, ZephyrInputPart};
+use crate::runner::input::{ZephyrInput, ZephyrInputPart};
 
 pub struct FixedZephyrInputPartGenerator<I> {
     fixed: Vec<Vec<u8>>,
@@ -67,13 +67,13 @@ impl<I> FixedZephyrInputGenerator<I> {
     }
 }
 
-impl<I, S, Z> Generator<Z, S> for FixedZephyrInputGenerator<I>
+impl<I, II, S> Generator<I, S> for FixedZephyrInputGenerator<II>
 where
-    Z: ZephyrInput<I>,
-    I: ZephyrInputPart,
-    Vec<u8>: From<I>,
+    I: ZephyrInput<II>,
+    II: ZephyrInputPart,
+    Vec<u8>: From<II>,
 {
-    fn generate(&mut self, _state: &mut S) -> Result<Z, libafl::Error> {
+    fn generate(&mut self, _state: &mut S) -> Result<I, libafl::Error> {
         // reset
         if self.current_length > self.fixed.len() {
             if !self.restart {
@@ -85,7 +85,7 @@ where
             }
         }
 
-        let res = Z::parse(&self.fixed[0..self.current_length]);
+        let res = I::parse(&self.fixed[0..self.current_length]);
         self.current_length += 1;
         Ok(res)
     }

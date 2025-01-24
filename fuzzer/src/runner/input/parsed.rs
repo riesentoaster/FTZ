@@ -16,6 +16,10 @@ pub struct ParsedZephyrInput {
 }
 
 impl ParsedZephyrInput {
+    pub fn new(eth: Ethernet, ip: Ipv4, tcp: Tcp) -> Self {
+        Self { eth, ip, tcp }
+    }
+
     pub fn eth_mut(&mut self) -> &mut Ethernet {
         &mut self.eth
     }

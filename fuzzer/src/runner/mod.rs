@@ -8,13 +8,14 @@ use smoltcp::wire::IpAddress;
 #[cfg(feature = "coverage_stability")]
 pub mod calibration_log_stage;
 
-mod client;
-mod executor;
+pub mod client;
+pub mod executor;
 pub mod feedback;
-mod fuzzer;
-mod input;
-mod objective;
-mod observer;
+pub mod fuzzer;
+pub mod generator;
+pub mod input;
+pub mod objective;
+pub mod observer;
 
 pub use {
     client::connect_to_zephyr,

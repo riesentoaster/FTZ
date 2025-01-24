@@ -120,6 +120,22 @@ impl From<Vec<u8>> for EtherparseInput {
 }
 
 impl EtherparseInput {
+    pub fn new(
+        tcp: TcpHeader,
+        ip: Ipv4Header,
+        ipv4_extensions: Ipv4Extensions,
+        eth: Ethernet2Header,
+        payload: Payload,
+    ) -> Self {
+        Self {
+            tcp,
+            ip,
+            ipv4_extensions,
+            eth,
+            payload,
+        }
+    }
+
     pub fn tcp_source_port(&mut self) -> &mut u16 {
         &mut self.tcp.source_port
     }
