@@ -2,7 +2,10 @@ use crate::{
     cli::Cli,
     packets::outgoing_tcp_packets,
     runner::{
-        feedback::{corpus_dir_count::CorpusDirCountFeedback, memory::MemoryPseudoFeedback},
+        feedback::{
+            corpus_dir_count::CorpusDirCountFeedback, input_len::InputLenFeedback,
+            memory::MemoryPseudoFeedback,
+        },
         generator::{
             fixed::{FixedZephyrInputGenerator, FixedZephyrInputPartGenerator},
             random::RandomTcpZephyrInputPartGenerator,
@@ -118,6 +121,8 @@ pub fn fuzz() {
                 gated_feedbacks,
                 TimeFeedback::new(&time_observer),
                 PacketMetadataFeedback::new(packet_observer_handle.clone()),
+                InputLenFeedback,
+                // only log coverage
                 feedback_and!(cov_feedback, ConstFeedback::new(false)),
                 state_feedback
             );

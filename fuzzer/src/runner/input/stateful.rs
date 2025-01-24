@@ -10,13 +10,21 @@ use libafl::{
 use libafl_bolts::{
     generic_hash_std,
     tuples::{Map, MappingFunctor},
-    HasLen, Named,
+    Named,
 };
 use serde::{Deserialize, Serialize};
+
+use crate::runner::feedback::input_len::HasLen;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ReplayingStatefulInput<I> {
     parts: Vec<I>,
+}
+
+impl<I> HasLen for ReplayingStatefulInput<I> {
+    fn len(&self) -> usize {
+        self.parts.len()
+    }
 }
 
 impl<I: Input + Hash> Input for ReplayingStatefulInput<I> {
@@ -72,9 +80,12 @@ impl<I: Default> ReplayingStatefulInput<I> {
         self.parts.last_mut().unwrap()
     }
 }
-impl<I: HasLen> HasLen for ReplayingStatefulInput<I> {
+impl<I: libafl_bolts::HasLen> libafl_bolts::HasLen for ReplayingStatefulInput<I> {
     fn len(&self) -> usize {
-        self.parts.last().map(HasLen::len).unwrap_or(0)
+        self.parts
+            .last()
+            .map(libafl_bolts::HasLen::len)
+            .unwrap_or(0)
     }
 }
 

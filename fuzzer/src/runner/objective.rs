@@ -33,6 +33,12 @@ impl CrashLoggingFeedback {
     }
 }
 
+impl Default for CrashLoggingFeedback {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<EM, I, OT, S> Feedback<EM, I, OT, S> for CrashLoggingFeedback {
     fn is_interesting(
         &mut self,

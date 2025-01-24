@@ -34,6 +34,8 @@ type EtherparseStatefulInput = ReplayingStatefulInput<EtherparseInput>;
 
 pub type ZephyrInputType = EtherparseStatefulInput;
 
+use super::feedback::input_len::HasLen;
+
 pub use {etherparse::EtherparseInput, parsed::ParsedZephyrInput};
 
 pub trait ZephyrInputPart: Sized
@@ -81,7 +83,7 @@ impl ZephyrInputPart for EtherparseInput {
     }
 }
 
-pub trait ZephyrInput<I>
+pub trait ZephyrInput<I>: HasLen
 where
     Vec<u8>: From<I>,
     I: ZephyrInputPart,
