@@ -19,7 +19,7 @@ use crate::{
 };
 use clap::Parser as _;
 use libafl::{
-    corpus::{Corpus, OnDiskCorpus},
+    corpus::{Corpus, InMemoryCorpus, OnDiskCorpus},
     events::{
         CentralizedEventManager, CentralizedLauncher, ClientDescription, EventConfig,
         SendExiting as _,
@@ -134,7 +134,7 @@ pub fn fuzz() {
 
             let solutions = OnDiskCorpus::new(opt.solutions_dir())?;
 
-            let corpus = OnDiskCorpus::new(opt.corpus_dir())?;
+            let corpus = InMemoryCorpus::new();
 
             let mut state: StdState<_, _, _, _> = state.unwrap_or_else(|| {
                 StdState::new(
