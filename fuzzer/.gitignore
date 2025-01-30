@@ -10,3 +10,4 @@ profile.json
 !log/*
 cov-*
 /duplicate*
+.DS_Store
