@@ -16,7 +16,6 @@ echo "Testing for changes in zephyr compared to diff file"
 
 DIFF_PATH="$(realpath ../zephyr.diff)"
 CUSTOM_TARGET_DIR="$(realpath ${ZEPHYR_EXE_DIR})"
-ASAN_BLACKLIST_PATH="$(realpath asan-blacklist.txt)"
 CURRENT_DIR="$(pwd)"
 
 cd ${ZEPHYR_PROJECT_DIR}
@@ -43,12 +42,7 @@ else
                 -O1 \
                 -fno-omit-frame-pointer \
                 -fsanitize-coverage=trace-pc-guard \
-                -fsanitize-ignorelist=${ASAN_BLACKLIST_PATH} \
             "
-    
-                # -fno-optimize-sibling-calls \
-                # -fsanitize-blacklist=${ASAN_BLACKLIST_PATH} \
-    # -fno-inline \
     cd $CURRENT_DIR
     echo "Adding changes to git"
     cargo make zephyr_diff
