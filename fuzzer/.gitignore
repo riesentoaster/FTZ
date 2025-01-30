@@ -1,6 +1,7 @@
 /target
 *.pcap
 *.log
+!log/**/*.log
 monitor.*
 solutions
 corpus*/
