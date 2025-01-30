@@ -22,7 +22,7 @@ This project relies on a default installation of Zephyr relative to this folder 
 
 #### Zephyr Diff
 
-Changes to Zephyr are stored in [zephyr.diff](./zephyr.diff). It is updated on each commit using [pre-commit](https://pre-commit.com). Apply it using `git apply`. It is based on commit `8fda052826d`.
+Changes to Zephyr are stored in [zephyr.diff](./zephyr.diff). It is updated on each commit using [pre-commit](https://pre-commit.com). Apply it using `git apply`. It is based on commit `7537a142be5`.
 
 ### Communication Protocol/Custom Layer 1
 
