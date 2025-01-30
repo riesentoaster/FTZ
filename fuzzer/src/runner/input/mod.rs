@@ -26,10 +26,15 @@ pub mod etherparse;
 pub mod parsed;
 pub mod stateful;
 
+#[allow(dead_code)]
 type HavocStatefulInput = ReplayingStatefulInput<BytesInput>;
+#[allow(dead_code)]
 type HavocMultipartInput = MultipartInput<BytesInput>;
+#[allow(dead_code)]
 type ParsedStatefulInput = ReplayingStatefulInput<ParsedZephyrInput>;
+#[allow(dead_code)]
 type ParsedMultipartInput = MultipartInput<ParsedZephyrInput>;
+#[allow(dead_code)]
 type EtherparseStatefulInput = ReplayingStatefulInput<EtherparseInput>;
 
 pub type ZephyrInputType = EtherparseStatefulInput;

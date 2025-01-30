@@ -24,8 +24,6 @@ use std::{
 
 use super::state::PacketState;
 
-const MAX_PACKETS: usize = 100;
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PacketObserver {
     packets: Vec<(Duration, Vec<u8>)>,
@@ -243,14 +241,6 @@ impl AsMut<Self> for PacketObserver {
     fn as_mut(&mut self) -> &mut Self {
         self
     }
-}
-
-#[derive(Serialize)]
-struct SerializedPacketObserver {
-    pcap: String,
-    states: Vec<String>,
-    state_map: Option<String>,
-    use_state_diffs: bool,
 }
 
 #[cfg(test)]

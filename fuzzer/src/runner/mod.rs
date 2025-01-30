@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::{ffi::CStr, sync::LazyLock, time::Duration};
 
 use libafl::Error;
