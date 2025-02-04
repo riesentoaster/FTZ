@@ -63,7 +63,7 @@ pub fn fuzz() {
 
     let zephyr_exec_path = opt.zephyr_exec_dir();
 
-    let run_client = |_primary: bool| {
+    let run_client = |primary: bool| {
         let opt = &opt;
         move |state: Option<_>,
               mut manager: CentralizedEventManager<_, _, _, _, _, _>,
@@ -95,10 +95,10 @@ pub fn fuzz() {
                     state_map_len,
                 )
             };
+            let cov_feedback = MaxMapFeedback::new(&cov_observer);
             let state_feedback = MaxMapFeedback::new(&state_map_observer);
             let packet_observer_handle = packet_observer.handle();
 
-            let cov_feedback = MaxMapFeedback::new(&cov_observer);
             #[cfg(feature = "coverage_stability")]
             let stability = CalibrationStage::new(&cov_feedback);
 
@@ -243,11 +243,17 @@ pub fn fuzz() {
                 manager.send_exiting()?;
                 return Err(Error::shutting_down());
             } else if opt.fuzz_one() {
-                fuzzer.fuzz_one(&mut stages, &mut executor, &mut state, &mut manager)?;
+                if primary {
+                    fuzzer.fuzz_one(&mut (), &mut executor, &mut state, &mut manager)?;
+                } else {
+                    fuzzer.fuzz_one(&mut stages, &mut executor, &mut state, &mut manager)?;
+                }
                 manager.send_exiting()?;
                 return Err(Error::shutting_down());
             // } else if manager.is_main() {
             //     fuzzer.fuzz_loop(&mut tuple_list!(), &mut executor, &mut state, &mut manager)?;
+            } else if primary {
+                fuzzer.fuzz_loop(&mut (), &mut executor, &mut state, &mut manager)?;
             } else {
                 fuzzer.fuzz_loop(&mut stages, &mut executor, &mut state, &mut manager)?;
             }

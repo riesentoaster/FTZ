@@ -5,7 +5,8 @@
 \usepackage{lipsum}
 \usepackage{xcolor}
 \usepackage{easy-todo}
-% \usepackage{graphicx}
+\usepackage{graphicx}
+\usepackage{xspace}
 % \usepackage{float}
 % \usepackage{pgfplots}
 % \usepgfplotslibrary{colorbrewer}
@@ -29,6 +30,12 @@
     aboveskip=10pt
 }
 \usepackage{listings-rust}
+
+\renewcommand{\footnoterule}{%
+  \kern 10pt % Increased spacing above delimiter
+  \hrule width 0.8\columnwidth
+  \kern 5pt
+}
 
 \usepackage[
     backend=biber,
@@ -75,7 +82,7 @@
 \hfuzz=50px
 \hbadness=10000
 \newcommand{\code}[2][]{\lstinline[language=#1, breaklines=false, basicstyle=\ttfamily]{#2}}
-\newcommand{\proj}{FuZetwork}
+\newcommand{\proj}{FuZetwork\xspace}
 \let\savedCite=\cite
 \renewcommand{\cite}{\unskip~\savedCite}
 \renewcommand{\arraystretch}{1.5} % Increase table padding
@@ -281,12 +288,12 @@
 
   When targeting \code{native_sim}, Zephyr's build system can further be instructed to compile the code using AddressSanitizer (ASAN). This compiler pass instruments the target binary with additional runtime checks for memory errors such as out-of-bounds accesses to heap, stack, or global variables, use-after-free and use-after-return errors, or double frees.\cite{ASAN} Both the default toolchain based on \code{gcc} and the alternate LLVM/\code{clang}-based toolchain provide such instrumentation.
 
-  During this project, I discovered a bug in Zephyr's device registration when using the ASAN implementation of clang, which I needed to use for its superior coverage instrumentation (see Section~\ref{SanCov}). I worked together with the maintainers of Zephyr to triage and fix this bug.\cite{ZephyrASANIssue}
+  During this project, I discovered a bug in Zephyr's device registration when using the ASAN implementation of clang, which I needed to use for its superior coverage instrumentation (see Section~\ref{Implementation:SanCov}). I worked together with the maintainers of Zephyr to triage and fix this bug.\cite{ZephyrASANIssue}
 
   \code{native_sim} allows manipulating the clock of Zephyr, to run the operating system faster or slower than realtime, or disabling any speed restrictions. The latter however renders any \code{sleep}-interrupted loop into one that runs nearly unrestrictedly fast. This in turn leads to near-instant timeouts of connections and is thus unsuitable for interaction with an other system such as the fuzzer. However, passing \code{--rt-ratio=<n>} to the executable built with the target \code{native_sim} allows a user to set the ratio of how quickly Zephyr's virtual time passes compared to real-time.
 
   \subsection{Coverage Information}
-  \label{SanCov}
+  \label{Implementation:SanCov}
 
   To guide the fuzzer and measure its progress, \proj measures the executed code under each trace (refer to Section~\ref{Background:Feedback} for more details on coverage feedback). A method commonly used and well-supported by LibAFL to do this is using \code{clang}'s SanitizerCoverage compiler pass. It instruments the code with two functions:
 
@@ -317,6 +324,7 @@ void __sanitizer_cov_trace_pc_guard(
   To increase performance and be more error-resistant, the coverage is directly written into shared memory created by the fuzzer. During the initialization, the shared memory is opened based on information passed through environment variables. Additionally, the information needed to map from the SanitizerCoverage-reserved memory section to the shared memory section is stored. On each edge, the appropriate address in the shared memory section is calculated and marked as visited. While there is a slight performance-penalty on each edge due to the address mapping, this approach does not require any post-processing on the client's part, such as copying the collected information back to the fuzzer. This is particularly important in cases of crashes in the PUT, since any post-processing function would no longer be called.
 
   \subsection{Network Interfaces}
+  \label{Implementation:NetworkInterface}
 
   Zephyr's \code{native_sim} already provides an ethernet driver for a TAP interface over a zeth interface.\cite{ZephyrNativeSim} However, for this project, I opted to build an alternative solution to circumvent the additional limitations of the host kernel interaction. Instead, I built a custom ethernet driver based that transmits network packets between the fuzzer and target using shared memory.
 
@@ -340,6 +348,7 @@ void __sanitizer_cov_trace_pc_guard(
   In \proj, I introduce \code{ReplayingStatefulInput}. It contains a list of messages, and each entry can be mutated in two ways: either a message can be appended (either generated or extracted from another trace), or the \textit{last} entry is mutated. To achieve this, \code{ReplayingStatefulInput::map_mutators} automatically maps any mutator targeting the \textit{message} type to one targeting the \code{trace} type, while also handling empty traces.
 
   \subsubsection{Seeding}
+  \label{Implementation:Seeding}
 
   Since both options of modelling a trace include mutators appending messages to a trace, one could seed the corpus with a single, empty trace. In principle, the fuzzer will still eventually find its way through the entire state space. However, one can speed up this process greatly with an improved seeding strategy. For this, I first traced an entire full and legal interaction between a client and Zephyr. The trace is then filtered for TCP messages going from the client to the server. Then, the corpus is seeded with slices of this filtered list of messages, starting with the an empty trace and then including increasingly more consecutive messages, all starting with the first filtered message.
 
@@ -358,61 +367,127 @@ void __sanitizer_cov_trace_pc_guard(
 
   When employing the third option, one has fine control over what mutations are done by the fuzzer, and what data has to be set manually. One could even allow the fuzzer to mutate checksum or length fields and only overriding the mutated values to the correct ones selectively. This approach tests both all parts of the input parser and still is able to reach the business logic of the TCP stack.
 
-  The drawback of this last option is that it requires the analyst to specify the structure of the network packet. For common protocols such as TCP/IP, there are libraries available, which significantly reduce the required programming overhead, but one still needs to decide which parts of the message should be randomly mutated and which parts should be fixed.
+  The drawback of this last option is that it requires the analyst to specify the structure of the network packet. For common protocols such as TCP/IP, there are libraries available, which significantly reduce the required programming overhead, but one still needs to decide which parts of the message should be randomly mutated and which parts should be fixed. The engineering overhead when using LibAFL has been significantly reduced with \code{MappingMutators}, which are discussed in Section~\ref{Implementation:ImprovementsToLibAFL}, along with other improvements to LibAFL implemented during this project.
 
   \subsection{State Inference Heuristic}
+  \label{Implementation:StateInference}
 
   Section~\ref{Background:TcpIsStateful} discussed how the internal state of the TCP stack is a major challenge for fuzzers. One promising response to mitigate this issue is adding state feedback to the fuzzer. This allows the fuzzer to take into consideration the differences in the state of the PUT's TCP state machine when assessing whether a new trace is worth adding to the corpus.
 
+  To implement this, I mapped incoming messages to a state, represented by a number: Any valid TCP packet is mapped to the \code{u8} representation of its header flag, other packets are mapped to different states representing the alternate packet content (such as packets not containing layer 4 data), or the error source (such as packets with an invalid IP header).
+
+  These state numbers are then used to index into a memory slice representing the TCP state space, similar to how coverage is catalogued in a coverage map. Compared to coverage measurements, one needs to consider that simply counting how often each state is measured, incentives the fuzzer to produce increasingly long traces, even if no new actual state is reached. \proj therefore only marks which states were measured at any point during evaluation of a trace. This further improves reliability, with a similar argument as is presented in Section~\ref{Implementation:SanCov} .
+
+  Section~\ref{Implementation:NetworkInterface} discussed that Zephyr emits certain ICMPv6 packets at unpredictable intervals. To optimize the reliability of state-based feedback, ICMPv6 packets are therefore not mapped to the state memory map.
+
+  Two ways of calculating state-feedback were implemented in \proj :
+  \begin{enumerate}
+    \item Messages emitted from Zephyr are simply mapped to states, and stored in the state memory map.
+    \item Alternatively, the state transition is calculated from an incoming packet and the previous packet, to incentivize the fuzzer to explore all possible state transitions. To implement this, the fuzzer keeps track of previously sent and received messages — since state transitions depend on packets sent both from the client and the server, both directions are taken into account. On each incoming message, \proj calculates a unique identifier for the measured state transition between the current and last packet, which is then used to index the state map. State transitions are only measured for each incoming message, because otherwise, when the fuzzer finds a way to send at least two arbitrary packets without a response, the entire state space would be accounted from fuzzer-emitted packets, while the TCP stack of Zephyr remains in the same state.
+  \end{enumerate}
+
+  \subsection{During an Execution: Implementation Details}
+
+  This section describes the details of the implementation of the different parts of \proj. For additional details refer to the architecture diagram of LibAFL in Figure~\ref{fig:LibAFLArchitecture} and their paper\cite{LibAFL} for the interaction of the different structures.
+
+\end{multicols}
+\vspace{1em}
+\begin{figure}[b]
+  \centering
+  \includegraphics[width=\textwidth]{assets/LibAFLArchitecture.png}
+  \caption{LibAFL's Architecture\cite{LibAFL}}
+  \label{fig:LibAFLArchitecture}
+\end{figure}
+\begin{multicols}{2}
+
+  \subsubsection{Central Infrastructure}
+
+  The fuzzer relies on \code{CentralizedLauncher} to spawn a number of clients, each with their own data structures and each spawning their own instance of Zephyr. \code{CentralizedLauncher} synchronizes inputs that were added to one of the client's corpi to minimize re-execution and combine the progress made across all clients. Two clients are spawned with a different configuration compared to all other clients: The central synchronizing client does not receive a mutational stage, its only job is synchronization. The last client receives additional feedbacks with constant interestingness-values, which report data about the host system, such as available memory, to the monitor.
+
+  Communication between clients is done through Low Level Message Passing (LLMP), a shared memory-based message passing system provided by LibAFL. The absence of a requirement for kernel-based synchronization primitives such as locks allows \proj to effectively scale across thousands of clients.
+
+  Central monitoring is configurable in \proj, but defaults to an \code{OnDiskJsonAggregateMonitor}, which will aggregate data across all clients and log it to a machine-readable file. Additionally, a graphical status-board, and a monitor relaying both a client's logs and aggregated logs to the global logging system are provided. LibAFL further supports more complex logging to different data types or other systems such as a prometheus instance, all of which are easily integrated into \proj.
+
+  \subsubsection{Client Setup and Operation}
+
+  Each client at the start of the fuzzing process initializes its own data structures. These include the following:
   \begin{itemize}
-    \item Based on responses by server
-    \item Parsing, different non-TCP responses classified
-    \item On TCP packets, the header flags are used
+    \item A shared memory section to measure coverage in.
+    \item A \code{ConstMapObserver} to handle the coverage, wrapped in a \code{HitcountsMapObserver} for binning postprocessing.
+    \item A \code{TimeObserver} to measure execution time.
+    \item A \code{PacketObserver} responsible for keeping track of transmitted packets, mapping states to a coverage-like map (refer to Section~\ref{Implementation:StateInference}), and providing all required information for the current execution, such as a has of all packets for deduplication of inputs, the states and state-map for debugging purposes, and a base64-encoded packet capture (pcap) representation of the interaction, to allow graphical tools like Wireshark to be used in debugging.
+    \item A \code{StdMapObserver} based on the map from the \code{PacketObserver}, to handle state coverage information.
+    \item Combined feedback containing
+          \begin{itemize}
+            \item \code{MaxMapFeedback}s for both code and state coverage information, the only feedbacks contributing values towards the interesting-ness of the current input.
+            \item A \code{PacketMetadataFeedback} attaching the metadata provided by the \code{PacketObserver} to the testcase containing the input.
+            \item A \code{TimeFeedback}, \code{InputLenFeedback}, and for the last client host system measuring feedbacks, attaching the execution time, input length, and other information to the metadata.
+          \end{itemize}
+    \item Two corpi: a \code{InMemoryCorpus} for the working corpus of the fuzzer, and an \code{OnDiskCorpus} for all solutions found.
+    \item A \code{StdState} containing a random number generator and the corpi.
+    \item The appropriate mutators depending on the selected representation of the trace (see Section~\ref{Implementation:InputModelling}).
+    \item \code{StdMOptMutator} is used as a mutator scheduler — it implements the algorithm first presented in MOpt\cite{MOpt}.
+    \item A \code{StdMutationalStage} wrapping the mutator scheduler and handling the main mutation workflow.
+    \item A \code{StdWeightedScheduler} as an input selection scheduler with a power schedule, as known from AFL++\cite{AFLPlusPlus}.
+    \item A \code{ReplayingFuzzer} handling the main fuzzing loop — see below for more details.
+    \item A custom \code{Executor} implementing all the necessary logic to interact with Zephyr — see below for more details.
   \end{itemize}
 
+  After setting up all the required data structures, the corpus is filled based on a recorded trace (refer to Section~\ref{Implementation:Seeding}). Because some of the trace subsets result in the same state coverage feedback, but they are still all useful to the fuzzer as starting points from mutations, they are force-generated and afterwards individually evaluated to enhance them with metadata.
 
+  Finally, the main fuzzing loop is started. Here, the fuzzer repeatedly calls the scheduler to select the next corpus entry to be mutated. Then, it calls the mutational stage to repeatedly select how many and which mutations to execute on a copy of the input and calls the evaluator in the fuzzer.
 
-  \subsection{Implementation Details}
-  \subsubsection{LibAFL Structure}
-  \begin{itemize}
-    \item Input Scheduling Algorithm
-    \item Mutation Scheduling Algorithm
-    \item Oracles
-    \item MapObserver/-Feedback
-    \item Executor
-  \end{itemize}
+  Here, the additional logic in \code{ReplayingFuzzer} compared to LibAFL's built-in \code{StdFuzzer} comes into play. It sets up a map to store execution results in, and then repeatedly does the following:
+  \begin{enumerate}
+    \item First, the observers are reset.
+    \item Then, the executor is called to execute the input.
+    \item After that, postprocessing on observers is done.
+    \item The results from the observer, whose results are to be made more reliable, are hashed and combined with the exit status of the execution.
+    \item This combination is then used to index into the execution count map, where \code{ReplayingFuzzer} counts how often each result is measured.
+    \item If a crash is observed, the fuzzer returns early from the loop to ensure all crashes are caught by the fuzzer.
+    \item If the results observed the most have been measured more than a configurable number more often than any other, and the latest execution results in the most common measurements, the execution results are assumed to be "correct" and returned.
+    \item If, after a configurable maximum number of executions, the fuzzer is still unable to get a decisive winner, the evaluation is short-circuited and the input is not added to either corpus.
+    \item Finally, the measured ratios are stored and reported to the monitor.
+  \end{enumerate}
+
+  The executor receives the input, and starts its operation by marking the new run in the fuzzing client state and resetting the packet transmission buffers. Then, Zephyr is spawned in a subprocess with the shared memory information for the coverage and network buffer as environment variables. \proj then waits for Zephyr to startup, while logging packets emitted by it, and only responding to those that require a manual response (see Section~\ref{Implementation:NetworkInterface}).
+
+  After this interaction, the trace is converted to a list of raw byte vectors to be transmitted to Zephyr. One by one, the packets are sent to Zephyr and added to the \code{PacketObserver}. In between sending packets, \proj waits for Zephyr to respond. Since there is currently no way to wait until Zephyr is done with processing an incoming packet, \proj waits until a set time has expired since the last outgoing or incoming packet. During this phase, manual responses are emitted if appropriate. After the last packet was sent and no packet was received for the set timeout, the subprocess running Zephyr is shut down and checked for a crash to be reported.
 
   \subsubsection{Helper Functionality}
-  \begin{itemize}
-    \item Manual connection
-    \item PCAP
-    \item Scripting
-  \end{itemize}
+  \proj contains additional logic helpful during development and triage of found issues. First, an implementation of the shared memory-based ethernet driver for the userland network client \code{smoltcp} allows manual interaction with Zephyr through shared memory. Additionally, a set of postprocessing scripts are available, which, among other things, extract pcap files from the corpus, and produce plots as shown in Section~\ref{Results}.
 
   \subsection{LibAFL}
+  \label{Implementation:ImprovementsToLibAFL}
 
-  To further simplify this task, I have contributed a range of improvements to LibAFL:
+  During this project, I have contributed a range of improvements implemented for \proj as generic version to LibAFL. These include:
   \begin{itemize}
-    \item \code{MappingMutator}s are essential for this approach — they allow mapping mutators targeting a certain type to those where the initial input type can be extracted from using custom logic. One such example would be applying \code{havoc_mutations} to the payload field of the TCP packet.\footnote{Currently, only non-crossover mutations are supported in \proj, because of a limitation in LibAFL with using nested \code{MappingMutator}s. This is required to map mutators from their raw target type (such as byte array or number) to the parsed input structure and then again to the composite type such as \code{ReplayingStatefulInput}.}
+    \item \code{MappingMutator}s are essential for any project using compound input types — they allow mapping mutators targeting a certain type to those where the initial input type can be extracted from using custom logic. One such example would be applying \code{havoc_mutations} to the payload field of the TCP packet.\footnote{Currently, only non-crossover mutations are supported in \proj, because of a limitation in LibAFL with using nested \code{MappingMutator}s. This is required to map mutators from their raw target type (such as byte array or number) to the parsed input structure and then again to the composite type such as \code{ReplayingStatefulInput}.}
+    \item \code{CentralizedLauncherBuilder::overcommit} and \code{LauncherBuilder::overcommit} allows users to launch multiple fuzzing clients per CPU core. This is useful in specific projects like \proj, where an individual client does not fully load a CPU core because of wait states necessary for e.g. synchronization.
     \item \code{int_mutators} include the applicable mutators from \code{havoc_mutations} targeting numeric types.
     \item \code{BoolMutator}s flip boolean values.
     \item \code{ValueInput}, an improvement to how inputs encapsuling a simple data type are implemented.
     \item A set of macros for mapping and combining mutator lists and their types.
+    \item Improved flexibility for certain schedulers to work on any observer.
+    \item \code{OnDiskJsonAggregateMonitor} logs the data aggregated across all fuzzing clients at a certain interval to a file containing machine-readable data.
+    \item Several bugfixes related to \code{MultipartInput}.
+    \item Several general architectural and clean-code improvements.
+    \item \code{StdFuzzer::with_bloom_input_filter}, an improvement to \code{StdFuzzer} which uses a probabilistic filter to reduce repeated execution of the same input\footnote{Not currently used in \proj.}
   \end{itemize}
 
-  \subsubsection{Overcommit}
-  \subsubsection{Numeric Mutators}
-  \subsubsection{Mapping Mutators}
-  \subsubsection{TODO: others}
-
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%% Results %%%%%%%%%%%%%%%%%%%%%
+  %%% Evalutation & Results %%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  \section{Results}
+  \section{Evaluation and Results}
   \label{Results}
 
   \subsection{Consistency, Timeouts, and Real Time}
+
+  \begin{itemize}
+    \item \code{StdScheduler} instead of \code{StdWeightedScheduler}, to test across a wider range of inputs
+    \item \code{ReplayingFuzzer} with a minimal count difference of 100, a minimum factor difference of 1.5, and maximal 1500 tries
+  \end{itemize}
 
   \subsection{Throughput and Overcommit}
 
@@ -488,11 +563,9 @@ void __sanitizer_cov_trace_pc_guard(
 \end{multicols}
 \vspace{30px}
 \begin{center}
-  \begin{minipage}{0.70\textwidth}
+  \begin{minipage}{0.75\textwidth}
     \centering
-    In the interest of open science, the source code of this project is publicly available and released under an open-source license. During development, thousands of lines of code have been introduced to multiple upstream projects.
-
-    All artifacts produced for this project are available at
+    In the interest of open science, the source code and all artifacts produced during this project are publicly available and released under an open-source license. During development, thousands of lines of code have been introduced to multiple upstream projects. All artifacts produced for this project are available at
 
     \vspace{8px}
 
