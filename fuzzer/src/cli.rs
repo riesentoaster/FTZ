@@ -61,6 +61,15 @@ pub struct Cli {
     #[arg(
         short,
         long,
+        help = "Set the Zephyr real-time ratio, 2 means zephyr runs twice as fast as real-time",
+        name = "ZEPHYR_RT_RATIO",
+        default_value = "1"
+    )]
+    zephyr_rt_ratio: f64,
+
+    #[arg(
+        short,
+        long,
         help = "Redirect Zephyr's output to this file",
         name = "ZEPHYR_OUT_DIR"
     )]
@@ -136,6 +145,10 @@ impl Cli {
 
     pub fn load_only(&self) -> bool {
         self.load_only
+    }
+
+    pub fn zephyr_rt_ratio(&self) -> f64 {
+        self.zephyr_rt_ratio
     }
 
     pub fn zephyr_out_dir(&self) -> Option<&PathBuf> {

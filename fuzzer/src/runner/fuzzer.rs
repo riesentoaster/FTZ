@@ -203,6 +203,7 @@ pub fn fuzz() {
                 opt.zephyr_out_dir().map(PathBuf::to_owned),
                 NETWORK_SHMEM_SIZE,
                 client_description.id(),
+                opt.zephyr_rt_ratio(),
             )?;
 
             if state.must_load_initial_inputs() {

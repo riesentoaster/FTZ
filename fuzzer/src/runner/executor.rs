@@ -41,10 +41,12 @@ pub struct ZepyhrExecutor<'a, S, OT, II> {
     envs: Vec<(String, String)>,
     zephyr_exec_path: PathBuf,
     zephyr_out_path: Option<PathBuf>,
+    zephyr_rt_ratio: f64,
     phantom: PhantomData<(S, II)>,
 }
 
 impl<'a, S, OT, II> ZepyhrExecutor<'a, S, OT, II> {
+    #[expect(clippy::too_many_arguments)]
     pub fn new(
         observers: &'a mut OT,
         packet_observer: Handle<PacketObserver>,
@@ -53,6 +55,7 @@ impl<'a, S, OT, II> ZepyhrExecutor<'a, S, OT, II> {
         zephyr_out_path: Option<PathBuf>,
         network_buf_size: usize,
         id: usize,
+        zephyr_rt_ratio: f64,
     ) -> Result<Self, Error> {
         let device = ShmemNetworkDevice::new(network_buf_size, id)?;
         let net_shmem_desc = device.get_shmem_description();
@@ -74,6 +77,7 @@ impl<'a, S, OT, II> ZepyhrExecutor<'a, S, OT, II> {
             envs,
             zephyr_exec_path,
             zephyr_out_path,
+            zephyr_rt_ratio,
             phantom: PhantomData,
         })
     }
@@ -130,6 +134,7 @@ where
             .stdout(stdout)
             .stderr(stderr)
             .envs(self.envs.clone())
+            .arg(format!("--rt-ratio={}", self.zephyr_rt_ratio))
             .spawn()
             .map_err(|e| Error::unknown(format!("Could not start command: {e:?}")))?;
 
