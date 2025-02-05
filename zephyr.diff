@@ -550,44 +550,6 @@ index 33729784d8e..028d82dbc8e 100644
 +
 +CONFIG_ASAN=y
 \ No newline at end of file
-diff --git a/samples/net/sockets/echo/src/socket_echo.c b/samples/net/sockets/echo/src/socket_echo.c
-index c8aad2bb068..5257815a153 100644
---- a/samples/net/sockets/echo/src/socket_echo.c
-+++ b/samples/net/sockets/echo/src/socket_echo.c
-@@ -19,6 +19,7 @@
- 
- #include <zephyr/net/socket.h>
- #include <zephyr/kernel.h>
-+#include "coverage.h"
- 
- #endif
- 
-@@ -70,6 +71,8 @@ int main(void)
- 
- 	printf("Single-threaded TCP echo server waits for a connection on "
- 	       "port %d...\n", BIND_PORT);
-+	k_sleep(K_MSEC(200)); // wait until all setup code is done, to ensure consistent coverage
-+	reset_coverage();
- 
- 	while (1) {
- 		struct sockaddr_in6 client_addr;
-@@ -99,6 +102,16 @@ int main(void)
- 				break;
- 			}
- 
-+			printf("Received TCP payload (%d bytes): ", len);
-+			for (int i = 0; i < len; i++) {
-+				printf("%c", buf[i]);  // Print as ASCII
-+			}
-+			printf(" with bytes: ");
-+			for (int i = 0; i < len; i++) {
-+				printf("%02x ", (unsigned char) buf[i]);  // Print as hex
-+			}
-+			printf("\n");
-+
- 			p = buf;
- 			do {
- 				out_len = send(client, p, len, 0);
 diff --git a/scripts/native_simulator/common/src/coverage.c b/scripts/native_simulator/common/src/coverage.c
 new file mode 100644
 index 00000000000..61989947260
