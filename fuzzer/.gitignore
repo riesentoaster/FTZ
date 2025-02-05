@@ -12,3 +12,4 @@ profile.json
 cov-*
 /duplicate*
 .DS_Store
+__pycache__
