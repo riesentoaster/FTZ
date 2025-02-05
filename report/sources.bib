@@ -590,6 +590,40 @@
   urldate = {2025-01-30}
 }
 
+@online{libFuzzer,
+  title   = {libFuzzer — a library for coverage-guided fuzz testing},
+  year    = {n.d.},
+  url     = {https://llvm.org/docs/LibFuzzer.html},
+  urldate = {2025-02-05}
+}
+
+@online{syskaller,
+  title   = {syzkaller - kernel fuzzer},
+  year    = {n.d.},
+  url     = {https://github.com/google/syzkaller},
+  urldate = {2025-02-05}
+}
+
+@online{hongfuzz,
+  title   = {Honggfuzz},
+  year    = {n.d.},
+  url     = {https://honggfuzz.dev},
+  urldate = {2025-02-05}
+}
+@online{OSSFuzz,
+  title   = {OSS-Fuzz},
+  year    = {n.d.},
+  url     = {https://google.github.io/oss-fuzz/},
+  urldate = {2025-02-05}
+}
+
+@online{AFL,
+  title   = {American Fuzzy Lop — Whitepaper},
+  year    = {n.d.},
+  url     = {https://lcamtuf.coredump.cx/afl/technical_details.txt},
+  urldate = {2025-02-05}
+}
+
 @inproceedings{AFLPlusPlus,
   author    = {Andrea Fioraldi and Dominik Maier and Heiko Ei{\ss}feldt and Marc Heuse},
   title     = {{AFL++} : Combining Incremental Steps of Fuzzing Research},
@@ -622,4 +656,74 @@
   month     = {11},
   location  = {Los Angeles, U.S.A.},
   publisher = {ACM}
+}
+
+@unpublished{EVA,
+  author = {Valentin Huber},
+  title  = {{Challenges and Mitigation Strategies in Symbolic Execution Based Fuzzing Through the Lens of Survey Papers}},
+  year   = {2023},
+  month  = {12},
+  day    = {15},
+  url    = {https://github.com/riesentoaster/review-symbolic-execution-in-fuzzing/releases/download/v1.0/Huber-Valentin-Challenges-and-Mitigation-Strategies-in-Symbolic-Execution-Based-Fuzzing-Through-the-Lens-of-Survey-Papers.pdf}
+}
+
+@unpublished{VT1,
+  author = {Valentin Huber},
+  title  = {{Running KLEE on GNU coreutils}},
+  year   = {2024},
+  month  = {02},
+  day    = {13},
+  url    = {https://github.com/riesentoaster/klee-coreutils-experiments/releases/download/v1.0/Huber-Valentin-running-KLEE-on-coreutils-report.pdf}
+}
+
+@unpublished{VT2,
+  author = {Valentin Huber},
+  title  = {{Differential Fuzzing on coreutils Using LibAFL}},
+  year   = {2024},
+  month  = {06},
+  day    = {25},
+  url    = {https://github.com/riesentoaster/coreutils-differential-fuzzing/releases/download/project-submission/Huber-Valentin_Differential-Fuzzing-on-coreutils-Using-LibAFL.pdf}
+}
+
+@article{FuzzingTheStateOfTheArt,
+  title   = {Fuzzing: The State of the Art},
+  journal = {DSTO Defence Science and Technology Organisation},
+  author  = {Richard McNally and Kenneth Kwok-Hei Yiu and Duncan A. Grove and Damien Gerhardy},
+  year    = {2012},
+  month   = {02}
+}
+
+@online{ClusterFuzzLite,
+  title   = {ClusterFuzzLite: Continuous fuzzing for all},
+  year    = {2021},
+  month   = {11},
+  day     = {11},
+  url     = {https://security.googleblog.com/2021/11/clusterfuzzlite-continuous-fuzzing-for.html},
+  urldate = {2025-02-05},
+  author  = {Methman, Jonathan}
+}
+
+@inproceedings{SAGE,
+  author   = {Godefroid, Patrice and Levin, Michael Y. and Molnar, David},
+  title    = {Automated Whitebox Fuzz Testing},
+  year     = {2008},
+  month    = {11},
+  abstract = {Fuzz testing is an effective technique for finding security vulnerabilities in software. Traditionally, fuzz testing tools apply random mutations to well-formed inputs of a program and test the resulting values. We present an alternative whitebox fuzz testing approach inspired by recent advances in symbolic execution and dynamic test generation. Our approach records an actual run of the program under test on a well-formed input, symbolically evaluates the recorded trace, and gathers constraints on inputs capturing how the program uses these. The collected constraints are then negated one by one and solved with a constraint solver, producing new inputs that exercise different control paths in the program. This process is repeated with the help of a code-coverage maximizing heuristic designed to find defects as fast as possible. We have implemented this algorithm in SAGE (Scalable, Automated, Guided Execution), a new tool employing x86 instruction-level tracing and emulation for whitebox fuzzing of arbitrary file-reading Windows applications. We describe key optimizations needed to make dynamic test generation scale to large input files and long execution traces with hundreds of millions of instructions. We then present detailed experiments with several Windows applications. Notably, without any format-specific knowledge, SAGE detects the MS07-017 ANI vulnerability, which was missed by extensive blackbox fuzzing and static analysis tools. Furthermore, while still in an early stage of development, SAGE has already discovered 30+ new bugs in large shipped Windows applications including image processors, media players, and file decoders. Several of these bugs are potentially exploitable memory access violations.},
+  url      = {https://www.microsoft.com/en-us/research/publication/automated-whitebox-fuzz-testing/}
+}
+
+@mastersthesis{KernelVsUserNetworking,
+  author = {Cai, Peter},
+  title  = {Kernel- vs. User-Level Networking: A Ballad of Interrupts and How to Mitigate Them},
+  school = {University of Waterloo},
+  year   = {2023}
+}
+
+@inproceedings{REDQUEEN,
+  title     = {REDQUEEN: Fuzzing with Input-to-State Correspondence.},
+  author    = {Aschermann, Cornelius and Schumilo, Sergej and Blazytko, Tim and Gawlik, Robert and Holz, Thorsten},
+  booktitle = {Proceedings of the 2016 Network and Distributed System Security Symposium (NDSS)},
+  volume    = {19},
+  pages     = {1--15},
+  year      = {2019}
 }

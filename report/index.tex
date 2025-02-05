@@ -3,10 +3,17 @@
 \usepackage{csquotes}
 \usepackage[vmargin=25mm, hmargin=20mm]{geometry}
 \usepackage{lipsum}
-\usepackage{xcolor}
+\usepackage[table]{xcolor}
 \usepackage{easy-todo}
 \usepackage{graphicx}
 \usepackage{xspace}
+\usepackage{enumerate}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{hhline}
+\usepackage{caption}
+\captionsetup[table]{hypcap=false}
+
 % \usepackage{float}
 % \usepackage{pgfplots}
 % \usepgfplotslibrary{colorbrewer}
@@ -64,7 +71,7 @@
 
 \title{%
     \vspace{50px}%
-    \Huge \proj : A Stateful Fuzzer\\for the TCP/IP Stack of the Zephyr
+    \Huge \proj : A Stateful Fuzzer for the TCP/IP Stack\\of Zephyr
     \vspace{250px}%
 }
 
@@ -82,7 +89,7 @@
 \hfuzz=50px
 \hbadness=10000
 \newcommand{\code}[2][]{\lstinline[language=#1, breaklines=false, basicstyle=\ttfamily]{#2}}
-\newcommand{\proj}{FuZetwork\xspace}
+\newcommand{\proj}{FTZ\xspace}
 \let\savedCite=\cite
 \renewcommand{\cite}{\unskip~\savedCite}
 \renewcommand{\arraystretch}{1.5} % Increase table padding
@@ -110,57 +117,39 @@
 \end{center}
 
 \clearpage\newpage
-\tableofcontents
-\vspace{30px}
-\pagenumbering{arabic}
-\clearpage\newpage
+% \clearpage\newpage
 
 \begin{multicols}{2}
+  \tableofcontents
+  % \vspace{30px}
+  \pagenumbering{arabic}
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% Introduction %%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   \section{Introduction}
+  \label{Introduction}
 
-  Zephyr is an open-source real-time operating system hosted by the Linux Foundation.\cite{ZephyrAbout} Real-time operating systems allow programers to define time constraints on their code, which are then guaranteed by the process scheduler. To do this, processes have to be verifiably complete within a constant maximal time or fail safely. This is particularly important for safety-critical systems where delays in computation can pose serious risk, such as control of a robot.\cite{RTOSWiki} Zephyr is used in a wide range of products, including large industrial equipments such as wind turbines, medtech devices such as hearing aids, laptops, embedded devices such as emergency water detectors.\cite{ZephyrUsedIn}
+  Zephyr is an open-source real-time operating system (OS) hosted by the Linux Foundation.\cite{ZephyrAbout} Real-time OSs allow programers to define time constraints on their code, which are then guaranteed by the process scheduler. To do this, processes have to be verifiably complete within a constant maximal time or fail safely. This is particularly important for safety-critical systems where delays in computation can pose serious risk, such as control of a robot.\cite{RTOSWiki} Zephyr is used in a wide range of products, including large industrial equipments such as wind turbines, medtech devices such as hearing aids, laptops, embedded devices such as emergency water detectors.\cite{ZephyrUsedIn}
 
-  Zephyr projects typically connect to other devices or the internet using one of the operating system's networking libraries, such as a custom-built TCP/IP stack. Since many of these devices need access to the internet, any defect in the network stack is comparatively likely to be remotely exploitable and thus critical. In combination with the potentially dangerous devices Zephyr runs on, this makes the correctness of these parts of Zephyr paramount.\todo{Too much opinion?}
+  Zephyr projects typically connect to other devices or the internet using one of the OS's networking libraries, such as a custom-built TCP/IP stack. Since many of these devices need access to the internet, any defect in the network stack is comparatively likely to be remotely exploitable and thus critical. In combination with the potentially dangerous devices Zephyr runs on, this makes the correctness of these parts of Zephyr paramount.\todo{Too much opinion?}
 
-  Fuzzing has been established as a widely used technique\cite{Demystifying} to find software defects by repeatedly running a certain program under test (PUT) with a wide range of inputs and observing the execution for illegal program states such as crashes. Ever since its inception in the nominal work by \citeauthor{UNIX}\cite{UNIX}, who used random data to test Unix utilities, many improvements to fuzzing have been introduced to the state of the art. Among many others (Google Scholar retrieves more than 60,000 results in a search for \textquote{fuzz testing}\cite{GoogleScholarFuzzing}) include observing the program execution to guide the fuzzer when selecting the next input to test, or improved oracles such as memory sanitizers. However, fuzzing the network stack of an operating system poses three challenges: (1) they are deeply integrated with the operating system, (2) they require highly structured input data, and (3) they have internal state. These challenges are further elaborated in Section~\ref{Background:FuzzingNetworkStacksIsHard}.
+  Fuzzing has been established as a widely used technique\cite{Demystifying} to find software defects by repeatedly running a certain program under test (PUT) with a wide range of inputs and observing the execution for illegal program states such as crashes. It has been applied to great effect: Windows requires dominant software to be fuzzed prior to release\cite{Demystifying}, and its fuzzer SAGE\cite{SAGE} \textquote{reportedly found a third of the Windows 7 bugs between 2007-2009}\cite{FuzzingTheStateOfTheArt}. Google admitted to finding 20,000 vulnerabilities in Chrome alone using fuzz testing\cite{Demystifying}, while its OSS-Fuzz program continuously fuzzing open-source software has resulted in over 6,500 vulnerabilities and 21,000 functional bugs fixed across 500 critical projects\cite{ClusterFuzzLite}.
 
-  This thesis presents \proj, a proof-of-concept fuzzer using advanced input representation and mutation techniques, stateful feedback, and approaches to effectively test an unreliably PUT targeting the TCP/IP stack of Zephyr. It is structured as follows:
+  Ever since its inception in the nominal work by \citeauthor{UNIX}\cite{UNIX}, who used random data to test Unix utilities, many improvements to fuzzing have been introduced to the state of the art. Among many others (Google Scholar retrieves more than 60,000 results in a search for \textquote{fuzz testing}\cite{GoogleScholarFuzzing}) include observing the program execution to guide the fuzzer when selecting the next input to test, or improved oracles such as memory sanitizers. Section~\ref{Background:MutationalFuzzing} provides additional background on specific fuzzing technique employed in this project called mutational fuzzing.
+
+  However, fuzzing the network stack of an operating system poses three additional challenges: (1) they are deeply integrated with the OS, (2) they require highly structured input data, and (3) they have internal state. These challenges are further elaborated in Section~\ref{Background:FuzzingNetworkStacksIsHard}.
+
+  For this thesis, I developed a proof-of-concept Fuzzer targeting the TCP/IP stack of Zephyr (\proj). \proj uses advanced input representation and mutation techniques, stateful feedback, and custom logic to effectively test an unreliably PUT. The remainder of this thesis is structured as follows:
 
   \begin{itemize}
     \item Section~\ref{Background} presents further background on fuzzing in general and targeting TCP/IP systems in particular,
     \item Section~\ref{RelatedWorks} explores related works,
     \item Section~\ref{Implementation} explains the different techniques used in \proj, along with how they were implemented,
-    \item Section~\ref{Results} presents the results achieved in this project,
+    \item Section~\ref{Results} presents the results achieved in the evaluation of \proj,
     \item Section~\ref{Discussion} discusses the implication of those results on the effectiveness of \proj, and
     \item Section~\ref{Conclusion} summarizes the findings of this thesis.
-  \end{itemize}
-
-  \subsection{Quotes, TODO: Integrate}
-
-  \textquote{The input language of a stateful system consists of two levels: (1) the language of the individual messages, which we will refer to as the message format, and (2) the language of traces, built on top of that. A description or specification of such an input language will usually come in two parts, one for each of the levels: for example, a context-free grammar for the message format and a finite state machine describing sequences of these messages. We will call the latter the state model or, if it is described as a state machine, the protocol state machine.}\cite{StatefulReview}
-
-
-  \subsubsection{TCP/IP}
-  Checksums such as in TCP/IP are challenging.\cite{StateOfTheArt} Approaches to deal with this include removing the program sections from the target program\cite{TFuzz}.
-
-  \subsection{Contributions of this Project}
-  A fuzzer that targets the TCP/IP stack of Zephyr, which
-  \begin{itemize}
-    \item employs a framework that allows running Zephyr as a native executable, removing the necessity of an emulation or translation layer,
-    \item introduces a custom ethernet driver based on shared memory to make fuzzing parallelizable and performant,
-    \item guides mutation based on coverage information and a heuristic to infer the state of the TCP state machine based on flags in the TCP header of responses from the server
-  \end{itemize}
-  This project further
-  \begin{itemize}
-    \item evaluates how different ways of using the feedback described above influence fuzzer performance,
-    \item evaluates different ways of modelling the packets passed to the fuzzer,
-    \item evaluates different approaches to mutating those, and
-    \item introduces various performance optimizations to LibAFL
   \end{itemize}
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -170,32 +159,37 @@
   \section{Background}
   \label{Background}
 
-  \subsection{Fuzzing techniques}
-  \subsubsection{Generational Fuzzing and Mutation}
-  \subsubsection{Feedback}
-  \label{Background:Feedback}
+  This section presents additional background information required to understand the remainder of this thesis.
+
+  \subsection{Mutational Fuzzing}
+
+  \label{Background:MutationalFuzzing}
+  \proj implements mutational fuzzing. This is a technique use across a wide range of influential fuzzers, such as AFL++\cite{AFLPlusPlus}, syskaller\cite{syskaller}, libFuzzer\cite{libFuzzer}, Honggfuzz\cite{hongfuzz}, or OSS-Fuzz\cite{OSSFuzz}. A mutational fuzzer maintains a corpus of inputs, first seeded at startup with a number of entries that are either generated randomly or loaded from a predefined set. The fuzzer then iteratively chooses one of the inputs in its corpus, mutates it in some way, and evaluates it in the PUT.
+
+  During the execution, mutational fuzzers observe the PUT in certain ways, such as by collecting information about which parts of the PUT's code were executed. These fuzzers are also known as greybox fuzzers — a mixture between blackbox fuzzers, which do not know anything about the internals of the PUT during the execution, and whitebox fuzzers, which further analyze the executed logic using symbolic execution or taint analysis.\cite{EVA}\todo{Can I just cite my own work here?}
+
+  The data observed during target execution is then used to decide if the current input should be added back into the corpus. The most common form of such feedback is coverage-guided fuzzing, which adds an input to the corpus if new coverage was measured in the PUT. This incentivizes the fuzzer to explore previously untested parts of the PUT.\cite{AFLPlusPlus}
 
   \subsection{Fuzzing Network Stacks Is Hard}
   \label{Background:FuzzingNetworkStacksIsHard}
 
+  As introduced in Section~\ref{Introduction}, fuzzing an operating system's network stack introduces three additional challenges.
+
   \subsubsection{Deep integration with OS}
-  \begin{itemize}
-    \item Environment/Hardware modelling necessary
-    \item Usually, whole system needs to be run, which is a performance issue
-    \item Instrumentation (Coverage, Sanitizers) is hard
-  \end{itemize}
 
-  \subsubsection{Network packets are highly structured}
+  OS' built-in network stacks are deeply integrated with other subsystems, such as the memory management subsystem for accessing the network interface card and socket buffers, the system call-based API thought the virtual filesystem. It further relies on the system's scheduler for event notifications. Extracting the network stack from the rest of the kernel to be run independently is therefore infeasible, since it would require extensive additional engineering, which is error-prone and may result in findings that do not hold on the original implementation.\cite{KernelVsUserNetworking}
+
+  To test the network stack of an operating system using a fuzzer, one therefore has to run the entire operating system, which includes a lot of logic unrelated to the network stack itself, thus introducing a significant performance penalty. This further means that any sanitizer has to be introduced into the OS' build system, which may not be possible because the additional logic may break assumptions made by the OS developers (see Section~\ref{Implementation:native_sim}). Finally, OS' kernels are by definition tightly integrated with hardware, and running an operating system therefore requires either dedicated hardware (which may be hard to observe and communicate with), or some form of hardware and environment simulation, introducing additional performance penalties.
+
+  \subsubsection{Network Packets Are Highly Structured}
   \label{Background:TcpIsStructured}
-  \begin{itemize}
-    \item Dependencies between data (length fields, checksums, etc.)
-    \item Dependencies between packages (state in TCP)
-  \end{itemize}
 
-  \subsubsection{TCP Stacks Have an Internal State}
+  Table~\ref{Table:NetworkPacket} shows the structure of a packet, as it would be used to seed \proj's corpus with. Many of the fields across all layers depend on values of other fields in their own or even other layers. Examples of these include length fields marked with green or checksums marked with blue. Checksums such as the CRC32 frame check sequence in the ethernet trailer or the 16-bit one's compliment-based checksums in the IPv4 and TCP headers are a prime example of logic fuzzers struggle to penetrate. This is because mutating one part of the data requires very specific changes to another, which is highly unlikely to happen in random mutation.\cite{StateOfTheArt} This challenge has garnered some attention from previous work, such as removing the program sections responsible for checking checksums from the target program\cite{TFuzz}, or bypassing them\cite{REDQUEEN}.
+
+  The sequence and acknowledgment numbers in the TCP header are dependent not only on the current packet, but on previously sent packets. Similarly, the TCP header flags have different meaning depending on the state of the recipient's TCP stack.
+
+  \subsubsection{TCP Stacks Have Internal State}
   \label{Background:TcpIsStateful}
-
-  \citeauthor{StatefulReview} introduce a taxonomy of stateful fuzzing in which they define a stateful system as \textquote{a system that takes a sequence of messages as input, producing outputs along the way, and where each input may result in an internal state change}\cite{StatefulReview}. TCP stacks are such a stateful system. This thesis will further follow the naming convention outlined in their same work, reserving \textquote{the term message or input message for the individual input that the System Under Test (SUT) consumes at each step and the term trace for a sequence of such messages that make up the entire input.}\cite{StatefulReview}
 
   The fact that TCP is a stateful protocol increases the state space to be explored by the fuzzer dramatically, and the fuzzer may find it hard to reach 'deeper' states.\cite{StatefulReview} Indeed, stateful targets are listed among the remaining challenges in fuzzing by \citeauthor{ChallengesAndReflections} in their review paper.\cite{ChallengesAndReflections}
 
@@ -205,7 +199,54 @@
     \item The trace to be mutated needs to contain all previous interaction with the PUT, which put it into a certain state, in addition to the last packet the fuzzer attempts to trigger an error with. Section~\ref{Implementation:InputModelling} presents different approaches evaluated in this project.
   \end{enumerate}
 
+  {
+  \vspace{1em}
+  \centering\small
+  \begin{tabular}{|l|l|l|}
+    \hline
+    \textbf{Layer}                & \textbf{Field}                             & \textbf{Size}               \\\hline
+    \multirow{4}{4em}{Ethernet}
+                                  & Destination MAC                            & 6 bytes                     \\\hhline{|~|-|-|}
+                                  & Source MAC                                 & 6 bytes                     \\\hhline{|~|-|-|}
+                                  & \cellcolor{gray!20}802.1Q VLAN Tag         & \cellcolor{gray!20}4 bytes  \\\hhline{|~|-|-|}
+                                  & EtherType                                  & 2 bytes                     \\\hhline{|-|-|-|}
+    \multirow{12}{4em}{IPv4}      & Version                                    & 4 bit                       \\\hhline{|~|-|-|}
+                                  & \cellcolor{green!10}Internet Header Length & \cellcolor{green!10}4 bit   \\\hhline{|~|-|-|}
+                                  & DSCP \& ECN                                & 1 byte                      \\\hhline{|~|-|-|}
+                                  & \cellcolor{green!10}Total Length           & \cellcolor{green!10}2 bytes \\\hhline{|~|-|-|}
+                                  & Identification                             & 2 bytes                     \\\hhline{|~|-|-|}
+                                  & Flags \& Fragment Offset                   & 2 bytes                     \\\hhline{|~|-|-|}
+                                  & Time To Live                               & 1 byte                      \\\hhline{|~|-|-|}
+                                  & Protocol                                   & 1 byte                      \\\hhline{|~|-|-|}
+                                  & \cellcolor{blue!10}Header Checksum         & \cellcolor{blue!10}2 bytes  \\\hhline{|~|-|-|}
+                                  & Source IP                                  & 4 bytes                     \\\hhline{|~|-|-|}
+                                  & Destination IP                             & 4 bytes                     \\\hhline{|~|-|-|}
+                                  & \cellcolor{gray!20}Options                 & \cellcolor{gray!20}variable \\\hhline{|-|-|-|}
+    \multirow{9}{4em}{TCP}        & Source Port                                & 2 bytes                     \\\hhline{|~|-|-|}
+                                  & Destination Port                           & 2 bytes                     \\\hhline{|~|-|-|}
+                                  & \cellcolor{green!10}Sequence Number        & \cellcolor{green!10}4 bytes \\\hhline{|~|-|-|}
+                                  & \cellcolor{green!10}Acknowledgment Number  & \cellcolor{green!10}4 bytes \\\hhline{|~|-|-|}
+                                  & Data Offset \& Reserved                    & 1 byte                      \\\hhline{|~|-|-|}
+                                  & Flags                                      & 1 byte                      \\\hhline{|~|-|-|}
+                                  & Window                                     & 2 bytes                     \\\hhline{|~|-|-|}
+                                  & \cellcolor{blue!10}Checksum                & \cellcolor{blue!10}2 bytes  \\\hhline{|~|-|-|}
+                                  & Urgent Pointer                             & 2 bytes                     \\\hhline{|~|-|-|}
+                                  & \cellcolor{gray!20}Options                 & \cellcolor{gray!20}variable \\\hhline{|-|-|-|}
+    \multicolumn{2}{|l|}{Payload} & variable                                                                 \\\hhline{|-|-|-|}
+    Ethernet                      & \cellcolor{blue!10}Frame Check Sequence    & \cellcolor{blue!10}4 bytes  \\\hline
+  \end{tabular}
+  \captionof{table}{Structure of a network package as used during seeding of \proj. Gray fields are optional, green fields length-dependent, and blue fields checksums.}
+  % \todo{move table}
+  \label{Table:NetworkPacket}
+  \vspace{1em}
+  }
+
+  \citeauthor{StatefulReview} introduce a taxonomy of stateful fuzzing in which they define a stateful system as \textquote{a system that takes a sequence of messages as input, producing outputs along the way, and where each input may result in an internal state change}\cite{StatefulReview}. TCP stacks are such a stateful system. This thesis will follow the naming convention outlined in their same work, reserving \textquote{the term message or input message for the individual input that the System Under Test (SUT) consumes at each step and the term trace for a sequence of such messages that make up the entire input.}\cite{StatefulReview}
+
   \subsection{LibAFL}
+
+  LibAFL is a fuzzing library written in Rust by the maintainers of AFL++. They have observed how many different fuzzers implement similar patterns and data structures, or even fork an existing fuzzer, but only change one specific part of the fuzzer. However,  their improvements rarely get implemented in the upstream fuzzer. This leaves the fuzzing community with a list of provably effective algorithms implemented in incompatible projects. LibAFL provides generic interfaces for common functionality such as schedulers or mutators and default basic default implementation of each.
+  Additionally, many advanced algorithms such as the mutation scheduler from MOpt\cite{MOpt}, the weighted input scheduler from AFL++\cite{AFLPlusPlus}, Hitcount coverage postprocessing from AFL\cite{AFL}, or execution-dependent mutation from REDQUEEN\cite{REDQUEEN} have been added. In\citedate{LibAFL}, when LibAFL was released, improvements from 20 prior works were implemented and evaluated individually and in combination. Since then, additional algorithms and improvements have been introduced to make LibAFL a powerful and flexible base for \proj. Section~\ref{Implementation} presents the details of how LibAFL is used in \proj.\cite{LibAFL}
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% Related Works%%%%%%%%%%%%%%%%
@@ -282,6 +323,7 @@
   \label{Implementation}
 
   \subsection{native\_sim}
+  \label{Implementation:native_sim}
   During the compilation of Zephyr, a target board has to be set. One such target provided by the Zephyr project is called \code{native_sim}, with which the entire operating system and all user code can be compiled into a Linux executable based on a POSIX architecture. It is based on NativeSimulator, and provides a wrapper around Zephyr with a main function, a scheduler mapping from the host's scheduler to Zephyr's scheduler, hardware models, interrupt controllers, and basic CPU functionality like threading and start/sleep/interrupt calls.\cite{NativeSimulator}. Its integration with Zephyr provides certain functionality to use the host operating system's functionality such as ethernet, UART, or display drivers, among others.\cite{ZephyrNativeSim}
 
   The ability to run Zephyr as a native executable allows the use of native debugging tools such as \code{gdb} and makes computationally expensive translation layers such as QEMU unnecessary, thus increasing the efficiency of the target. This is especially relevant for a fuzzer since it runs the target millions of times.
@@ -295,7 +337,7 @@
   \subsection{Coverage Information}
   \label{Implementation:SanCov}
 
-  To guide the fuzzer and measure its progress, \proj measures the executed code under each trace (refer to Section~\ref{Background:Feedback} for more details on coverage feedback). A method commonly used and well-supported by LibAFL to do this is using \code{clang}'s SanitizerCoverage compiler pass. It instruments the code with two functions:
+  To guide the fuzzer and measure its progress, \proj measures the executed code under each trace (refer to Section~\ref{Background:MutationalFuzzing} for more details on coverage feedback). A method commonly used and well-supported by LibAFL to do this is using \code{clang}'s SanitizerCoverage compiler pass. It instruments the code with two functions:
 
   \begin{lstlisting}[
     language=C++,
@@ -323,7 +365,7 @@ void __sanitizer_cov_trace_pc_guard(
 
   To increase performance and be more error-resistant, the coverage is directly written into shared memory created by the fuzzer. During the initialization, the shared memory is opened based on information passed through environment variables. Additionally, the information needed to map from the SanitizerCoverage-reserved memory section to the shared memory section is stored. On each edge, the appropriate address in the shared memory section is calculated and marked as visited. While there is a slight performance-penalty on each edge due to the address mapping, this approach does not require any post-processing on the client's part, such as copying the collected information back to the fuzzer. This is particularly important in cases of crashes in the PUT, since any post-processing function would no longer be called.
 
-  \subsection{Network Interfaces}
+  \subsection{Exchanging Network Packets with Zephyr}
   \label{Implementation:NetworkInterface}
 
   Zephyr's \code{native_sim} already provides an ethernet driver for a TAP interface over a zeth interface.\cite{ZephyrNativeSim} However, for this project, I opted to build an alternative solution to circumvent the additional limitations of the host kernel interaction. Instead, I built a custom ethernet driver based that transmits network packets between the fuzzer and target using shared memory.
@@ -367,7 +409,7 @@ void __sanitizer_cov_trace_pc_guard(
 
   When employing the third option, one has fine control over what mutations are done by the fuzzer, and what data has to be set manually. One could even allow the fuzzer to mutate checksum or length fields and only overriding the mutated values to the correct ones selectively. This approach tests both all parts of the input parser and still is able to reach the business logic of the TCP stack.
 
-  The drawback of this last option is that it requires the analyst to specify the structure of the network packet. For common protocols such as TCP/IP, there are libraries available, which significantly reduce the required programming overhead, but one still needs to decide which parts of the message should be randomly mutated and which parts should be fixed. The engineering overhead when using LibAFL has been significantly reduced with \code{MappingMutators}, which are discussed in Section~\ref{Implementation:ImprovementsToLibAFL}, along with other improvements to LibAFL implemented during this project.
+  The drawback of this last option is that it requires the analyst to specify the structure of the network packet. For common protocols such as TCP/IP, there are libraries available, which significantly reduce the required programming overhead, but one still needs to decide which parts of the message should be randomly mutated and which parts should be fixed. The engineering overhead when using LibAFL has been significantly reduced with \code{MappingMutators}, which are discussed in Section~\ref{Implementation:ContributionsToLibAFL}, along with other improvements to LibAFL implemented during this project.
 
   \subsection{State Inference Heuristic}
   \label{Implementation:StateInference}
@@ -388,11 +430,11 @@ void __sanitizer_cov_trace_pc_guard(
 
   \subsection{During an Execution: Implementation Details}
 
-  This section describes the details of the implementation of the different parts of \proj. For additional details refer to the architecture diagram of LibAFL in Figure~\ref{fig:LibAFLArchitecture} and their paper\cite{LibAFL} for the interaction of the different structures.
+  This section describes the details of the implementation of the different parts of \proj. For additional details refer to the architecture diagram of LibAFL in Figure~\ref{fig:LibAFLArchitecture} and their paper\cite{LibAFL} for the interaction of the different structures.\todo{Move figure}
 
 \end{multicols}
 \vspace{1em}
-\begin{figure}[b]
+\begin{figure}[h]
   \centering
   \includegraphics[width=\textwidth]{assets/LibAFLArchitecture.png}
   \caption{LibAFL's Architecture\cite{LibAFL}}
@@ -440,13 +482,16 @@ void __sanitizer_cov_trace_pc_guard(
   Here, the additional logic in \code{ReplayingFuzzer} compared to LibAFL's built-in \code{StdFuzzer} comes into play. It sets up a map to store execution results in, and then repeatedly does the following:
   \begin{enumerate}
     \item First, the observers are reset.
-    \item Then, the executor is called to execute the input.
+    \item Then, the input is passed to the executor to be run.
     \item After that, postprocessing on observers is done.
     \item The results from the observer, whose results are to be made more reliable, are hashed and combined with the exit status of the execution.
     \item This combination is then used to index into the execution count map, where \code{ReplayingFuzzer} counts how often each result is measured.
-    \item If a crash is observed, the fuzzer returns early from the loop to ensure all crashes are caught by the fuzzer.
-    \item If the results observed the most have been measured more than a configurable number more often than any other, and the latest execution results in the most common measurements, the execution results are assumed to be "correct" and returned.
-    \item If, after a configurable maximum number of executions, the fuzzer is still unable to get a decisive winner, the evaluation is short-circuited and the input is not added to either corpus.
+    \item Then, the measurements are evaluated as follows:
+          \begin{enumerate}[a.]
+            \item If a crash is observed, the fuzzer returns early from the loop to ensure all crashes are caught by the fuzzer.
+            \item If the results observed the most have been measured more than a configurable number more often than any other, and the latest execution results in the most common measurements, the execution results are assumed to be "correct" and returned.
+            \item If, after a configurable maximum number of executions, the fuzzer is still unable to get a decisive winner, the evaluation is short-circuited and the input is not added to either corpus.
+          \end{enumerate}
     \item Finally, the measured ratios are stored and reported to the monitor.
   \end{enumerate}
 
@@ -457,8 +502,8 @@ void __sanitizer_cov_trace_pc_guard(
   \subsubsection{Helper Functionality}
   \proj contains additional logic helpful during development and triage of found issues. First, an implementation of the shared memory-based ethernet driver for the userland network client \code{smoltcp} allows manual interaction with Zephyr through shared memory. Additionally, a set of postprocessing scripts are available, which, among other things, extract pcap files from the corpus, and produce plots as shown in Section~\ref{Results}.
 
-  \subsection{LibAFL}
-  \label{Implementation:ImprovementsToLibAFL}
+  \subsection{Contributions to LibAFL}
+  \label{Implementation:ContributionsToLibAFL}
 
   During this project, I have contributed a range of improvements implemented for \proj as generic version to LibAFL. These include:
   \begin{itemize}
@@ -476,7 +521,7 @@ void __sanitizer_cov_trace_pc_guard(
   \end{itemize}
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%% Evalutation & Results %%%%%%%
+  %%% Evaluation & Results %%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   \section{Evaluation and Results}

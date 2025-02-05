@@ -11,25 +11,18 @@ TEX_FILE="${MAIN_FILE}.tex"
 
 run_pdflatex() {
     echo "Running pdflatex..."
-    PDFLATEX_OUTPUT=$(
-        pdflatex \
+    pdflatex \
         -synctex=1 \
         -interaction=nonstopmode \
         -file-line-error \
         -recorder \
         -output-directory="${OUTPUT_DIR}" \
         "${TEX_FILE}"
-    )
-    if [ $? -ne 0 ]; then
-        echo "Error in pdflatex:"
-        echo $PDFLATEX_OUTPUT | grep "LaTeX Error" -A 10
-        exit 1
-    fi
 }
 
 run_biber() {
     echo "Running biber..."
-    biber "${OUTPUT_DIR}/${MAIN_FILE}" -q
+    biber "${OUTPUT_DIR}/${MAIN_FILE}"
 }
 
 clean_aux() {
@@ -44,10 +37,34 @@ clean_aux() {
 }
 
 mkdir -p "${OUTPUT_DIR}"
-run_pdflatex # First pdflatex run
-run_biber # Run biber to process bibliography
-run_pdflatex # Second pdflatex run to incorporate bibliography
-run_pdflatex # Third pdflatex run to resolve references
+
+# Run each step and capture its exit status
+echo "Starting LaTeX build process..."
+
+if ! run_pdflatex; then
+    echo "Error during first pdflatex run"
+    cat "${OUTPUT_DIR}/${MAIN_FILE}.log"
+    exit 1
+fi
+
+if ! run_biber; then
+    echo "Error during biber run"
+    cat "${OUTPUT_DIR}/${MAIN_FILE}.blg"
+    exit 1
+fi
+
+if ! run_pdflatex; then
+    echo "Error during second pdflatex run"
+    cat "${OUTPUT_DIR}/${MAIN_FILE}.log"
+    exit 1
+fi
+
+if ! run_pdflatex; then
+    echo "Error during third pdflatex run"
+    cat "${OUTPUT_DIR}/${MAIN_FILE}.log"
+    exit 1
+fi
+
 echo "Build completed successfully!"
 clean_aux
 git add "${OUTPUT_DIR}/index.pdf"
