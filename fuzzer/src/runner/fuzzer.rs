@@ -29,8 +29,9 @@ use libafl::{
     fuzzer::{replaying::ReplayingFuzzer, Evaluator as _, Fuzzer as _},
     generators::Generator as _,
     monitors::OnDiskJsonAggregateMonitor,
-    mutators::StdMOptMutator,
-    observers::{CanTrack, ConstMapObserver, HitcountsMapObserver, StdMapObserver, TimeObserver},
+    mutators::{NopMutator, StdMOptMutator},
+    observers::{ConstMapObserver, HitcountsMapObserver, StdMapObserver, TimeObserver},
+    schedulers::StdScheduler,
     stages::StdMutationalStage,
     state::{HasCorpus as _, StdState},
     Error,
@@ -82,7 +83,7 @@ pub fn fuzz() {
                 )
             };
 
-            let cov_observer = HitcountsMapObserver::new(cov_raw_observer).track_indices();
+            let cov_observer = HitcountsMapObserver::new(cov_raw_observer);
             let time_observer = TimeObserver::new("time-observer");
 
             let mut packet_observer = PacketObserver::new(opt.state_diff());
@@ -123,8 +124,8 @@ pub fn fuzz() {
                 PacketMetadataFeedback::new(packet_observer_handle.clone()),
                 InputLenFeedback,
                 // only log coverage
-                feedback_and!(cov_feedback, ConstFeedback::new(false)),
-                state_feedback
+                feedback_and!(state_feedback, ConstFeedback::new(false)),
+                cov_feedback,
             );
 
             let mut objective = feedback_or_fast!(
@@ -132,7 +133,8 @@ pub fn fuzz() {
                 CrashLoggingFeedback::new(),
             );
 
-            let solutions = OnDiskCorpus::new(opt.solutions_dir())?;
+            let solutions = OnDiskCorpus::<ZephyrInputType>::new(opt.solutions_dir())?;
+            // let corpus = OnDiskCorpus::new(opt.corpus_dir())?;
 
             let corpus = InMemoryCorpus::new();
 
@@ -147,13 +149,22 @@ pub fn fuzz() {
                 .expect("Could not create state")
             });
 
-            let mutations = ZephyrInputType::mutators().merge(
-                tuple_list!(
-                    FixedZephyrInputPartGenerator::new(outgoing_tcp_packets(), true),
-                    RandomTcpZephyrInputPartGenerator
-                )
-                .map(ToAppendingMutatorWrapper),
-            );
+            let appending_muators = tuple_list!(
+                FixedZephyrInputPartGenerator::new(outgoing_tcp_packets(), true),
+                RandomTcpZephyrInputPartGenerator
+            )
+            .map(ToAppendingMutatorWrapper);
+
+            let mutations = ZephyrInputType::non_appending_mutators().merge(appending_muators);
+            // let mutations = ZephyrInputType::mutators().merge(
+            //     tuple_list!(
+            //         FixedZephyrInputPartGenerator::new(outgoing_tcp_packets(), true),
+            //         RandomTcpZephyrInputPartGenerator
+            //     )
+            //     .map(ToAppendingMutatorWrapper),
+            // );
+
+            // let mutations = tuple_list!(NopMutator::new(libafl::mutators::MutationResult::Mutated));
 
             let mutator =
                 StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);
@@ -166,23 +177,23 @@ pub fn fuzz() {
             #[cfg(not(feature = "coverage_stability"))]
             let mut stages = tuple_list!(mutator);
 
-            #[cfg(not(feature = "coverage_stability"))]
-            let scheduler = StdWeightedScheduler::with_schedule(
-                &mut state,
-                &state_map_observer,
-                Some(PowerSchedule::fast()),
-            );
+            // #[cfg(not(feature = "coverage_stability"))]
+            // let scheduler = StdWeightedScheduler::with_schedule(
+            //     &mut state,
+            //     &state_map_observer,
+            //     Some(PowerSchedule::fast()),
+            // );
 
             // StdWeightedScheduler is not compatible with CalibrationStage
             #[cfg(feature = "coverage_stability")]
             let scheduler = StdScheduler::new();
-
+            let scheduler = StdScheduler::new();
             let mut fuzzer = ReplayingFuzzer::new(
-                3,
-                2.1,
-                10,
+                100,
+                1.5,
+                1500,
                 true,
-                state_map_observer.handle(),
+                cov_observer.handle(),
                 scheduler,
                 feedback,
                 objective,
@@ -299,7 +310,7 @@ pub fn fuzz() {
         .overcommit(overcommit)
         .stdout_file(opt.stdout().and_then(|e| e.as_os_str().to_str()))
         .stderr_file(opt.stderr().and_then(|e| e.as_os_str().to_str()))
-        .launch_delay(89)
+        .launch_delay(243)
         .build()
         .launch()
     {

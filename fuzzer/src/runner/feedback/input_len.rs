@@ -3,23 +3,11 @@ use std::{borrow::Cow, marker::PhantomData};
 use libafl::{
     events::{Event, EventFirer},
     feedbacks::{Feedback, StateInitializer},
-    inputs::MultipartInput,
     monitors::{AggregatorOps, UserStats, UserStatsValue},
 };
 use libafl_bolts::Named;
 
-pub trait HasLen {
-    fn len(&self) -> usize;
-    fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-}
-
-impl<I> HasLen for MultipartInput<I> {
-    fn len(&self) -> usize {
-        self.parts().len()
-    }
-}
+pub use libafl::fuzzer::replaying::HasLen;
 
 pub struct InputLenFeedback;
 

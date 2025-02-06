@@ -32,7 +32,7 @@ pub const SETUP_TIMEOUT: Duration = Duration::from_millis(300 + 200); // time wa
 pub const INTER_SEND_WAIT: Duration = Duration::from_millis(200);
 
 #[cfg(not(feature = "coverage_stability"))]
-pub const SETUP_TIMEOUT: Duration = Duration::from_millis(200); // time waited until client attempts to send data
+pub const SETUP_TIMEOUT: Duration = Duration::from_millis(300); // time waited until client attempts to send data
 #[cfg(not(feature = "coverage_stability"))]
 pub const INTER_SEND_WAIT: Duration = Duration::from_millis(100);
 

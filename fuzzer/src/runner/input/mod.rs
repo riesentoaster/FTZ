@@ -15,7 +15,7 @@ use libafl::{
 };
 
 use libafl_bolts::{
-    map_tuple_list_type, merge_tuple_list_type,
+    map_tuple_list_type,
     tuples::{tuple_list, tuple_list_type, Map, Merge},
 };
 use serde::Serialize;
@@ -93,8 +93,8 @@ where
     Vec<u8>: From<I>,
     I: ZephyrInputPart,
 {
-    type Mutators;
-    fn mutators() -> Self::Mutators;
+    type NonAppendingMutators;
+    fn non_appending_mutators() -> Self::NonAppendingMutators;
     fn to_packets(&self) -> Vec<Vec<u8>>;
     fn parse(input: &[Vec<u8>]) -> Self;
     fn fixed_generator(fixed: Vec<Vec<u8>>, restart: bool) -> FixedZephyrInputGenerator<Self>
@@ -110,9 +110,9 @@ where
     I: ZephyrInputPart + TryFrom<Vec<u8>> + Clone,
     Vec<u8>: From<I>,
 {
-    type Mutators = I::Mutators;
+    type NonAppendingMutators = I::Mutators;
 
-    fn mutators() -> Self::Mutators {
+    fn non_appending_mutators() -> Self::NonAppendingMutators {
         I::mutators()
     }
 
@@ -145,15 +145,10 @@ where
         Merge<map_tuple_list_type!(I::Generators, ToAppendingMutatorWrapper)>,
     Vec<u8>: From<I>,
 {
-    type Mutators = merge_tuple_list_type!(
-        map_tuple_list_type!(I::Mutators, ToReplayingStatefulMutator),
-        map_tuple_list_type!(I::Generators, ToAppendingMutatorWrapper)
-    );
+    type NonAppendingMutators = map_tuple_list_type!(I::Mutators, ToReplayingStatefulMutator);
 
-    fn mutators() -> Self::Mutators {
-        I::mutators()
-            .map(ToReplayingStatefulMutator)
-            .merge(I::generator().map(ToAppendingMutatorWrapper))
+    fn non_appending_mutators() -> Self::NonAppendingMutators {
+        I::mutators().map(ToReplayingStatefulMutator)
     }
 
     fn parse(input: &[Vec<u8>]) -> Self {
