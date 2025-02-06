@@ -24,7 +24,7 @@
   url    = {https://github.com/riesentoaster/coreutils-differential-fuzzing/blob/main/report/out/index.pdf}
 }
 
-@inproceedings{StatefulGreybox,
+@inproceedings{SGFuzz,
   author    = {Jinsheng Ba and Marcel B{\"o}hme and Zahra Mirzamomen and Abhik Roychoudhury},
   title     = {Stateful Greybox Fuzzing},
   booktitle = {31st USENIX Security Symposium (USENIX Security 22)},
@@ -368,7 +368,7 @@
   abstract = {The widespread application of industrial control systems has driven the development of industrial control protocols. However, traditional industrial control protocols suffer from issues such as a lack of security mechanisms, resulting in the existence of many dangerous vulnerabilities in industrial control systems. Fuzzing, as a commonly used technique for vulnerability discovery, has its own set of issues, including low testing efficiency, lack of adaptive capability, and high repetition rate of generated test cases. To solve the existing problems, we propose a low-repetition rate Modbus TCP fuzzing method based on Transformer and Mutation Target Adaptation. Firstly, the syntactic features of the industrial control protocol Modbus TCP are learned by using a simplified Transformer model. The model effectively reduces the training and generation time without decreasing the acceptance rate of test cases; Secondly, in the test case generation phase, in order to improve the mutation efficiency of test cases, the byte mutation probability adaptive strategy is introduced to replace the greedy strategy of Transformer. This strategy can dynamically adjust the mutation probability of each byte in the newly generated test cases, so as to improve the abnormal rate and reduce the repetition rate of test cases; Finally, the mutation results are selected by the mutation byte adaptive selection strategy, which not only improves the mutation adaptivity, but also maintains the diversity of mutations. The experimental results indicate that, compared to traditional methods, our approach has improved acceptance rates and abnormal rates by at least 10\%. In comparison to AI-based fuzzing methods, our approach maintains a similar acceptance rate while increasing the abnormal rate by 3\% to 25\%.}
 }
 
-@inproceedings{StateMachine,
+@inproceedings{ZFuzz,
   author    = {Zhao, Pengyu and Jiang, Sikang and Liu, Shengli and Liu, Long},
   booktitle = {2024 4th International Conference on Electronic Information Engineering and Computer Science (EIECS)},
   title     = {Fuzz Testing of Protocols Based on Protocol Process State Machines},
@@ -726,4 +726,41 @@
   volume    = {19},
   pages     = {1--15},
   year      = {2019}
+}
+
+@online{Renode,
+  title   = {Fuzzing Zephyr with AFL and Renode},
+  year    = {2023},
+  month   = {10},
+  day     = {10},
+  url     = {https://www.zephyrproject.org/fuzzing-zephyr-with-afl-and-renode/},
+  urldate = {2025-02-06}
+}
+
+@online{ZephyrFuzzing,
+  title   = {Zephyr Documentation — Fuzzing},
+  year    = {n.d.},
+  url     = {https://docs.zephyrproject.org/latest/samples/subsys/debug/fuzz/README.html},
+  urldate = {2025-02-06}
+}
+
+@online{ZephyrFuzzingSample,
+  title   = {Zephyr Sample Project — Fuzz},
+  year    = {n.d.},
+  url     = {https://github.com/zephyrproject-rtos/zephyr/tree/main/samples/subsys/debug/fuzz},
+  urldate = {2025-02-06}
+}
+
+@online{ZephyrFuzzBuzz,
+  title   = {FuzzBuzz — Zephyr's Fuzzing Example},
+  year    = {n.d.},
+  url     = {https://github.com/fuzzbuzz/fuzz-zephyr},
+  urldate = {2025-02-06}
+}
+
+@article{ZephyrFuzzCI,
+  title   = {A Practical Guide to Fuzz Testing Embedded Software in a CI Pipeline},
+  author  = {Dennis Kengo Oka and Tommi Makila},
+  journal = {FISITA World Congress 2021 - Technical Programme},
+  year    = {2021}
 }
