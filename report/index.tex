@@ -131,7 +131,7 @@
   \section{Introduction}
   \label{Introduction}
 
-  Zephyr is an open-source real-time operating system (OS) hosted by the Linux Foundation.\cite{ZephyrAbout} Real-time OSs allow programers to define time constraints on their code, which are then guaranteed by the process scheduler. To do this, processes have to be verifiably complete within a constant maximal time or fail safely. This is particularly important for safety-critical systems where delays in computation can pose serious risk, such as control of a robot.\cite{RTOSWiki} Zephyr is used in a wide range of products, including large industrial equipments such as wind turbines, medtech devices such as hearing aids, laptops, embedded devices such as emergency water detectors.\cite{ZephyrUsedIn}
+  Zephyr is an open-source real-time operating system (OS) hosted by the Linux Foundation.\cite{ZephyrAbout} Real-time OSs allow programers to define time constraints on their code, which are then guaranteed by the process scheduler. To do this, processes have to be verifiably complete within a constant maximal time or fail safely. This is particularly important for safety-critical systems where delays in computation can pose serious risk, such as control of a robot.\cite{RTOSWiki} Zephyr is used in a wide range of products, including large industrial equipments such as wind turbines, medtech devices such as hearing aids, laptops, or embedded devices such as emergency water detectors.\cite{ZephyrUsedIn}
 
   Zephyr projects typically connect to other devices or the internet using one of the OS's networking libraries, such as a custom-built TCP/IP stack. Since many of these devices need access to the internet, any defect in the network stack is comparatively likely to be remotely exploitable and thus critical. In combination with the potentially dangerous devices Zephyr runs on, this makes the correctness of these parts of Zephyr paramount.\todo{Too much opinion?}
 
@@ -141,7 +141,7 @@
 
   However, fuzzing the network stack of an operating system poses three additional challenges: (1) they are deeply integrated with the OS, (2) they require highly structured input data, and (3) they have internal state. These challenges are further elaborated in Section~\ref{Background:FuzzingNetworkStacksIsHard}.
 
-  For this thesis, I developed a proof-of-concept Fuzzer targeting the TCP/IP stack of Zephyr (\proj). \proj uses advanced input representation and mutation techniques, stateful feedback, and custom logic to effectively test an unreliably PUT. The remainder of this thesis is structured as follows:
+  For this thesis, I developed a proof-of-concept Fuzzer targeting the TCP/IP stack of Zephyr (\proj), built on top of the fuzzing library LibAFL. \proj uses advanced input representation and mutation techniques, stateful feedback, and reliability-enhancing logic to effectively test Zephyr. The remainder of this thesis is structured as follows:
 
   \begin{itemize}
     \item Section~\ref{Background} presents further background on fuzzing in general and targeting TCP/IP systems in particular,
@@ -281,21 +281,21 @@
 
   \paragraph{Manual Annotation}
 
-  Ijon\cite{Ijon} is an extension to AFL and requires analysts to manually annotate the PUT's code. Ijon introduces logic at the annotated location to add entries to an AFL-style map, in either a tainting or counting mode. It can further directly include state information such as variable values in how the edge coverage is calculated, and store the max value a certain variable reaches during execution for the fuzzer to then maximize back in the fuzzer. It is evaluated by comparing its ability to solve mazes and Super Mario Bros levels, work with complex file formats, and hashing constraints. However, the only target resembling a protocol is the CROMU\_00020 target of the Darpa Cyber Grand Challenge, which requires inferring the state of the target. There, it showed improved performance compared to unmodified AFL.
+  Ijon\cite{Ijon} is an extension to AFL and requires analysts to manually annotate the PUT's code. Ijon introduces logic at the annotated location to add entries to an AFL-style map, in either a tainting or counting mode. It can further directly include state information such as variable values in how the edge coverage is calculated, and store the maximum value a certain variable reaches during execution for the fuzzer to then maximize back in the fuzzer. However, the only target Ijon is evaluated on and resembling a protocol is the CROMU\_00020 target of the Darpa Cyber Grand Challenge, which requires inferring the state of the target to successfully trigger the error. There, Ijon showed improved performance compared to unmodified AFL.
 
   \paragraph{Automatic Annotation}
 
   Manual annotations of state variables is tedious, error-prone, and requires a decent understanding of the PUT internal structure by the analyst. Because of this, many projects attempt to use a heuristic to automatically find variable or memory locations representing the current state of the PUT and passing this information back to the fuzzer.
 
-  SandPuppy\cite{SandPuppy} performs an initial run of the PUT, capturing variable-value traces, and uses a heuristic based on this information and static analysis of the source code of the PUT to identify state-representing variables. These are then instrumented with a Ijon-like feedback mechanism. This process is repeated at certain intervals during the fuzzing campaign.Compared to Ijon, minor improvements were achieved, such as additional solved Super Mario Bros levels. It further found 10 out of 11 bugs in PcapPlusPlus, relying on its ability to penetrate to deep program states such as those depending on specific UDP source and destination ports.
-
   \citeauthor{SGFuzz} rely on the intuition that variables representing the state of their target are often assigned from named constants in an enum struct. At all locations updating these variables, instrumentation is injected to pass the information back to the fuzzer.\cite{SGFuzz}
+
+  SandPuppy\cite{SandPuppy} performs an initial run of the PUT, capturing variable-value traces, and uses a heuristic based on this information and static analysis of the source code of the PUT to identify state-representing variables. These are then instrumented with a Ijon-like feedback mechanism. This process is repeated at certain intervals during the fuzzing campaign.Compared to Ijon, minor improvements were achieved, such as additional solved Super Mario Bros levels. It further shows that state feedback generally improves achieved coverage compared to pure coverage-guided fuzzers such as AFL, AFL++, or REDQUEEN, and even compared to the heuristic to identify state-representing variables in SGFuzz.
 
   StateFuzz\cite{StateFuzz} identifies state-representing memory by looking for variables that are long-lived, updatable by the user, and either change the control flow or are used to index into memory. StateFuzz identified a four digit number of state variables in the Linux and Qualcomm MSM kernel used in Google's Pixel line of smartphone.
 
   \paragraph{Other Greybox Heuristics}
 
-  StateAFL\cite{StateAFL} relies on compile-time probes observing memory allocation and I/O operations to identify state-representing memory locations. State inference is then done based on fuzzy hashing of long-lived memory areas. However, it targets servers of session layer (OSI layer 5) such as FTP, DNS, SMTP, or SSH. And while all tested protocols use either TCP or UDP for their layer 4, it is not the main focus of their project. Their approach proves effective, even compared to other state-aware fuzzers such as AFLNet.
+  StateAFL\cite{StateAFL} relies on compile-time probes observing memory allocation and I/O operations to identify state-representing memory locations. State inference is then done based on fuzzy hashing of long-lived memory areas. Their approach proves effective, even compared to other state-aware fuzzers such as AFLNet.
 
   TCP-Fuzz\cite{TCPFuzz} and Ankou\cite{Ankou} take the combination of executed branches as a heuristic for the state of the target. Because this approach leads to a number of states much larger than the states of the abstract state machine powering the server (TCP-Fuzz found 47.9K state transitions in the TCP stack mTCP), Ankou further reduces this complexity for a custom adaptive fitness function.
 
@@ -303,9 +303,7 @@
   \todo{write something here}
   \paragraph{Feedback}
 
-  In mutational fuzzers, state information can be used in several ways to decide whether an input should be considered interesting and thus added to the corpus. Examples of this includes StateFuzz\cite{StateFuzz}, which considers inputs interesting that trigger additional, previously unchanged states, state values representing a new value range, or new extreme values. Value ranges are binned values of states determined to be congruent using symbolic execution. AFLNet\cite{AFLNET} allows users to specify that not only states but also state-transitions should be use to determine the interesting-ness of an input.
-
-  DDFuzz\cite{DDFuzz} uses a similar approach, but does not directly rely on state information and instead uses execution of new inter-data dependency relationships as feedback.
+  In mutational fuzzers, state information can be used in several ways to decide whether an input should be considered interesting and thus added to the corpus. Examples of this includes StateFuzz\cite{StateFuzz}, which considers inputs interesting that trigger additional, previously unchanged states, state values representing a new value range, or new extreme values. Value ranges are binned values of states determined to be congruent using symbolic execution. AFLNet\cite{AFLNET} allows users to specify that not only states but also state-transitions should be use to determine the interesting-ness of an input. DDFuzz\cite{DDFuzz} uses a similar approach, but does not directly rely on state information and instead uses execution of new inter-data dependency relationships as feedback.
 
   \paragraph{Scheduling}
 
@@ -317,28 +315,29 @@
 
   \subsubsection{Limitations of Existing Protocol Fuzzers in Relation to \proj}
 
-  While all of the projects presented above introduce provably effective approaches to increase a fuzzer's performance on their targets by using state feedback, only \todo{which} have the same target as \proj: a TCP/IP stack.
+  While all of the projects presented above introduce provably effective approaches to increase a fuzzer's performance on their targets by using state feedback, only TCP-Fuzz\cite{TCPFuzz} has the same target as \proj: TCP/IP stacks.
 
-  Others target FTP \cite{AFLNET} or RTSP\cite{AFLNET} servers, SCADA systems\cite{EPF}
+  Others target BitTorrent\cite{Ankou}, DNS\cite{StateAFL}, FTP \cite{AFLNET, FitM, StateAFL, Autofuzz,ZFuzz}, HTTP2\cite{SGFuzz}, Modbus-TCP\cite{ModbusTCP,ModbusTCP2, GANFuzz, MTA, AnotherModbusTCP}, MSNIM\cite{ModelBased}, RTSP and other media streaming protocols\cite{AFLNET, SGFuzz}, SMTP\cite{StateAFL}, SSH\cite{StateAFL}, or SSL/TLS\cite{SGFuzz,ZFuzz,DDFuzz} libraries, or SCADA systems\cite{EPF}. TCP/IP is used by some of these fuzzers to facilitate communication between the fuzzer and PUT, but not evaluated independently. To compare the effectiveness of improvements introduced by a certain fuzzer, some are further evaluated against mazes\cite{Ijon, SandPuppy}, levels of the game Super Mario Bros\cite{Ijon, SandPuppy}, or file formats with complex data-interdependencies\cite{Ijon, SandPuppy, DDFuzz, Ankou}.
 
-  Thus, comparisons are impossible without reimplementing the logic of either related work for \proj's targets, or the other way around. Additionally, such changes to related works would also need to include the custom logic to exchange packets with the PUT introduced in \proj.
+  Thus, comparisons are impossible without reimplementing the logic of either related work for \proj's targets, or the other way around. Additionally, such changes to related works would also need to include the custom logic to exchange packets with the PUT introduced in \proj — this also applies to TCP-Fuzz.
 
   \subsection{Input Modelling and Targeted Specific Mutation}
 
-  \begin{itemize}
-    \item \citetitle{EPF}\cite{EPF}: Target SCADA, uses population-based simulated annealing to schedule which packet type to add/mutate next in conjunction with coverage feedback. Requires Scapy-compatible implementation of packet types to ensure packet structure.
-    \item TCP-Fuzz: input: syscalls + packets, complex mutators including intelligent dependencies between the current and all previous packets and syscalls in the input,
-    \item GANFuzz\cite{GANFuzz}: Learn GAN to generate next inputs
-    \item     Autofuzz\cite{Autofuzz}: learn packet syntax using a bioinformatics technique. Fuzz server and client.
+  Section~\ref{Background:TcpIsStructured} introduced how mutation on inputs that have high data interdependence such as length fields or checksums is one of the core challenges for mutational fuzzers targeting logic processing such inputs. While most protocol fuzzers rely on random mutation, certain works have proposed improvements to better mitigate this issue.
+
+  EPF\cite{EPF} uses population-based simulated annealing to schedule which packet type to add or mutate next in conjunction with coverage feedback. It requires Scapy-compatible implementation of packet types to be fuzzed to ensure packet structure. TCP-Fuzz models the inputs to the TCP/IP stacks tested as a list of system calls and packets, and mutates these lists while ensuring certain constraints between input parts, such as \code{socket}, \code{bind}, \code{listen} and \code{accept} being always called in order if a connection is in a certain state. However, TCP-Fuzz randomly selects which part of the input is mutated next. Since \proj employs a similar technique, it includes the major downside of this approach: the structure of the packets and constraints to be ensured after mutation have to be specified manually.
+
+  Alternatively, approaches such as GANFuzz\cite{GANFuzz} or Autofuzz\cite{Autofuzz} attempt to automatically learn the structure of the inputs based on generative adversarial networks\cite{GANFuzz} or bioinformatics techniques\cite{Autofuzz}.
+
+  \subsection{Machine-in-the-Middle}
+  As opposed to other works, FitM\cite{FitM} and Autofuzz\cite{Autofuzz} attempt to fuzz both the server and client implementations of a protocol library through machine-in-the-middle mutation, while relying
 
 
-  \end{itemize}
+  % continue here
 
-  \subsection{Snapshotting}
   \begin{itemize}
     \item FitM
     \item Autofuzz\cite{Autofuzz}: Man-in-the-middle, Fuzz server and client
-
   \end{itemize}
 
   \subsection{Protocols Targeting TCP Stacks}
