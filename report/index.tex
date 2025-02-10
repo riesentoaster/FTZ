@@ -1,3 +1,5 @@
+% !TeX TXS-program:compile = txs:///pdflatex/[--shell-escape]
+
 \documentclass{article}
 \usepackage[hidelinks]{hyperref}
 \usepackage{csquotes}
@@ -13,6 +15,7 @@
 \usepackage{hhline}
 \usepackage{caption}
 \captionsetup[table]{hypcap=false}
+\captionsetup[figure]{hypcap=false}
 
 % \usepackage{float}
 % \usepackage{pgfplots}
@@ -94,6 +97,27 @@
 \let\savedCite=\cite
 \renewcommand{\cite}{\unskip~\savedCite}
 \renewcommand{\arraystretch}{1.5} % Increase table padding
+
+% \newcommand{\customfigure}[3]{%
+%   {%
+%     \vspace{1em}%
+%     \centering%
+%     \includegraphics[width=1.1\columnwidth]{assets/#1}%
+%     \captionof{figure}{#2}%
+%     \label{fig:#3}%
+%     \vspace{1em}%
+%   }%
+% }
+
+\newcommand{\customfigure}[3]{%
+  \vspace{1em}%
+  \noindent\begin{minipage}{\columnwidth}%
+    \makebox[\columnwidth]{\includegraphics[width=1.2\columnwidth]{assets/#1}}%
+    \captionof{figure}{#2}%
+    \label{fig:#3}%
+  \end{minipage}%
+  \vspace{1em}%
+}
 
 
 \begin{document}
@@ -456,8 +480,8 @@ void __sanitizer_cov_trace_pc_guard(
 
   Two ways of calculating state-feedback were implemented in \proj :
   \begin{enumerate}
-    \item Messages emitted from Zephyr are simply mapped to states, and stored in the state memory map.
-    \item Alternatively, the state transition is calculated from an incoming packet and the previous packet, to incentivize the fuzzer to explore all possible state transitions. To implement this, the fuzzer keeps track of previously sent and received messages — since state transitions depend on packets sent both from the client and the server, both directions are taken into account. On each incoming message, \proj calculates a unique identifier for the measured state transition between the current and last packet, which is then used to index the state map. State transitions are only measured for each incoming message, because otherwise, when the fuzzer finds a way to send at least two arbitrary packets without a response, the entire state space would be accounted from fuzzer-emitted packets, while the TCP stack of Zephyr remains in the same state.
+    \item Messages emitted from Zephyr are simply mapped to states, and stored in the state memory map. This mode will be called state feedback.
+    \item Alternatively, the state transition is calculated from an incoming packet and the previous packet, to incentivize the fuzzer to explore all possible state transitions. To implement this, the fuzzer keeps track of previously sent and received messages — since state transitions depend on packets sent both from the client and the server, both directions are taken into account. On each incoming message, \proj calculates a unique identifier for the measured state transition between the current and last packet, which is then used to index the state map. State transitions are only measured for each incoming message, because otherwise, when the fuzzer finds a way to send at least two arbitrary packets without a response, the entire state space would be accounted from fuzzer-emitted packets, while the TCP stack of Zephyr remains in the same state. Using the state transitions as feedback will be labeled as using state-diff feedback.
   \end{enumerate}
 
   \subsection{During an Execution: Implementation Details}
@@ -516,7 +540,7 @@ void __sanitizer_cov_trace_pc_guard(
     \item First, the observers are reset.
     \item Then, the input is passed to the executor to be run.
     \item After that, postprocessing on observers is done.
-    \item The results from the observer, whose results are to be made more reliable, are hashed and combined with the exit status of the execution.
+    \item The results from the observer(s), whose results are to be made more reliable, are hashed and combined with the exit status of the execution.
     \item This combination is then used to index into the execution count map, where \code{ReplayingFuzzer} counts how often each result is measured.
     \item Then, the measurements are evaluated as follows:
           \begin{enumerate}[a.]
@@ -530,6 +554,8 @@ void __sanitizer_cov_trace_pc_guard(
   The executor receives the input, and starts its operation by marking the new run in the fuzzing client state and resetting the packet transmission buffers. Then, Zephyr is spawned in a subprocess with the shared memory information for the coverage and network buffer as environment variables. \proj then waits for Zephyr to startup, while logging packets emitted by it, and only responding to those that require a manual response (see Section~\ref{Implementation:NetworkInterface}).
 
   After this interaction, the trace is converted to a list of raw byte vectors to be transmitted to Zephyr. One by one, the packets are sent to Zephyr and added to the \code{PacketObserver}. In between sending packets, \proj waits for Zephyr to respond. Since there is currently no way to wait until Zephyr is done with processing an incoming packet, \proj waits until a set time has expired since the last outgoing or incoming packet. During this phase, manual responses are emitted if appropriate. After the last packet was sent and no packet was received for the set timeout, the subprocess running Zephyr is shut down and checked for a crash to be reported.
+
+  There exists a balance between the inter-packet wait time and Zephyr's \code{--rt-ratio} value (see Section~\ref{Implementation:native_sim}) to maximize Zephyr's consistency. If Zephyr is run too quickly, and the inter-packet wait time is set too long, the connection times out before the second packet is sent. In the opposite case, Zephyr may not be done processing a packet before the fuzzer attempts to send the next packet. Initial experiments showed the sweet spot to be at a \code{--rt-ratio} of 1 (thus running Zephyr according to the host's real-time) and an inter-packet wait time of 100ms, interrupted 5 times to check for incoming packets.
 
   \subsubsection{Helper Functionality}
   \proj contains additional logic helpful during development and triage of found issues. First, an implementation of the shared memory-based ethernet driver for the userland network client \code{smoltcp} allows manual interaction with Zephyr through shared memory. Additionally, a set of postprocessing scripts are available, which, among other things, extract pcap files from the corpus, and produce plots as shown in Section~\ref{Results}.
@@ -559,12 +585,20 @@ void __sanitizer_cov_trace_pc_guard(
   \section{Evaluation and Results}
   \label{Results}
 
-  \subsection{Consistency, Timeouts, and Real Time}
+  \proj was evaluated along multiple axis, starting with experiments on the consistency of the target, and then evaluating the effectiveness of the different improvements implemented in \proj.
 
-  \begin{itemize}
-    \item \code{StdScheduler} instead of \code{StdWeightedScheduler}, to test across a wider range of inputs
-    \item \code{ReplayingFuzzer} with a minimal count difference of 100, a minimum factor difference of 1.5, and maximal 1500 tries
-  \end{itemize}
+  All experiments were performed on a 64-core AMD EPYC-Milan machine, using the configuration and parameters described in Section~\ref{Implementation} unless indicated otherwise.
+
+  \subsection{Consistency, Timeouts, and Real Time}
+  To evaluate the consistency of the PUT, I changed \proj to use \code{StdScheduler}, which selects inputs from the corpus at random, to generate a wider range of inputs. I further set up \code{ReplayingFuzzer} to evaluate input traces until the most common appears at least 100 times and a factor of 1.5 more often than any other input, up to 1500 executions per input.
+
+  When \proj is setup to use both coverage and state-diff feedback, and requiring inputs to be consistent in both their coverage and state measurements, the results in Figure~\ref{fig:both-inter} are measured. The results for runs checking coverage and state-diff feedback exclusively can be found in Figures~\ref{fig:cov-inter} and~\ref{fig:state-diff-inter}. All figures show the average stability measured across inputs of a certain trace length. The evaluations were run across 64 cores, with 10 clients per core, for 24 hours and approximately 40 million target executions on individual feedbacks, and for 48 hours for the combined feedback.
+
+  \customfigure{consistency/both-inter.png}{Average stability of both feedbacks across trace lengths}{both-inter}
+  \customfigure{consistency/cov-inter.png}{Average stability of coverage feedback across trace lengths}{cov-inter}
+  \customfigure{consistency/state-diff-inter.png}{Average stability of state-diff feedback across trace lengths}{state-diff-inter}
+
+
 
   \subsection{Throughput and Overcommit}
 
