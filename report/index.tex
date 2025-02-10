@@ -81,6 +81,7 @@
     \small and \href{https://www.zhaw.ch/en/engineering/institutes-centres/init/}{Institute of Computer Science at ZHAW}\\%
     \small \href{mailto://contact@valentinhuber.me}{contact@valentinhuber.me}%
     \vspace{10px}
+    \todo{fix title page}
 }
 
 \date{\today}
@@ -249,7 +250,7 @@
   Additionally, many advanced algorithms such as the mutation scheduler from MOpt\cite{MOpt}, the weighted input scheduler from AFL++\cite{AFLPlusPlus}, Hitcount coverage postprocessing from AFL\cite{AFL}, or execution-dependent mutation from REDQUEEN\cite{REDQUEEN} have been added. In\citedate{LibAFL}, when LibAFL was released, improvements from 20 prior works were implemented and evaluated individually and in combination. Since then, additional algorithms and improvements have been introduced to make LibAFL a powerful and flexible base for \proj. Section~\ref{Implementation} presents the details of how LibAFL is used in \proj.\cite{LibAFL}
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%% Related Works%%%%%%%%%%%%%%%%
+  %%% Related Works %%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   \section{Related Works}
@@ -271,9 +272,11 @@
 
   \subsection{Stateful Protocol Fuzzing}
 
-  The wider field of protocol fuzzing has received considerable attention. I have selected a set of works deemed relevant to the potential improvements implemented and evaluated in \proj.\todo{Do I need a more precise argument for when to include a paper?}
+  The wider field of protocol fuzzing has received considerable attention. I have selected a set of works published before October of 2024 to represent the potential improvements implemented and evaluated in \proj. Stateful protocol fuzzing has received considerable attention — refer to the survey papers such as \cite{StatefulReview,Survey,IndustrialReview} for a more complete overview over the state of the art.
 
-  While not strictly being related work, the review paper by \citeauthor{StatefulReview}\cite{StatefulReview} provide an overview of the state of the art, along with a taxonomy of components of and categorization of stateful fuzzers. It further compares approaches and lists challenges and future directions.
+  \citeauthor{ProFuzzBench} propose a benchmark for stateful protocol fuzzers iin ProFuzzBench\cite{ProFuzzBench}, containing a suite of 10 protocols and 11 open-source implementations of those to be tested. TCP notably is not part of this benchmark directly, but is used as an underlying protocol for others, such as FTP. State feedback is provided by HTTP status codes — certain protocols such as FTP already provide these, others are patched to do so based on a superficial heuristic for their state. The authors note that configuration of the targets is not taken into account and multi-party ($\geq 3$ participants) protocols cannot currently be fuzzed. Non-determinism in the programs make feedback (like code coverage) less predictable and thus fuzzing less performant, because it introduces non-differentiable duplicate entries into the corpus.
+
+  However, of the fuzzers projects discussed in this thesis, only StateAFL\cite{StateAFL} is evaluated against this benchmark, while EPF\cite{EPF} notes the absence of such a benchmark for their work.
 
   \subsubsection{Observing State}
 
@@ -309,15 +312,15 @@
 
   The state of the PUT as observed using any of the methods described above can then be used to improve both input and mutator scheduling, as shown by the following approaches:
 
-  Several projects create an abstract data structure representing the state space and possible state transitions of the PUT. This can then be used to improve scheduling. Examples include ZFuzz, which calculates an ad-hoc directed graph based on measured states, while SGFuzz\cite{SGFuzz} constructs a similar data structure called a state transition tree. \citeauthor{ModelBased}\cite{ModelBased} and Autofuzz\cite{Autofuzz} construct a finite state machine, where the latter employs a bioinformatics algorithm and the former minimizes the FSM before using it to schedule the mutators.
+  Several projects create an abstract data structure representing the state space and possible state transitions of the PUT. This can then be used to improve scheduling. Examples include ZFuzz, which calculates an ad-hoc directed graph based on measured states, while SGFuzz\cite{SGFuzz} constructs a similar data structure called a state transition tree. Finite state machines are a popular structure to model state transitions, as implemented by \citeauthor{Congestion}, whose fuzzer requires manual specification of the FSM based on the protocol specification, or \citeauthor{ModelBased}\cite{ModelBased}, who additionally implement FSM minimization. Autofuzz\cite{Autofuzz} on the other hand employs a bioinformatics algorithm to approximate the FSM.
 
   These structures are then used in several ways: AFLNet\cite{AFLNET} uses a custom heuristic based on statistics about each state to schedule the next input to be mutated. SGFuzz\cite{SGFuzz} guides the fuzzer to under-explored parts of the state-space by scheduling input traces leaving the PUT in such a state for the next mutation. The structure can further be used to schedule which mutator(s) should be invoked next\cite{ModelBased}. ZFuzz\cite{ZFuzz} does this based on a formula incorporating state depth, coverage, number of transitions, and number of mutations based on this state.
 
-  \subsubsection{Limitations of Existing Protocol Fuzzers in Relation to \proj}
+  \subsubsection{Target Differences}
 
   While all of the projects presented above introduce provably effective approaches to increase a fuzzer's performance on their targets by using state feedback, only TCP-Fuzz\cite{TCPFuzz} has the same target as \proj: TCP/IP stacks.
 
-  Others target BitTorrent\cite{Ankou}, DNS\cite{StateAFL}, FTP \cite{AFLNET, FitM, StateAFL, Autofuzz,ZFuzz}, HTTP2\cite{SGFuzz}, Modbus-TCP\cite{ModbusTCP,ModbusTCP2, GANFuzz, MTA, AnotherModbusTCP}, MSNIM\cite{ModelBased}, RTSP and other media streaming protocols\cite{AFLNET, SGFuzz}, SMTP\cite{StateAFL}, SSH\cite{StateAFL}, or SSL/TLS\cite{SGFuzz,ZFuzz,DDFuzz} libraries, or SCADA systems\cite{EPF}. TCP/IP is used by some of these fuzzers to facilitate communication between the fuzzer and PUT, but not evaluated independently. To compare the effectiveness of improvements introduced by a certain fuzzer, some are further evaluated against mazes\cite{Ijon, SandPuppy}, levels of the game Super Mario Bros\cite{Ijon, SandPuppy}, or file formats with complex data-interdependencies\cite{Ijon, SandPuppy, DDFuzz, Ankou}.
+  Others target BitTorrent\cite{Ankou}, DNS\cite{StateAFL}, FTP \cite{AFLNET, FitM, StateAFL, Autofuzz,ZFuzz}, HTTP2\cite{SGFuzz}, Modbus-TCP\cite{ModbusTCP,ModbusTCP2, GANFuzz, MTA, MTFStorm, AnotherModbusTCP}, MSNIM\cite{ModelBased}, RTSP and other media streaming protocols\cite{AFLNET, SGFuzz}, SMTP\cite{StateAFL}, SSH\cite{StateAFL}, or SSL/TLS\cite{SGFuzz,ZFuzz,DDFuzz} libraries, or SCADA systems\cite{EPF}. TCP/IP is used by some of these fuzzers to facilitate communication between the fuzzer and PUT, but not evaluated independently or declared as out-of-scope. To compare the effectiveness of improvements introduced by a certain fuzzer, some are further evaluated against mazes\cite{Ijon, SandPuppy}, levels of the game Super Mario Bros\cite{Ijon, SandPuppy}, or file formats with complex data-interdependencies\cite{Ijon, SandPuppy, DDFuzz, Ankou}.
 
   Thus, comparisons are impossible without reimplementing the logic of either related work for \proj's targets, or the other way around. Additionally, such changes to related works would also need to include the custom logic to exchange packets with the PUT introduced in \proj — this also applies to TCP-Fuzz.
 
@@ -327,44 +330,17 @@
 
   EPF\cite{EPF} uses population-based simulated annealing to schedule which packet type to add or mutate next in conjunction with coverage feedback. It requires Scapy-compatible implementation of packet types to be fuzzed to ensure packet structure. TCP-Fuzz models the inputs to the TCP/IP stacks tested as a list of system calls and packets, and mutates these lists while ensuring certain constraints between input parts, such as \code{socket}, \code{bind}, \code{listen} and \code{accept} being always called in order if a connection is in a certain state. However, TCP-Fuzz randomly selects which part of the input is mutated next. Since \proj employs a similar technique, it includes the major downside of this approach: the structure of the packets and constraints to be ensured after mutation have to be specified manually.
 
-  Alternatively, approaches such as GANFuzz\cite{GANFuzz} or Autofuzz\cite{Autofuzz} attempt to automatically learn the structure of the inputs based on generative adversarial networks\cite{GANFuzz} or bioinformatics techniques\cite{Autofuzz}.
+  Alternatively, approaches such as MTA\cite{MTA}, GANFuzz\cite{GANFuzz} or Autofuzz\cite{Autofuzz} attempt to automatically learn the structure of the inputs based on generative adversarial networks\cite{GANFuzz}, simplified transformers\cite{MTA}, or bioinformatics techniques\cite{Autofuzz}.
 
   \subsection{Machine-in-the-Middle}
-  As opposed to other works, FitM\cite{FitM} and Autofuzz\cite{Autofuzz} attempt to fuzz both the server and client implementations of a protocol library through machine-in-the-middle mutation, while relying
+  As opposed to other works, FitM\cite{FitM} and Autofuzz\cite{Autofuzz} attempt to fuzz both the server and client implementations of a protocol library through machine-in-the-middle mutation. The former uses userspace snapshots of the entire client and server processes instead of a log of previous messages (see Section~\ref{Background:TcpIsStateful}), while the latter constructs a finite state automaton from the observed packets to intelligently mutate messages.
 
-
-  % continue here
-
-  \begin{itemize}
-    \item FitM
-    \item Autofuzz\cite{Autofuzz}: Man-in-the-middle, Fuzz server and client
-  \end{itemize}
-
-  \subsection{Protocols Targeting TCP Stacks}
-  \begin{itemize}
-    \item \citetitle{GANFuzz}\cite{GANFuzz}: Targets Modbus-TCP.
-    \item \citetitle{TCPFuzz}\cite{TCPFuzz}: TCP targets, differential fuzzing, input: syscalls + packets, complex mutators including intelligent dependencies between the current and all previous packets and syscalls in the input, feedback: inter-package diff in coverage. \todo{mention everywhere}
-    \item \citetitle{FitM}\cite{FitM}: Use persistent snapshots of userspace processes (CRIU), fuzzer-in-the-middle, multiple strategies such as input deduplication and resynchronization necessary because of the approach\todo{mention everywhere}
-    \item   \citetitle{ModbusTCP}\cite{ModbusTCP} is a Modbus fuzzer, that only seems to use TCP as transport. Generation of packets happens only for Modbus itself. \citetitle{MTFStorm}\cite{MTFStorm} is follow-up work that does the same more systematically.
-    \item \citetitle{MTA}\cite{MTA} use machine learning models to generate Modbus/TCP packets, but target Modbus and again only use TCP as a transportation layer.
-    \item \citetitle{AnotherModbusTCP}\cite{AnotherModbusTCP} is another Modbus/TCP fuzzer that does not fuzz the TCP stack. See also\cite{ModbusTCP2}.
-    \item A similar approach using a Scapy-based fuzzer was implemented for the industrial protocol EtherNet/IP, where TCP was declared as out-of-scope\cite{ENIP}.
-  \end{itemize}
-
-  \subsection{Data, TODO: Integrate}
-  \begin{itemize}
-    \item \citetitle{ProFuzzBench}\cite{ProFuzzBench}: Suite of 10 protocols and 11 open-source implementations of those to be tested. TCP is notably absent from this list. Certain protocols (like FTP) already return HTTP status codes, others are patched to do so. Dockerized. The authors note that configuration is not taken into account and multi-party ($\geq 3$) protocols can not be fuzzed right now. Non-determinism in the programs make feedback (like code coverage) less predictable and thus fuzzing less performant because it introduces non-differentiable duplicate entries into the corpus. Speed is another issue, where complex setup-processes, costly network operations (resp. synchronization for me), and long multipart-inputs contribute. Finally, state identification is only superficially handled.
-    \item \citetitle{Congestion}\cite{Congestion}: Manual FSM from RFC to generate abstract attack models against congestion control implementations, which are then transformed to concrete attacks strategies and tested on actual implementations.
-    \item \citetitle{IndustrialReview}\cite{IndustrialReview} review industrial control protocol. Notably, Modbus/TCP fuzzing seems common, but TCP is only used as transport layer, not target.
-  \end{itemize}
-
-  \subsubsection{Probably remove}
-  \begin{itemize}
-    \item \citetitle{INVSCOV}\cite{INVSCOV}: run for 24 hours, record variable values and relationships between them, then add a feedback that rewards when the generated assertions are violated
-    \item \citetitle{ParmeSan}\cite{ParmeSan}: Use sanitizers checks as fuzzing targets
-    \item \citetitle{FuzzFactory}\cite{FuzzFactory}: framework to add custom feedbacks like number of basic blocks executed, amount of memory allocated, etc.
-
-  \end{itemize}
+  % \subsubsection{Probably remove}
+  % \begin{itemize}
+  %   \item \citetitle{INVSCOV}\cite{INVSCOV}: run for 24 hours, record variable values and relationships between them, then add a feedback that rewards when the generated assertions are violated
+  %   \item \citetitle{ParmeSan}\cite{ParmeSan}: Use sanitizers checks as fuzzing targets
+  %   \item \citetitle{FuzzFactory}\cite{FuzzFactory}: framework to add custom feedbacks like number of basic blocks executed, amount of memory allocated, etc.
+  % \end{itemize}
 
   \subsubsection{TODO: Read}
   \begin{itemize}
@@ -490,7 +466,7 @@ void __sanitizer_cov_trace_pc_guard(
 
 \end{multicols}
 \vspace{1em}
-\begin{figure}[h]
+\begin{figure}[htb]
   \centering
   \includegraphics[width=\textwidth]{assets/LibAFLArchitecture.png}
   \caption{LibAFL's Architecture\cite{LibAFL}}
