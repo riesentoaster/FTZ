@@ -40,7 +40,7 @@ use libafl_bolts::{
     core_affinity::Cores,
     rands::StdRand,
     shmem::{ShMem, ShMemProvider as _, StdShMemProvider},
-    tuples::{tuple_list, Handled as _, Map as _, Merge as _},
+    tuples::{tuple_list, Handle, Handled as _, Map as _, Merge as _},
 };
 use std::{path::PathBuf, ptr::NonNull, time::Duration};
 
@@ -125,8 +125,8 @@ pub fn fuzz() {
                 InputLenFeedback,
                 // only log coverage
                 // feedback_and_fast!(state_feedback, ConstFeedback::new(false)),
+                feedback_and_fast!(cov_feedback, ConstFeedback::new(false)),
                 state_feedback,
-                cov_feedback,
             );
 
             let mut objective = feedback_or_fast!(
@@ -194,7 +194,7 @@ pub fn fuzz() {
                 1.5,
                 1500,
                 true,
-                Some(cov_observer.handle()),
+                None::<Handle<u8>>,
                 Some(state_map_observer.handle()),
                 scheduler,
                 feedback,

@@ -6,6 +6,9 @@ from collections import defaultdict
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("input_file", help="Input file to process")
+    parser.add_argument(
+        "--type", choices=["state", "coverage"], help="Type of consistency to analyze"
+    )
     args = parser.parse_args()
 
     base_output_file = os.path.splitext(args.input_file)[0]
@@ -18,16 +21,47 @@ def main():
     try:
         with open(args.input_file) as f:
             for line in f:
-                if match := re.search(
-                    r"Observer correctness stats for input of len (\d+): both wrong: (\d+), first wrong/second right: (\d+), first right/second wrong: (\d+), both right: (\d+)",
-                    line,
-                ):
-                    input_len = int(match.groups()[0])
-                    numbers = [int(x) for x in match.groups()[1:]]
-                    total = sum(numbers)
-                    if total > 0:  # Avoid division by zero
-                        ratios = [n / total for n in numbers]
-                        ratios_by_len[input_len].append(ratios)
+                if args.type:
+                    # Parse the simplified format for single observer
+                    if match := re.search(
+                        r"consistency_ratios for input of len (\d+): ([\d,\s]+)",
+                        line,
+                    ):
+                        input_len = int(match.groups()[0])
+                        values = [int(x.strip()) for x in match.groups()[1].split(",")]
+                        stable_count = values[0]
+                        unstable_count = sum(values[1:])
+                        total = stable_count + unstable_count
+                        if total > 0:  # Avoid division by zero
+                            # Format ratios to match the existing format:
+                            # [both_unstable, coverage_unstable, state_unstable, both_stable]
+                            if args.type == "coverage":
+                                ratios = [
+                                    0,
+                                    unstable_count / total,
+                                    0,
+                                    stable_count / total,
+                                ]
+                            else:  # state
+                                ratios = [
+                                    0,
+                                    0,
+                                    unstable_count / total,
+                                    stable_count / total,
+                                ]
+                            ratios_by_len[input_len].append(ratios)
+                else:
+                    # Parse the original format for both observers
+                    if match := re.search(
+                        r"Observer correctness stats for input of len (\d+): both wrong: (\d+), first wrong/second right: (\d+), first right/second wrong: (\d+), both right: (\d+)",
+                        line,
+                    ):
+                        input_len = int(match.groups()[0])
+                        numbers = [int(x) for x in match.groups()[1:]]
+                        total = sum(numbers)
+                        if total > 0:  # Avoid division by zero
+                            ratios = [n / total for n in numbers]
+                            ratios_by_len[input_len].append(ratios)
 
             if ratios_by_len:
                 # Calculate overall average for pie chart
@@ -38,32 +72,86 @@ def main():
                 ]
                 avg_ratios = np.mean(all_ratios, axis=0)
 
+                # Determine which types of instability are present
+                has_both_unstable = avg_ratios[0] > 0
+                has_coverage_unstable = avg_ratios[1] > 0
+                has_state_unstable = avg_ratios[2] > 0
+                has_both_stable = avg_ratios[3] > 0
+
+                # Set labels and colors based on which types appear
+                if has_coverage_unstable and has_state_unstable:
+                    labels = [
+                        "Both Unstable",
+                        "Coverage Unstable",
+                        "State Unstable",
+                        "Both Stable",
+                    ]
+                    colors = ["#cc0000", "#0066cc", "#006600", "#cc6600"]
+                elif has_coverage_unstable:
+                    # Combine "Both Unstable" and "Coverage Unstable" into just "Unstable"
+                    avg_ratios = [
+                        avg_ratios[0] + avg_ratios[1],
+                        0,
+                        0,
+                        avg_ratios[2] + avg_ratios[3],
+                    ]
+                    labels = ["Unstable", "", "", "Stable"]
+                    colors = ["#cc0000", "#ffffff", "#ffffff", "#cc6600"]
+                elif has_state_unstable:
+                    # Combine "Both Unstable" and "State Unstable" into just "Unstable"
+                    avg_ratios = [
+                        avg_ratios[0] + avg_ratios[2],
+                        0,
+                        0,
+                        avg_ratios[1] + avg_ratios[3],
+                    ]
+                    labels = ["Unstable", "", "", "Stable"]
+                    colors = ["#cc0000", "#ffffff", "#ffffff", "#cc6600"]
+
                 # Create pie chart
                 plt.figure(figsize=(10, 8))
                 plt.pie(
                     avg_ratios,
-                    labels=[
-                        "Both Unstable",
-                        "Coverage Unstable/States Stable",
-                        "Coverage Stable/States Unstable",
-                        "Both Stable",
-                    ],
-                    colors=["#ff9999", "#66b3ff", "#99ff99", "#ffcc99"],
-                    autopct="%1.5f%%",
+                    labels=labels,
+                    colors=colors,
+                    autopct=lambda pct: f"{pct:.5f}%" if pct > 0 else "",
                 )
-                plt.title(f"Observer Consistency Analysis")
                 plt.axis("equal")
                 plt.savefig(pie_output_file)
                 plt.close()
                 print(f"Pie chart saved to {pie_output_file}")
 
                 # Create stacked bar chart
-                plt.figure(figsize=(15, 8))
+                plt.figure(figsize=(10, 6))
                 input_lens = sorted(ratios_by_len.keys())
                 avg_ratios_by_len = {
                     length: np.mean(ratios, axis=0)
                     for length, ratios in ratios_by_len.items()
                 }
+
+                # Transform the ratios for each length based on which types appear
+                if has_coverage_unstable and not has_state_unstable:
+                    for length in avg_ratios_by_len:
+                        ratios = avg_ratios_by_len[length]
+                        avg_ratios_by_len[length] = [
+                            ratios[0]
+                            + ratios[1],  # Combine both unstable and coverage unstable
+                            0,
+                            0,
+                            ratios[2]
+                            + ratios[3],  # Combine state unstable and both stable
+                        ]
+                elif has_state_unstable and not has_coverage_unstable:
+                    for length in avg_ratios_by_len:
+                        ratios = avg_ratios_by_len[length]
+                        avg_ratios_by_len[length] = [
+                            ratios[0]
+                            + ratios[2],  # Combine both unstable and state unstable
+                            0,
+                            0,
+                            ratios[1]
+                            + ratios[3],  # Combine coverage unstable and both stable
+                        ]
 
                 # Calculate number of samples for each length
                 samples_by_len = {
@@ -74,14 +162,14 @@ def main():
                 samples_by_len[-1] = total_samples
 
                 # Add overall average to the plot data
-                input_lens = [-1] + input_lens  # Add -1 for overall average
-                avg_ratios_by_len[-1] = avg_ratios  # Add overall average ratios
+                input_lens = [-2] + input_lens[1:]
+                avg_ratios_by_len[-2] = avg_ratios
 
                 # Calculate bar widths based on number of samples, with fixed width for overall average
                 max_samples = max(
                     samples_by_len[length] for length in input_lens[1:]
                 )  # Exclude overall average
-                min_width = 0.1  # Minimum bar width
+                min_width = 0.2  # Minimum bar width
                 fixed_width = 1  # Width for overall average bar
                 widths = [fixed_width] + [
                     min_width + (samples_by_len[length] / max_samples / 1.3)
@@ -89,36 +177,34 @@ def main():
                 ]
 
                 bottoms = np.zeros(len(input_lens))
-                colors = ["#ff9999", "#66b3ff", "#99ff99", "#ffcc99"]
-                labels = [
-                    "Both Unstable",
-                    "Coverage Unstable/States Stable",
-                    "Coverage Stable/States Unstable",
-                    "Both Stable",
-                ]
 
+                # Use the same labels and colors as determined for the pie chart
                 for i in range(4):  # For each ratio type
-                    values = [avg_ratios_by_len[length][i] for length in input_lens]
-                    plt.bar(
-                        input_lens,
-                        values,
-                        bottom=bottoms,
-                        label=labels[i],
-                        color=colors[i],
-                        width=widths,
-                    )
-                    bottoms += values
+                    if labels[i]:  # Only plot if the label is not empty
+                        values = [avg_ratios_by_len[length][i] for length in input_lens]
+                        if any(
+                            v > 0 for v in values
+                        ):  # Only plot if there are non-zero values
+                            plt.bar(
+                                input_lens,
+                                values,
+                                bottom=bottoms,
+                                label=labels[i],
+                                color=colors[i],
+                                width=widths,
+                            )
+                        bottoms += values
 
                 plt.xlabel(
-                    "Input Length\n(Bar width indicates relative number of samples)"
+                    "Input Length\n(Bar width indicates relative number of samples)",
+                    labelpad=-20,
                 )
                 plt.ylabel("Ratio")
-                plt.title("Observer Consistency Analysis by Input Length")
                 plt.legend()
 
                 # Customize x-axis labels with sample counts
-                x_labels = [f"Avg"] + [str(x) for x in input_lens[1:]]
-                plt.xticks(input_lens, x_labels, rotation=0)
+                x_labels = [f"Weighted\nAverage"] + [str(x) for x in input_lens[1:]]
+                plt.xticks(input_lens, x_labels, rotation=90)
 
                 plt.tight_layout()
                 plt.savefig(bar_output_file)

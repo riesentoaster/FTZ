@@ -1,6 +1,7 @@
 """Main plotting functionality for consistency analysis."""
 
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 from typing import Optional, Tuple
 
@@ -10,18 +11,47 @@ from .data_extractor import (
     calculate_error_ratios,
 )
 from .distribution_plotter import create_distribution_plots
-from .ratio_plotter import create_ratio_plots
+from .ratio_plotter import create_ratio_plots, create_box_plot
 
 
-def create_ratio_figure(data_by_len):
+def create_ratio_figure(data_by_len, boxplot_output):
     """Create a figure with ratio plots."""
     fig, axes = plt.subplots(
         4, 2, figsize=(20, 40)  # Increased width from 15 to 20 inches
     )
     lens, second_ratios, sum_ratios, ratios_by_len = calculate_error_ratios(data_by_len)
     create_ratio_plots(
-        axes.flatten(), lens, second_ratios, sum_ratios, ratios_by_len, data_by_len
+        axes.flatten(),
+        lens,
+        second_ratios,
+        sum_ratios,
+        ratios_by_len,
+        data_by_len,
     )
+
+    boxplot_fig, boxplot_ax = plt.subplots(1, 1, figsize=(10, 10))
+
+    min_len = min(ratios_by_len.keys())
+    max_len = max(ratios_by_len.keys())
+    all_lengths = list(range(min_len, max_len + 1))
+
+    sum_boxes = [ratios_by_len.get(l, {"sum": []})["sum"] for l in all_lengths]
+    positions = np.arange(len(all_lengths)) * 0.35
+
+    create_box_plot(
+        boxplot_ax,
+        sum_boxes,
+        positions,
+        "Sum(Rest)/First Ratio Box Plot",
+        ("lightpink", "red", "darkred"),
+        all_lengths,
+    )
+    boxplot_ax.set_title(None)
+    boxplot_fig.tight_layout()
+    boxplot_fig.savefig(boxplot_output, bbox_inches="tight")
+    plt.close(boxplot_fig)
+    print(f"Separate boxplot saved as '{boxplot_output}'")
+
     return fig
 
 
@@ -82,8 +112,9 @@ def process_log_file(
 
     # Create and save ratio plots if requested
     if plot_ratios:
-        ratio_fig = create_ratio_figure(data_by_len)
-        ratio_output = os.path.splitext(logfile)[0] + "-ratios.svg"
+        base_name = os.path.splitext(logfile)[0]
+        ratio_fig = create_ratio_figure(data_by_len, base_name + "-boxplot.svg")
+        ratio_output = base_name + "-ratios.svg"
         ratio_fig.tight_layout()
         ratio_fig.savefig(ratio_output, bbox_inches="tight")
         plt.close(ratio_fig)

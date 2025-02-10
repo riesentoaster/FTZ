@@ -64,6 +64,33 @@ def create_box_plot(
         whis=1.5,
         widths=0.3,
     )
+
+    # Add horizontal lines at means
+    means = []
+    for boxes in data:
+        if len(boxes) > 0:
+            means.append(np.mean(boxes))
+        else:
+            means.append(np.nan)
+
+    # Draw horizontal lines at each mean with a width slightly larger than the box
+    line_width = 0.4  # slightly wider than box width of 0.3
+    mean_color = (
+        "blue" if colors[1] == "red" else "red"
+    )  # orange for red boxes, pink for blue boxes
+
+    for pos, mean in zip(positions, means):
+        if not np.isnan(mean):
+            ax.hlines(
+                y=mean,
+                xmin=pos - line_width / 2,
+                xmax=pos + line_width / 2,
+                colors=mean_color,
+                linewidth=2,
+                label="Average" if pos == positions[0] else "",
+            )
+
+    ax.legend()
     setup_axis(ax, title, positions, all_lengths)
 
 
@@ -110,6 +137,7 @@ def create_ratio_plots(
         sum_ratios: List of sum-to-first ratios
         ratios_by_len: Dictionary containing ratios by input length
         data_by_len: Raw data dictionary mapping input lengths to their entries
+        output_prefix: Prefix for output files (optional)
     """
     ax_count1, ax_count2, ax1, ax2, ax3, ax4, ax5, ax6 = axes
 
