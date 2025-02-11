@@ -13,3 +13,5 @@ cov-*
 /duplicate*
 .DS_Store
 __pycache__
+*.svg
+!*/**/*.svg
