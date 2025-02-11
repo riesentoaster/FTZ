@@ -86,7 +86,7 @@ def main():
                         "State Unstable",
                         "Both Stable",
                     ]
-                    colors = ["#cc0000", "#0066cc", "#006600", "#cc6600"]
+                    colors = ["#cc0000", "#0066cc", "#cc6600", "#006600"]
                 elif has_coverage_unstable:
                     # Combine "Both Unstable" and "Coverage Unstable" into just "Unstable"
                     avg_ratios = [
@@ -96,7 +96,7 @@ def main():
                         avg_ratios[2] + avg_ratios[3],
                     ]
                     labels = ["Unstable", "", "", "Stable"]
-                    colors = ["#cc0000", "#ffffff", "#ffffff", "#cc6600"]
+                    colors = ["#cc0000", "#ffffff", "#ffffff", "#006600"]
                 elif has_state_unstable:
                     # Combine "Both Unstable" and "State Unstable" into just "Unstable"
                     avg_ratios = [
@@ -106,7 +106,7 @@ def main():
                         avg_ratios[1] + avg_ratios[3],
                     ]
                     labels = ["Unstable", "", "", "Stable"]
-                    colors = ["#cc0000", "#ffffff", "#ffffff", "#cc6600"]
+                    colors = ["#cc0000", "#ffffff", "#ffffff", "#006600"]
 
                 # Create pie chart
                 plt.figure(figsize=(10, 8))
@@ -169,14 +169,17 @@ def main():
                 max_samples = max(
                     samples_by_len[length] for length in input_lens[1:]
                 )  # Exclude overall average
-                min_width = 0.2  # Minimum bar width
+                min_width = 0.3  # Minimum bar width
                 fixed_width = 1  # Width for overall average bar
                 widths = [fixed_width] + [
-                    min_width + (samples_by_len[length] / max_samples / 1.3)
+                    min_width + (samples_by_len[length] / max_samples / 1.4)
                     for length in input_lens[1:]
                 ]
 
                 bottoms = np.zeros(len(input_lens))
+                weighted_avg_transitions = (
+                    []
+                )  # Store transition points for horizontal lines
 
                 # Use the same labels and colors as determined for the pie chart
                 for i in range(4):  # For each ratio type
@@ -193,18 +196,79 @@ def main():
                                 color=colors[i],
                                 width=widths,
                             )
+                            # Store the weighted average transition point
+                            weighted_avg_transitions.append(bottoms[0] + values[0])
                         bottoms += values
+
+                # Add horizontal lines at weighted average transitions
+                x_min, x_max = plt.xlim()
+
+                # Draw horizontal lines for transitions
+                for i, y_val in enumerate(weighted_avg_transitions[:-1]):
+                    plt.hlines(
+                        y=y_val,
+                        xmin=x_min,
+                        xmax=x_max,
+                        colors=colors[i],
+                        linestyles="--",
+                    )
+
+                # Add the transition values to the y-axis ticks
+                ax = plt.gca()
+                ax.yaxis.set_major_formatter(plt.FormatStrFormatter("%.3f"))
+
+                # Get default ticks and transition points
+                default_ticks = list(plt.yticks()[0])  # Get current ticks
+                transition_points = weighted_avg_transitions[
+                    :-1
+                ]  # Get transition points
+
+                # Keep ticks that are far enough from transition points
+                min_distance = 0.03  # Minimum distance between ticks
+                kept_ticks = []
+                for tick in default_ticks:
+                    # Check if this tick is far enough from all transition points
+                    if all(abs(tick - tp) > min_distance for tp in transition_points):
+                        kept_ticks.append(tick)
+
+                # Combine kept ticks with transition points
+                all_values = sorted(set(kept_ticks + transition_points))
+
+                # Create tick labels with appropriate colors
+                tick_labels = []
+                for val in all_values:
+                    # Check if this value is a transition point
+                    if val in transition_points:
+                        # Find which transition point it is to get the color
+                        idx = transition_points.index(val)
+                        tick_labels.append(
+                            {"label": f"{val:.3f}", "color": colors[idx]}
+                        )
+                    else:
+                        # Regular tick label in black
+                        tick_labels.append({"label": f"{val:.3f}", "color": "black"})
+
+                # Set the ticks and their properties
+                plt.yticks(all_values, [t["label"] for t in tick_labels])
+                # Color the tick labels
+                ax.yaxis.set_tick_params(labelsize=10)
+                for tick, tick_props in zip(ax.yaxis.get_ticklabels(), tick_labels):
+                    tick.set_color(tick_props["color"])
 
                 plt.xlabel(
                     "Input Length\n(Bar width indicates relative number of samples)",
                     labelpad=-20,
                 )
                 plt.ylabel("Ratio")
-                plt.legend()
+                plt.legend(framealpha=1.0)
 
                 # Customize x-axis labels with sample counts
                 x_labels = [f"Weighted\nAverage"] + [str(x) for x in input_lens[1:]]
                 plt.xticks(input_lens, x_labels, rotation=90)
+
+                # Adjust x-axis limits to reduce space between bars and edges
+                plt.xlim(input_lens[0] - 0.8, input_lens[-1] + 0.8)
+                plt.ylim(0, 1)
 
                 plt.tight_layout()
                 plt.savefig(bar_output_file)
