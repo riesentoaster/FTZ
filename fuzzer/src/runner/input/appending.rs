@@ -8,7 +8,7 @@ use libafl::{
 };
 use libafl_bolts::{tuples::MappingFunctor, Named};
 
-use super::stateful::ReplayingStatefulInput;
+use super::{list::ListInput, stateful::ReplayingStatefulInput};
 
 pub struct AppendingMutator<G> {
     generator: G,
@@ -29,6 +29,17 @@ where
         state: &mut S,
         input: &mut ReplayingStatefulInput<I>,
     ) -> Result<MutationResult, Error> {
+        let new_part = self.generator.generate(state).unwrap();
+        input.parts_mut().push(new_part);
+        Ok(MutationResult::Mutated)
+    }
+}
+
+impl<G, I, S> Mutator<ListInput<I>, S> for AppendingMutator<G>
+where
+    G: Generator<I, S>,
+{
+    fn mutate(&mut self, state: &mut S, input: &mut ListInput<I>) -> Result<MutationResult, Error> {
         let new_part = self.generator.generate(state).unwrap();
         input.parts_mut().push(new_part);
         Ok(MutationResult::Mutated)

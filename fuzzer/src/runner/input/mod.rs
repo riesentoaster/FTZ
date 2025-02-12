@@ -23,6 +23,7 @@ use serde::Serialize;
 pub mod appending;
 pub mod bool;
 pub mod etherparse;
+pub mod list;
 pub mod parsed;
 pub mod stateful;
 
@@ -93,8 +94,6 @@ where
     Vec<u8>: From<I>,
     I: ZephyrInputPart,
 {
-    type NonAppendingMutators;
-    fn non_appending_mutators() -> Self::NonAppendingMutators;
     fn to_packets(&self) -> Vec<Vec<u8>>;
     fn parse(input: &[Vec<u8>]) -> Self;
     fn fixed_generator(fixed: Vec<Vec<u8>>, restart: bool) -> FixedZephyrInputGenerator<Self>
@@ -110,12 +109,6 @@ where
     I: ZephyrInputPart + TryFrom<Vec<u8>> + Clone,
     Vec<u8>: From<I>,
 {
-    type NonAppendingMutators = I::Mutators;
-
-    fn non_appending_mutators() -> Self::NonAppendingMutators {
-        I::mutators()
-    }
-
     fn parse(input: &[Vec<u8>]) -> Self {
         input
             .iter()
@@ -145,12 +138,6 @@ where
         Merge<map_tuple_list_type!(I::Generators, ToAppendingMutatorWrapper)>,
     Vec<u8>: From<I>,
 {
-    type NonAppendingMutators = map_tuple_list_type!(I::Mutators, ToReplayingStatefulMutator);
-
-    fn non_appending_mutators() -> Self::NonAppendingMutators {
-        I::mutators().map(ToReplayingStatefulMutator)
-    }
-
     fn parse(input: &[Vec<u8>]) -> Self {
         input
             .iter()

@@ -10,13 +10,20 @@ use crate::{
             fixed::{FixedZephyrInputGenerator, FixedZephyrInputPartGenerator},
             random::RandomTcpZephyrInputPartGenerator,
         },
-        input::{appending::ToAppendingMutatorWrapper, ZephyrInput, ZephyrInputType},
+        input::{appending::ToAppendingMutatorWrapper, list::ListInput},
         objective::CrashLoggingFeedback,
         PacketMetadataFeedback, PacketObserver, ZepyhrExecutor,
     },
     shmem::get_shmem,
     COV_SHMEM_SIZE, NETWORK_SHMEM_SIZE,
 };
+
+#[allow(unused_imports)]
+use {
+    crate::runner::input::etherparse::EtherparseInput,
+    libafl::{inputs::BytesInput, mutators::havoc_mutations_no_crossover},
+};
+
 use clap::Parser as _;
 use libafl::{
     corpus::{Corpus, InMemoryCorpus, OnDiskCorpus},
@@ -31,7 +38,6 @@ use libafl::{
     monitors::OnDiskJsonAggregateMonitor,
     mutators::StdMOptMutator,
     observers::{ConstMapObserver, HitcountsMapObserver, StdMapObserver, TimeObserver},
-    schedulers::StdScheduler,
     stages::StdMutationalStage,
     state::{HasCorpus as _, StdState},
     Error,
@@ -41,6 +47,7 @@ use libafl_bolts::{
     rands::StdRand,
     shmem::{ShMem, ShMemProvider as _, StdShMemProvider},
     tuples::{tuple_list, Handle, Handled as _, Map as _, Merge as _},
+    Named as _,
 };
 use std::{path::PathBuf, ptr::NonNull, time::Duration};
 
@@ -126,6 +133,7 @@ pub fn fuzz() {
                 // only log coverage
                 // feedback_and_fast!(state_feedback, ConstFeedback::new(false)),
                 feedback_and_fast!(cov_feedback, ConstFeedback::new(false)),
+                // cov_feedback,
                 state_feedback,
             );
 
@@ -134,7 +142,7 @@ pub fn fuzz() {
                 CrashLoggingFeedback::new(),
             );
 
-            let solutions = OnDiskCorpus::<ZephyrInputType>::new(opt.solutions_dir())?;
+            let solutions = OnDiskCorpus::<ListInput<BytesInput>>::new(opt.solutions_dir())?;
             // let corpus = OnDiskCorpus::new(opt.corpus_dir())?;
 
             let corpus = InMemoryCorpus::new();
@@ -156,19 +164,13 @@ pub fn fuzz() {
             )
             .map(ToAppendingMutatorWrapper);
 
-            let mutations = ZephyrInputType::non_appending_mutators().merge(appending_muators);
-            // let mutations = ZephyrInputType::mutators().merge(
-            //     tuple_list!(
-            //         FixedZephyrInputPartGenerator::new(outgoing_tcp_packets(), true),
-            //         RandomTcpZephyrInputPartGenerator
-            //     )
-            //     .map(ToAppendingMutatorWrapper),
-            // );
+            let mutators =
+                ListInput::<BytesInput>::map_to_mutate_on_last(havoc_mutations_no_crossover())
+                    .merge(appending_muators);
 
-            // let mutations = tuple_list!(NopMutator::new(libafl::mutators::MutationResult::Mutated));
+            println!("Input/Mutator config: {}", mutators.0.name());
 
-            let mutator =
-                StdMutationalStage::new(StdMOptMutator::new(&mut state, mutations, 7, 5)?);
+            let mutator = StdMutationalStage::new(StdMOptMutator::new(&mut state, mutators, 7, 5)?);
 
             #[cfg(feature = "coverage_stability")]
             let unstable_coverage_log_stage = CalibrationLogStage::new("unstable-coverage.txt");
@@ -178,21 +180,21 @@ pub fn fuzz() {
             #[cfg(not(feature = "coverage_stability"))]
             let mut stages = tuple_list!(mutator);
 
-            // #[cfg(not(feature = "coverage_stability"))]
-            // let scheduler = StdWeightedScheduler::with_schedule(
-            //     &mut state,
-            //     &state_map_observer,
-            //     Some(PowerSchedule::fast()),
-            // );
+            #[cfg(not(feature = "coverage_stability"))]
+            let scheduler = StdWeightedScheduler::with_schedule(
+                &mut state,
+                &state_map_observer,
+                Some(PowerSchedule::fast()),
+            );
 
             // StdWeightedScheduler is not compatible with CalibrationStage
             #[cfg(feature = "coverage_stability")]
             let scheduler = StdScheduler::new();
-            let scheduler = StdScheduler::new();
+
             let mut fuzzer = ReplayingFuzzer::new(
-                100,
-                1.5,
-                1500,
+                3,
+                2.0,
+                10,
                 true,
                 None::<Handle<u8>>,
                 Some(state_map_observer.handle()),
