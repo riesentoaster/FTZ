@@ -112,7 +112,10 @@
   \begin{minipage}{0.8\textwidth}
     \vspace{70px}
     \begin{abstract}
-      \lipsum[1]\lipsum[2]\lipsum[3]\todo{write}
+      \lipsum[1]\lipsum[2]\lipsum[3]
+      \todo{write}
+      \todo{correct title page layout}
+      \todo{order of title page, abstract, acknowledgments (right title?), main}
     \end{abstract}
   \end{minipage}
   \vspace{70px}
@@ -127,6 +130,7 @@
 % \clearpage\newpage
 
 \tableofcontents
+\todo{do i put a ToC?}
 % \vspace{30px}
 \pagenumbering{arabic}
 
@@ -674,11 +678,11 @@ The consistencies of both feedbacks show a further notable statistic: The averag
   \label{fig:overcommit-state-diff}
 \end{figure}
 
-When spawning a single fuzzing client per core, as is usual in fuzzing, the CPU averages approximately 0.8\% user space time and 1.9 system space time. Compared to a single client per core, using an \code{overcommit} value of 10 (thus spawning 10 clients per core) does not result in increased inconsistencies for both coverage and state-diff feedback. However, when using 20 clients per core, this no longer holds, as demonstrated in \cref{fig:overcommit-consistencies}. The CPU loads for \code{overcommit} values of 10 and 20 are \todo{measure} respectively.
+When spawning a single fuzzing client per core, as is usual in fuzzing, the CPU averages approximately 0.8\% user space time and 1.9 system space time. Increasing the \code{overcommit} value and thus the number of clients per core increases instability rates for both observers, as seen in \cref{fig:overcommit-consistencies}. However, it simultaneously increases the overall execution speed of the fuzzer and thus penetration speed of the fuzzer through state-diff and basic block coverage, as seen in \cref{fig:overcommit-cov,fig:overcommit-state-diff,fig:overcommit-exec-speed}. The CPU loads for \code{overcommit} values of 10 and 20 are \todo{measure} respectively.
 
 \subsubsection{Discussion}
 
-As described in \cref{Implementation:ImplementationDetails:Client}, executing a single input on Zephyr leads to a dominating number wait states in both Zephyr and the fuzzer needed for synchronization. Increasing the number of clients per core does not fully load the CPU either, suggesting the limitation of \proj is scheduling over 2500 processes requiring precise timing for their execution consistency.
+As described in \cref{Implementation:ImplementationDetails:Client}, executing a single input on Zephyr leads to a dominating number wait states in both Zephyr and the fuzzer needed for synchronization. Increasing the number of clients per core does not fully load the CPU either, suggesting the limitation of \proj is scheduling over 2500 processes requiring precise timing for their execution consistency. There exists a tradeoff between speed and consistency when configuring \proj. Increased \code{overcommit} values and thus execution speed requires additional measures to mitigate the increased error rates. The primary such mitigation is additional repeated executions of the same input, which in turn slows down the overall execution speed with regard to the number of unique inputs evaluated. For the remaining evaluation, \code{overcommit} values of 10 were used.
 
 \subsection{Input Modelling and Mutation}
 byte array vs. parsed structure
@@ -748,5 +752,7 @@ any vs. last
 \defbibheading{bibliography}[\bibname]{\section*{#1}}
 \addcontentsline{toc}{section}{\bibname}
 \printbibliography
+
+\todo{appendix: How much data?}
 
 \end{document}
