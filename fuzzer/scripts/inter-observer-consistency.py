@@ -177,17 +177,14 @@ def main():
                 ]
 
                 bottoms = np.zeros(len(input_lens))
-                weighted_avg_transitions = (
-                    []
-                )  # Store transition points for horizontal lines
+                # Store transition points for horizontal lines
+                weighted_avg_transitions = []
 
                 # Use the same labels and colors as determined for the pie chart
                 for i in range(4):  # For each ratio type
                     if labels[i]:  # Only plot if the label is not empty
                         values = [avg_ratios_by_len[length][i] for length in input_lens]
-                        if any(
-                            v > 0 for v in values
-                        ):  # Only plot if there are non-zero values
+                        if any(v > 0 for v in values):
                             plt.bar(
                                 input_lens,
                                 values,
@@ -224,25 +221,40 @@ def main():
                 ]  # Get transition points
 
                 # Keep ticks that are far enough from transition points
-                min_distance = 0.03  # Minimum distance between ticks
+                min_distance = 0.025  # Minimum distance between ticks
                 kept_ticks = []
                 for tick in default_ticks:
                     # Check if this tick is far enough from all transition points
                     if all(abs(tick - tp) > min_distance for tp in transition_points):
                         kept_ticks.append(tick)
 
-                # Combine kept ticks with transition points
-                all_values = sorted(set(kept_ticks + transition_points))
+                # Adjust transition points if they are too close together
+                adjusted_transitions = transition_points.copy()
+                for i in range(1, len(adjusted_transitions)):
+                    if (
+                        abs(adjusted_transitions[i] - adjusted_transitions[i - 1])
+                        < min_distance
+                    ):
+                        # Move the current point up by min_distance
+                        adjusted_transitions[i] = (
+                            adjusted_transitions[i - 1] + min_distance
+                        )
+
+                # Combine kept ticks with adjusted transition points
+                all_values = sorted(set(kept_ticks + adjusted_transitions))
 
                 # Create tick labels with appropriate colors
                 tick_labels = []
                 for val in all_values:
-                    # Check if this value is a transition point
-                    if val in transition_points:
-                        # Find which transition point it is to get the color
-                        idx = transition_points.index(val)
+                    # Check if this value is a transition point (using original transition points for color mapping)
+                    if val in adjusted_transitions:
+                        # Find which transition point it corresponds to
+                        idx = adjusted_transitions.index(val)
                         tick_labels.append(
-                            {"label": f"{val:.3f}", "color": colors[idx]}
+                            {
+                                "label": f"{transition_points[idx]:.3f}",
+                                "color": colors[idx],
+                            }
                         )
                     else:
                         # Regular tick label in black

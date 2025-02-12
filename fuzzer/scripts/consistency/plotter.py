@@ -11,10 +11,10 @@ from .data_extractor import (
     calculate_error_ratios,
 )
 from .distribution_plotter import create_distribution_plots
-from .ratio_plotter import create_ratio_plots, create_box_plot
+from .ratio_plotter import create_ratio_plots, create_box_plot, create_violin_plot
 
 
-def create_ratio_figure(data_by_len, boxplot_output):
+def create_ratio_figure(data_by_len, base_name):
     """Create a figure with ratio plots."""
     fig, axes = plt.subplots(
         4, 2, figsize=(20, 40)  # Increased width from 15 to 20 inches
@@ -29,14 +29,14 @@ def create_ratio_figure(data_by_len, boxplot_output):
         data_by_len,
     )
 
-    boxplot_fig, boxplot_ax = plt.subplots(1, 1, figsize=(10, 10))
-
     min_len = min(ratios_by_len.keys())
     max_len = max(ratios_by_len.keys())
     all_lengths = list(range(min_len, max_len + 1))
 
     sum_boxes = [ratios_by_len.get(l, {"sum": []})["sum"] for l in all_lengths]
     positions = np.arange(len(all_lengths)) * 0.35
+
+    boxplot_fig, boxplot_ax = plt.subplots(1, 1, figsize=(10, 10))
 
     create_box_plot(
         boxplot_ax,
@@ -46,11 +46,29 @@ def create_ratio_figure(data_by_len, boxplot_output):
         ("lightpink", "red", "darkred"),
         all_lengths,
     )
+    boxplot_output = base_name + "-boxplot.svg"
     boxplot_ax.set_title(None)
     boxplot_fig.tight_layout()
     boxplot_fig.savefig(boxplot_output, bbox_inches="tight")
     plt.close(boxplot_fig)
     print(f"Separate boxplot saved as '{boxplot_output}'")
+
+    violin_fig, violin_ax = plt.subplots(1, 1, figsize=(10, 10))
+
+    create_violin_plot(
+        violin_ax,
+        sum_boxes,
+        positions,
+        f"Sum(Rest)/First Ratio Distribution",
+        ("lightpink", "red", "darkred"),
+        all_lengths,
+    )
+    violin_output = base_name + "-violin.svg"
+    violin_ax.set_title(None)
+    violin_fig.tight_layout()
+    violin_fig.savefig(violin_output, bbox_inches="tight")
+    plt.close(violin_fig)
+    print(f"Separate violin plot saved as '{violin_output}'")
 
     return fig
 
@@ -113,7 +131,7 @@ def process_log_file(
     # Create and save ratio plots if requested
     if plot_ratios:
         base_name = os.path.splitext(logfile)[0]
-        ratio_fig = create_ratio_figure(data_by_len, base_name + "-boxplot.svg")
+        ratio_fig = create_ratio_figure(data_by_len, base_name)
         ratio_output = base_name + "-ratios.svg"
         ratio_fig.tight_layout()
         ratio_fig.savefig(ratio_output, bbox_inches="tight")
