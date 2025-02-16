@@ -98,7 +98,11 @@ pub fn fuzz() {
             let state_map_observer = unsafe {
                 let state_map_len = state_map.len();
                 StdMapObserver::from_mut_ptr(
-                    "state-map-observer",
+                    if opt.state_diff() {
+                        "state-diff-map-observer"
+                    } else {
+                        "state-map-observer"
+                    },
                     state_map.as_mut_ptr(),
                     state_map_len,
                 )

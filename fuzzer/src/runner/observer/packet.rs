@@ -74,6 +74,7 @@ impl PacketObserver {
 
         let current_idx = u16::from(&*current_state) as usize;
 
+        #[expect(clippy::collapsible_else_if)]
         let offset = if self.use_state_diffs {
             // only update states on incoming packets, otherwise any flag combination in front of nothing is a new combo.
             let prev_state = matches!(current_state, Source::Server(..)).then(|| {
@@ -86,7 +87,11 @@ impl PacketObserver {
             let prev_idx = prev_state.map(|p| u16::from(p) as usize);
             prev_idx.map(|p| Self::calculate_combined_offset(p, current_idx))
         } else {
-            Some(current_idx)
+            if matches!(current_state, Source::Server(..)) {
+                Some(current_idx)
+            } else {
+                None
+            }
         };
 
         if let Some(offset) = offset {

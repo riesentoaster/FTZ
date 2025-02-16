@@ -146,11 +146,20 @@ def main():
 
         times_list = []
         values_list = []
-        for data_points in all_data_points:
-            times = [d["run_time"] for d in data_points]
-            values = [d.get(field, 0) for d in data_points]
-            times_list.append(times)
-            values_list.append(values)
+        valid_labels = []
+        for data_points, label in zip(all_data_points, labels):
+            # Check if this data series has any values for this field
+            values = [d.get(field) for d in data_points]
+            # Only include the series if it has at least one non-None value
+            if any(v is not None for v in values):
+                times = [d["run_time"] for d in data_points]
+                times_list.append(times)
+                values_list.append(values)
+                valid_labels.append(label)
+
+        # Skip creating subplot if no data series have this field
+        if not times_list:
+            continue
 
         # Determine if the field represents a percentage
         is_percent = field in all_percent_fields
@@ -159,7 +168,7 @@ def main():
         config = {
             "times_list": times_list,
             "y_list": values_list,
-            "labels": labels,
+            "labels": valid_labels,
             "ylabel": f"{field} [{' %' if is_percent else 'count'}]",
         }
 
@@ -168,12 +177,13 @@ def main():
 
         configs.append(config)
 
-        # Only add recent plots if the flag is set
-        if args.include_recent:
+        # Only add recent plots if the flag is set and we have data
+        if args.include_recent and times_list:
             recent_times_list = []
             recent_values_list = []
+            recent_labels = []
 
-            for times, values in zip(times_list, values_list):
+            for times, values, label in zip(times_list, values_list, valid_labels):
                 max_time = max(times)
                 min_time = min(times)
                 if (max_time - min_time) < 3600:
@@ -189,12 +199,13 @@ def main():
                     recent_values = [values[i] for i in recent_indices]
                     recent_times_list.append(recent_times)
                     recent_values_list.append(recent_values)
+                    recent_labels.append(label)
 
             if recent_times_list:
                 config = {
                     "times_list": recent_times_list,
                     "y_list": recent_values_list,
-                    "labels": labels,
+                    "labels": recent_labels,
                     "ylabel": f"Recent {field} [{' %' if is_percent else 'count'}]",
                 }
                 if use_float_format:
