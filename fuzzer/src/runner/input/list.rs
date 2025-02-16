@@ -66,6 +66,12 @@ impl<I> ListInput<I> {
         inner.map(ToLastEntryListMutator)
     }
 
+    pub fn map_to_mutate_on_random<M: Map<ToRandomEntryListMutator>>(
+        inner: M,
+    ) -> <M as Map<ToRandomEntryListMutator>>::MapResult {
+        inner.map(ToRandomEntryListMutator)
+    }
+
     pub fn parts(&self) -> &[I] {
         &self.parts
     }

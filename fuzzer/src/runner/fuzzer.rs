@@ -142,7 +142,7 @@ pub fn fuzz() {
                 CrashLoggingFeedback::new(),
             );
 
-            let solutions = OnDiskCorpus::<ListInput<BytesInput>>::new(opt.solutions_dir())?;
+            let solutions = OnDiskCorpus::<ListInput<EtherparseInput>>::new(opt.solutions_dir())?;
             // let corpus = OnDiskCorpus::new(opt.corpus_dir())?;
 
             let corpus = InMemoryCorpus::new();
@@ -165,7 +165,7 @@ pub fn fuzz() {
             .map(ToAppendingMutatorWrapper);
 
             let mutators =
-                ListInput::<BytesInput>::map_to_mutate_on_last(havoc_mutations_no_crossover())
+                ListInput::<EtherparseInput>::map_to_mutate_on_last(EtherparseInput::mutators())
                     .merge(appending_muators);
 
             println!("Input/Mutator config: {}", mutators.0.name());
