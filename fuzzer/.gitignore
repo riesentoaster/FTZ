@@ -15,4 +15,4 @@ cov-*
 __pycache__
 *.svg
 !*/**/*.svg
-temp
+temp*
