@@ -679,7 +679,7 @@ The consistencies of both feedbacks show a further notable statistic: The averag
   \label{fig:overcommit-exec-speed}
 \end{figure}
 
-When spawning a single fuzzing client per core, as is usual in fuzzing, the CPU averages approximately 0.8\% user space time and 1.9 system space time. Increasing the \code{overcommit} value and thus the number of clients per core increases instability rates for both observers, as seen in \cref{fig:overcommit-consistencies}. However, it simultaneously increases the overall execution speed of the fuzzer as seen in \cref{fig:overcommit-exec-speed}. The CPU loads for \code{overcommit} values of 10, 20, and 50 are 3.9\%/10.1\%, 8.7\%/23.1\%, and \todo{insert} respectively.
+When spawning a single fuzzing client per core, as is usual in fuzzing, the CPU averages approximately 0.8\% user space time and 1.9 system space time. Increasing the \code{overcommit} value and thus the number of clients per core increases instability rates for both observers, as seen in \cref{fig:overcommit-consistencies}. However, it simultaneously increases the overall execution speed of the fuzzer as seen in \cref{fig:overcommit-exec-speed}. The CPU loads for \code{overcommit} values of 10, 20, and 50 are 3.9\%/10.1\%, 8.7\%/23.1\%, and 8.3\%/89.9\% respectively.
 
 \subsubsection*{Discussion}
 
