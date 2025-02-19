@@ -62,30 +62,7 @@
 \addbibresource{sources.bib}
 \renewcommand*{\bibfont}{\footnotesize}
 
-%\usepackage{multicol}
 \setlength{\columnsep}{13mm}
-
-% \usepackage{hypcap}
-% \usepackage{caption}
-% \captionsetup{
-%     justification=centerlast,
-%     font=small,
-%     labelfont=sc,
-%     margin=5pt,
-%     belowskip=15pt
-% }
-% \DeclareCaptionType{listing}[Listing][List of Listings]
-
-
-\author{%
-    Valentin Huber\vspace{5px}\\%
-    \small at \href{https://www.cydcampus.admin.ch/}{Cyber Defence Campus}\\%
-    \small and \href{https://www.zhaw.ch/en/engineering/institutes-centres/init/}{Institute of Computer Science at ZHAW}\\%
-    \small \href{mailto://contact@valentinhuber.me}{contact@valentinhuber.me}%
-    \vspace{10px}
-    \todo{@Peter I need the title page template}
-}
-
 
 \DeclareFieldFormat*{citetitle}{\textit{#1}}
 \hfuzz=50px
@@ -109,11 +86,10 @@
     \vspace*{\stretch{1.5}}
     {\Large\bfseries Valentin Huber}\\
     \vspace*{\stretch{1}}
-    {\large\bfseries Master's Thesis}\\
-    \vspace*{\stretch{1}}
+    {\large{\bfseries Master's Thesis} at}\\[1ex]
     \href{https://www.zhaw.ch/en/engineering/institutes-centres/init/information-security}{
       Zürich University of Applied Sciences ZHAW\\
-      Institute of Computer Science\\
+      Institute of Computer Science InIT\\
       Information Security Research Group
     }\\[2ex]
     In collaboration with \href{https://www.cydcampus.admin.ch/}{Cyber Defence Campus}\\
@@ -163,17 +139,17 @@
 \section{Introduction}
 \label{Introduction}
 
-Zephyr is an open-source real-time operating system (OS) hosted by the Linux Foundation\cite{ZephyrAbout}. Real-time OSs allow programers to define time constraints on their code, which are then guaranteed by the process scheduler. To do this, processes have to be verifiably complete within a constant maximal time or fail safely. This is particularly important for safety-critical systems where delays in computation can pose serious risk, such as control of a robot\cite{RTOSWiki}. Zephyr is used in a wide range of products, including large industrial equipments such as wind turbines, medtech devices such as hearing aids, laptops, or embedded devices such as emergency water detectors\cite{ZephyrUsedIn}.
+Zephyr is an open-source real-time operating system (OS) hosted by the Linux Foundation\cite{ZephyrAbout}. Real-time OSs allow programers to define time constraints on their code, which are then guaranteed by the process scheduler. This is particularly important for safety-critical systems where delays in computation can pose serious risk, such as control of a robot. To achieve this, all operations have to be verifiably complete within a constant maximal time or fail safely.\cite{RTOSWiki}. Zephyr is used in a wide range of products, including large industrial equipments such as wind turbines, medtech devices such as hearing aids, laptops controllers, or embedded devices such as emergency water detectors\cite{ZephyrUsedIn}.
 
-Zephyr projects typically connect to other devices or the internet using one of the OS's networking libraries, such as a custom-built TCP/IP stack. Since many of these devices need access to the internet, any defect in the network stack is comparatively likely to be remotely exploitable and thus critical. In combination with the potentially dangerous devices Zephyr runs on, this makes the correctness of these parts of Zephyr paramount.\todo{@Peter is this a reasonable statement? Do I need a source? Too much opinion?}
+Zephyr projects typically connect to other devices or the internet using one of the OS's networking libraries, such as the Zephyr TCP/IP stack. Since many of these devices need access to the internet, any defect in the network stack is comparatively likely to be remotely exploitable and thus critical. In combination with the potentially dangerous devices Zephyr runs on, this makes the correctness of these parts of Zephyr arguably important.
 
-Fuzzing has been established as a widely used technique\cite{Demystifying} to find software defects by repeatedly running a certain program under test (PUT) with a wide range of inputs and observing the execution for illegal program states such as crashes. It has been applied to great effect: Windows requires dominant software to be fuzzed prior to release\cite{Demystifying}, and its fuzzer SAGE\cite{SAGE} \textquote{reportedly found a third of the Windows 7 bugs between 2007-2009}\cite{FuzzingTheStateOfTheArt}. Google admitted to finding 20,000 vulnerabilities in Chrome alone using fuzz testing\cite{Demystifying}, while its OSS-Fuzz program continuously fuzzing open-source software has resulted in over 6,500 vulnerabilities and 21,000 functional bugs fixed across 500 critical projects\cite{ClusterFuzzLite}.
+Fuzzing has been established as a widely used technique\cite{Demystifying} to find software defects by repeatedly running a certain program under test (PUT) with a wide range of inputs and observing the execution for illegal program states such as crashes. It has been applied to great effect: Microsoft requires dominant software to be fuzzed prior to release\cite{Demystifying}, and its fuzzer SAGE\cite{SAGE} \textquote{reportedly found a third of the Windows 7 bugs between 2007-2009}\cite{FuzzingTheStateOfTheArt}. Google mentioned finding 20,000 vulnerabilities in Chrome alone using fuzz testing\cite{Demystifying}, while its OSS-Fuzz program continuously fuzzing open-source software has resulted in over 6,500 vulnerabilities and 21,000 functional bugs fixed across 500 projects deemed critical enough to be included in OSS-Fuzz\cite{ClusterFuzzLite}.
 
 Ever since its inception in the nominal work by \citeauthor{UNIX}\cite{UNIX}, who used random data to test Unix utilities, many improvements to fuzzing have been introduced to the state of the art. Among many others (Google Scholar retrieves more than 60,000 results in a search for \textquote{fuzz testing}\cite{GoogleScholarFuzzing}) include observing the program execution to guide the fuzzer when selecting the next input to test, or improved oracles such as memory sanitizers. \cref{Background:MutationalFuzzing} provides additional background on specific fuzzing technique employed in this project called mutational fuzzing.
 
 However, fuzzing the network stack of an operating system poses three additional challenges: (1) they are deeply integrated with the OS, (2) they require highly structured input data, and (3) they have internal state. These challenges are further elaborated in \cref{Background:FuzzingNetworkStacksIsHard}.
 
-For this thesis, I developed a proof-of-concept Fuzzer targeting the TCP/IP stack of Zephyr (\proj), built on top of the fuzzing library LibAFL. \proj uses advanced input representation and mutation techniques, stateful feedback, and reliability-enhancing logic to effectively test Zephyr. The remainder of this thesis is structured as follows:
+For this thesis, I developed a proof-of-concept Fuzzer targeting the TCP/IP stack of Zephyr (\proj), built on top of the fuzzing library LibAFL. \proj uses two different input representation along with appropriate mutation techniques, two strategies for targeting input parts to mutate, stateful feedback based on a heuristic requiring no target instrumentation, and reliability-enhancing logic to effectively test Zephyr. The remainder of this thesis is structured as follows:
 
 \begin{itemize}
   \item \cref{Background} presents further background on fuzzing in general and targeting TCP/IP systems in particular,
@@ -183,13 +159,9 @@ For this thesis, I developed a proof-of-concept Fuzzer targeting the TCP/IP stac
   \item \cref{Conclusion} summarizes the findings of this thesis.
 \end{itemize}
 
-\todo{@Peter doesn't a pagebreak here (and before other section headings) look odd?}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Background %%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\raggedbottom\pagebreak
 
 \section{Background}
 \label{Background}
@@ -199,7 +171,7 @@ This section presents additional background information required to understand t
 \subsection{Mutational Fuzzing}
 
 \label{Background:MutationalFuzzing}
-\proj implements mutational fuzzing. This is a technique use across a wide range of influential fuzzers, such as AFL++\cite{AFLPlusPlus}, syskaller\cite{syskaller}, libFuzzer\cite{libFuzzer}, Honggfuzz\cite{hongfuzz}, or OSS-Fuzz\cite{OSSFuzz}. A mutational fuzzer maintains a corpus of inputs, first seeded at startup with a number of entries that are either generated randomly or loaded from a predefined set. The fuzzer then iteratively chooses one of the inputs in its corpus, mutates it in some way, and evaluates it in the PUT.
+\proj implements mutational fuzzing. This is a technique use across a wide range of influential fuzzers, such as AFL++\cite{AFLPlusPlus}, syskaller\cite{syskaller}, libFuzzer\cite{libFuzzer}, Honggfuzz\cite{hongfuzz}, or OSS-Fuzz\cite{OSSFuzz}. A mutational fuzzer maintains a corpus of inputs, first seeded at startup with a number of entries that are either generated randomly or loaded from a predefined set. The fuzzer then iteratively chooses one of the inputs in its corpus, mutates it in some way, and evaluates it in the PUT\cite{FuzzingBook}.
 
 During the execution, mutational fuzzers observe the PUT in certain ways, such as by collecting information about which parts of the PUT's code were executed. These fuzzers are also known as greybox fuzzers — a mixture between blackbox fuzzers, which do not know anything about the internals of the PUT during the execution, and whitebox fuzzers, which further analyze the executed logic using symbolic execution or taint analysis\cite{Demystifying}.
 
@@ -212,7 +184,7 @@ As introduced in \cref{Introduction}, fuzzing an operating system's network stac
 
 \subsubsection{Deep integration with OS}
 
-OS' built-in network stacks are deeply integrated with other subsystems, such as the memory management subsystem for accessing the network interface card and socket buffers, the system call-based API thought the virtual filesystem. It further relies on the system's scheduler for event notifications. Extracting the network stack from the rest of the kernel to be run independently is therefore infeasible, since it would require extensive additional engineering, which is error-prone and may result in findings that do not hold on the original implementation\cite{KernelVsUserNetworking}.
+OS' built-in network stacks are deeply integrated with other subsystems, such as the memory management subsystem for accessing the network interface card and socket buffers, or the system's scheduler for event notifications. Extracting the network stack from the rest of the kernel to be run independently is therefore infeasible, since it would require extensive additional engineering, which is error-prone and may result in findings that do not hold on the original implementation\cite{KernelVsUserNetworking}.
 
 To test the network stack of an operating system using a fuzzer, one therefore has to run the entire operating system, which includes a lot of logic unrelated to the network stack itself, thus introducing a significant performance penalty. This further means that any sanitizer has to be introduced into the OS' build system, which may not be possible because the additional logic may break assumptions made by the OS developers (see \cref{Implementation:native_sim}). Finally, OS' kernels are by definition tightly integrated with hardware, and running an operating system therefore requires either dedicated hardware (which may be hard to observe and communicate with), or some form of hardware and environment simulation, introducing additional performance penalties.
 
@@ -291,7 +263,7 @@ Additionally, many advanced algorithms such as the mutation scheduler from MOpt\
 
 \subsection{Fuzzing Zephyr}
 
-I was unable to find scientific work evaluating fuzz testing on Zephyr. There are however reports of fuzzing campaigns available, listed and compared to \proj here:
+I was unable to find scientific work evaluating fuzz testing on Zephyr. \todo{Check again} There are however reports of fuzzing campaigns available, listed and compared to \proj here:
 
 Zephyr has an integration to test parts of the software that are callable from user code using libFuzzer. Compilation of an instrumented version of the OS and linking with libFuzzer is possible with a simple build system configuration entry. However, the example project used as an explanation in Zephyr's documentation does not contain any kernel logic and instead dummy code showing the abilities of coverage-guided fuzzing\cite{ZephyrFuzzing, ZephyrFuzzingSample}.
 
@@ -306,7 +278,7 @@ Finally, \citeauthor{ZephyrFuzzCI} discuss fuzzing Zephyr projects in a continuo
 \subsection{Stateful Protocol Fuzzing}
 \label{RelatedWorks:ProtocolFuzzing}
 
-The wider field of protocol fuzzing has received considerable attention. I have selected a set of works published before October of 2024 to represent the potential improvements implemented and evaluated in \proj. Stateful protocol fuzzing has received considerable attention — refer to the survey papers such as \cite{StatefulReview,Survey,IndustrialReview} for a more complete overview over the state of the art.
+The wider field of protocol fuzzing has received considerable attention. A set of works published before October of 2024 have been selected to represent the potential improvements implemented and evaluated in \proj. Stateful protocol fuzzing has received considerable attention — refer to the survey papers such as \cite{StatefulReview,Survey,IndustrialReview} for a more complete overview over the state of the art.
 
 \citeauthor{ProFuzzBench} propose a benchmark for stateful protocol fuzzers iin ProFuzzBench\cite{ProFuzzBench}, containing a suite of 10 protocols and 11 open-source implementations of those to be tested. TCP notably is not part of this benchmark directly, but is used as an underlying protocol for others, such as FTP. State feedback is provided by HTTP status codes — certain protocols such as FTP already provide these, others are patched to do so based on a superficial heuristic for their state. The authors note that configuration of the targets is not taken into account and multi-party ($\geq 3$ participants) protocols cannot currently be fuzzed. Non-determinism in the programs make feedback (like code coverage) less predictable and thus fuzzing less performant, because it introduces non-differentiable duplicate entries into the corpus.
 
@@ -790,9 +762,13 @@ Alternatively, \proj could be evaluated on other implementations of TCP/IP stack
 Finally, one could investigate how state information could be used besides feedback. \cref{RelatedWorks:ProtocolFuzzing:UseOfState} discusses advancements other projects have shown by using state information in other parts of the fuzzer, such as the scheduler.
 
 \subsection{Contributions and Summary}
-\todo{write}
+This thesis presents \proj, a proof-of-concept fuzzer targeting the TCP/IP stack of Zephyr. To achieve this, it introduces a custom ethernet driver based on shared memory to reduce host kernel dependencies. \code{native_sim}, the environment simulation wrapper, is used to run Zephyr without the need for a dynamic emulation layer. It is built on and extends the fuzzing framework LibAFL.
 
-\vspace{30px}
+In addition to initial investigation into the reasons for Zephyr's at times unpredictable behavior, I evaluated the differences in performance of mutations on serialized and parsed packet representations, two strategies to select which message in a trace to mutate, and two heuristics to estimate the TCP state of a connection based on returned packets.
+
+The experiments show that even limited structure-aware mutation is more efficient at covering both code coverage and the state space compared to naïve random mutation. In addition to appending new packets, mutating the last message of a trace is more efficient than selecting a random message to mutate. Finally, I present that maximizing simple state feedback as calculated by the heuristic quickly saturates the possible state space after which \proj no longer makes any progress. Conversely, maximizing coverage across state transitions proofs to be more effective.
+
+\vspace*{\stretch{2}}
 \begin{center}
   \centering
   In the interest of open science, the source code and all artifacts produced during this project are publicly available and released under an open-source license. During development, thousands of lines of code have been introduced to multiple upstream projects. All artifacts produced for this project are available at
@@ -801,6 +777,7 @@ Finally, one could investigate how state information could be used besides feedb
 
   \href{https://github.com/riesentoaster/fuzzing-zephyr-network-stack}{github.com/riesentoaster/fuzzing-zephyr-network-stack}.\todo{change url}
 \end{center}
+\vspace*{\stretch{1}}
 
 \onecolumn
 \newpage
