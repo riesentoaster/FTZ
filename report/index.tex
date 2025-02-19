@@ -584,17 +584,18 @@ To evaluate the consistency of the PUT when executed by the fuzzer, I changed \p
 
 When \proj is setup to use both coverage and state-diff feedback, and requiring inputs to be consistent in both their coverage and state measurements, the results in \cref{fig:both-inter} are measured. The results for runs checking coverage and state-diff feedback exclusively can be found in \cref{fig:cov-inter,fig:state-diff-inter}. All figures show the average stability measured across inputs of a certain trace length. The evaluations were run across 64 cores, with 10 clients per core, for approximately 24 hours and 40 million target executions on individual feedbacks, and for 48 hours for the combined feedback.
 
-\begin{figure}[htb]
+\todo{Re-render plots at higher DPI, fix placement}
+\begin{figure}
   \includegraphics[width=\columnwidth]{assets/consistency/both-observer-ratios-by-len.png}
   \caption{Average stability of both feedbacks across trace lengths}
   \label{fig:both-inter}
 \end{figure}
-\begin{figure}[htb]
+\begin{figure}
   \includegraphics[width=\columnwidth]{assets/consistency/coverage-observer-ratios-by-len.png}
   \caption{Average stability of coverage feedback across trace lengths}
   \label{fig:cov-inter}
 \end{figure}
-\begin{figure}[htb]
+\begin{figure}
   \includegraphics[width=\columnwidth]{assets/consistency/state-diff-observer-ratios-by-len.png}
   \caption{Average stability of state-diff feedback across trace lengths}
   \label{fig:state-diff-inter}
