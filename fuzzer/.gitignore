@@ -2,7 +2,7 @@
 *.pcap
 *.log
 !log/**/*.log
-monitor.*
+*monitor.json
 solutions
 corpus*/
 *.tmp
