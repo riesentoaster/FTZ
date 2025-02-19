@@ -1,0 +1,5 @@
+top - load average: 4174.90, 4176.17, 4159.79
+Tasks: 10934 total, 1689 running, 8591 sleeping, 0 stopped, 653 zombie
+%Cpu(s): 8.3 us, 89.9 sy, 0.0 ni, 1.8 id, 0.0 wa, 0.0 hi, 0.0 si, 0.0 st
+MiB Mem : 128825.6 total, 101336.5 free, 24187.5 used, 3301.6 buff/cache
+MiB Swap: 0.0 total, 0.0 free, 0.0 used, 103326.8 avail Mem
