@@ -582,26 +582,26 @@ All experiments were performed on a 64-core AMD EPYC-Milan machine, using the co
 \label{Results:Consistency}
 To evaluate the consistency of the PUT when executed by the fuzzer, I changed \proj to use \code{StdScheduler}, which selects inputs from the corpus at random, to generate a wider range of inputs. I further set up \code{ReplayingFuzzer} to evaluate input traces until the most common appears at least 100 times and a factor of 1.5 more often than any other input, up to 1500 executions per input.
 
-When \proj is setup to use both coverage and state-diff feedback, and requiring inputs to be consistent in both their coverage and state measurements, the results in \cref{fig:both-inter} are measured. The results for runs checking coverage and state-diff feedback exclusively can be found in \cref{fig:cov-inter,fig:state-diff-inter}. All figures show the average stability measured across inputs of a certain trace length. The evaluations were run across 64 cores, with 10 clients per core, for approximately 24 hours and 40 million target executions on individual feedbacks, and for 48 hours for the combined feedback.
+When \proj is setup to use both coverage and state-diff feedback, and requiring inputs to be consistent in both their coverage and state measurements, the results in \cref{fig:both-inter} are measured. The results for runs checking coverage and state-diff feedback exclusively can be found in \cref{fig:cov-inter,fig:state-diff-inter}. All figures show the average stability measured across trace lengths. The evaluations were run across 64 cores, with 10 clients per core, for approximately 24 hours and 40 million target executions on individual feedbacks, and for 48 hours for the combined feedback.
 
 \todo{Re-render plots at higher DPI, fix placement}
 \begin{figure}
-  \includegraphics[width=\columnwidth]{assets/consistency/both-observer-ratios-by-len.png}
+  \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/consistency/both-observer-ratios-by-len.png}}
   \caption{Average stability of both feedbacks across trace lengths}
   \label{fig:both-inter}
 \end{figure}
 \begin{figure}
-  \includegraphics[width=\columnwidth]{assets/consistency/coverage-observer-ratios-by-len.png}
+  \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/consistency/coverage-observer-ratios-by-len.png}}
   \caption{Average stability of coverage feedback across trace lengths}
   \label{fig:cov-inter}
 \end{figure}
 \begin{figure}
-  \includegraphics[width=\columnwidth]{assets/consistency/state-diff-observer-ratios-by-len.png}
+  \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/consistency/state-diff-observer-ratios-by-len.png}}
   \caption{Average stability of state-diff feedback across trace lengths}
   \label{fig:state-diff-inter}
 \end{figure}
 
-To find the source of the different coverage maps measured across multiple executions of the same input, I added additional logging to \code{__sanitier_cov_trace_pc_guard} (refer to \cref{Implementation:SanCov}) for the guard index along with the function from which the basic block transitions originates. At the same time, the differences between executions are mapped back to guard index in the fuzzer and recorded. The most common functions appearing in this list are the following:
+To find the source of the different coverage maps measured across multiple executions of the same input, I added additional logging to \code{__sanitier_cov_trace_pc_guard} (refer to \cref{Implementation:SanCov}), recording the guard index and the address the function returns to. The latter is used to map guard to source code location. At the same time, the differences between executions are mapped back to guard index in the fuzzer and recorded. This information is then combined, and sorted by how often each guard appears. The most common functions appearing in this list are the following:
 \begin{enumerate}
   \item \code{k_work_init_delayable} from \code{kernel/work.c}
   \item \code{net_ipv6_mld_init} from \code{net/ip/ipv6_mld.c}
@@ -624,64 +624,66 @@ Both coverage and state-diff results show inconsistencies when Zephyr is run by 
 \paragraph{Distribution}
 
 \paragraph{Coverage}
-As discussed in \cref{Implementation:SanCov}, for certain coverage entries, the \textit{how often} a certain basic block is executed is expected to be inconsistent because of the inconsistencies of the host scheduler. However, since \proj only taints executed basic blocks, the differences measured are between a basic block being executed any number of times and the basic block not being executed at all. Functions such as \code{net_init} should be called on every launch, and if they are not executed, Zephyr may not be initialized correctly, thus invalidating any evaluation on it, indicating that the differences in coverage can not be ignored by \proj. It is further noticeable that many of the functions in the list of inconsistently executed basic blocks appear to be related to system startup and initialization. It is further notable that coverage is measured with high consistency across trace length, which may suggest that the logic only executed sometimes is not related to packet handling.
+As discussed in \cref{Implementation:SanCov}, for certain coverage entries, \textit{how often} a certain basic block is executed is expected to be inconsistent because of inherent inconsistencies of the non-deterministic host scheduler. However, since \proj only taints executed basic blocks, the differences measured are between a basic block being executed any number of times and the basic block not being executed at all. Functions such as \code{net_init} should be called on every launch, and if they are not executed, Zephyr may not be initialized correctly, thus invalidating any evaluation on it, indicating that the differences in coverage can not be ignored by \proj. It is further notable that many of the functions in the list of inconsistently executed basic blocks appear to be related to system startup and initialization. Finally, coverage is measured with high consistency across trace length, which may suggest that the logic only executed sometimes is not related to packet handling.
 
-While \cref{Results:Overcommit} explores how different configurations of Zephyr make both state and code coverage less stable at the host's performance limit, I was unable to determine the fundamental source of these inconsistencies. Because of the high rate of inconsistency in the measurements of basic block coverage, I decided to not use it as feedback to the fuzzer in \proj. However, the values can still be used as a heuristic to measure the fuzzer's ability to test all system parts recorded at any part in any execution. Since \code{MaxMapFeedback} records map entries present in \textit{any} map passed to it, even if a certain function is not called in one execution because something went wrong e.g. during Zephyr's initialization logic, the same function is likely to be triggered in one of the other executions.
+While \cref{Results:Overcommit} explores how different configurations of Zephyr make both state and code coverage less stable at the host's performance limit, I was unable to determine the fundamental source of these inconsistencies. Because of the high rate of inconsistency in the measurements of basic block coverage, I decided to not use it as feedback to the fuzzer in \proj. However, the values can still be used as a heuristic to measure the fuzzer's ability to test all system parts recorded at any part in any execution. Since \code{MaxMapFeedback} records map entries present in \textit{any} map passed to it, even if a certain function is not called in one execution because something went wrong, e.g. during Zephyr's initialization logic, the same function is likely to be triggered in one of the other executions.
 
 \paragraph{State-Diff}
 
-The differences as measured by the state-diff observer indicates a difference in packets received by the fuzzer. This could be confirmed by manual inspection of the different interactions between the fuzzer and Zephyr from the same input. As described in \cref{Implementation:ImplementationDetails:HelperFunctionality,Implementation:ImplementationDetails:Client}, \proj provides functionality to extract these into \code{pcap} files. \cref{fig:wireshark-combined} show screenshots of three different exchanges recorded for 10 executions with the same input.
+The differences as measured by the state-diff observer indicates a difference in packets received by the fuzzer. This could be confirmed by manual inspection of the different interactions between the fuzzer and Zephyr from the same input. As described in \cref{Implementation:ImplementationDetails:HelperFunctionality,Implementation:ImplementationDetails:Client}, \proj provides functionality to extract these into \code{pcap} files. \cref{fig:wireshark-combined} shows screenshots of three different exchanges recorded for 10 executions with the same input.
 
-Like in the example, retransmitted packets and those resetting the connection appear frequently. However, I have not been able to find a reason for the inconsistencies or a definite pattern between them.
+Like in the example, retransmitted packets and those resetting the connection appear frequently. However, I was unable to find a reason for the inconsistencies or a definite pattern between them.
 
 Unlike with basic block coverage, state-diff coverage seems to be trace-length dependent: Traces with length $\le5$ are almost always consistent with respect to the packets exchanged between fuzzer and Zephyr. However, the ratio does not continue rising with increased trace length after that, as would be expected if the error rate is independent of state and packet. This suggests that there remains an unknown factor influencing reliability of Zephyr's responses. The fact that short traces are executed comparatively consistently may be caused by either a filling buffer in Zephyr or an underlying problem requiring Zephyr to be in a state only reachable with a certain number of packets.
 
 \paragraph{Distribution}
 
-The consistencies of both feedbacks show a further notable statistic: The average incorrect-to-correct ratios are higher than the medians by a considerable margin across all trace lengths (at least for those that have a significant number of traces evaluated). \cref{fig:both-inter-boxplot,fig:cov-inter-boxplot,fig:state-diff-inter-boxplot} show the distribution of ratios between the incorrect and correct measurements across trace lengths. For an input that provoked three different observer values appearing 2, 10, and 100 times, this ratio would therefore be 0.12. This conjecture is further compounded for state-diff feedback specifically by the distribution of the ratios according to \cref{fig:state-diff-inter-violin}, showing two sections along the y-axis with higher densities, at approximately 0.1 and 0.75 respectively, with fewer inputs resulting in consistencies at around 0.4. These distributions may be used to further evaluate whether either one or both feedbacks behave inconsistent for all inputs equally or if there exists a class of inputs for which Zephyr behaves more or less consistently. However, I was unable to complete an in-depth evaluation of this phenomenon as part of this thesis.
+% The consistencies of both feedbacks show a further notable statistic: The average incorrect-to-correct ratios are higher than the medians by a considerable margin across all trace lengths (at least for those that have a significant number of traces evaluated). \cref{fig:both-inter-boxplot,fig:cov-inter-boxplot,fig:state-diff-inter-boxplot} show the distribution of ratios between the incorrect and correct measurements across trace lengths. For an input that provoked three different observer values appearing 2, 10, and 100 times, this ratio would therefore be 0.12. This conjecture is further compounded for state-diff feedback specifically by the distribution of the ratios according to \cref{fig:state-diff-inter-violin}, showing two sections along the y-axis with higher densities, at approximately 0.1 and 0.75 respectively, with fewer inputs resulting in consistencies at around 0.4. These distributions may be used to further evaluate whether either one or both feedbacks behave inconsistent for all inputs equally or if there exists a class of inputs for which Zephyr behaves more or less consistently. However, I was unable to complete an in-depth evaluation of this phenomenon as part of this thesis.
 
-\begin{figure}
-  \includegraphics[width=\columnwidth]{assets/consistency/both-boxplot.png}
-  \caption{Ratio between incorrect and correct observer measurements across trace lengths when using both feedbacks}
-  \label{fig:both-inter-boxplot}
-\end{figure}
-\begin{figure}
-  \includegraphics[width=\columnwidth]{assets/consistency/coverage-boxplot.png}
-  \caption{Ratio between incorrect and correct observer measurements across trace lengths when using coverage feedback}
-  \label{fig:cov-inter-boxplot}
-\end{figure}
-\begin{figure}
-  \includegraphics[width=\columnwidth]{assets/consistency/state-diff-boxplot.png}
-  \caption{Ratio between incorrect and correct observer measurements across trace lengths when using state-diff feedback}
-  \label{fig:state-diff-inter-boxplot}
-\end{figure}
+The consistencies of both feedbacks show a further notable statistic: There seems to be a set of inputs triggering inconsistent behavior more likely than others. \cref{fig:state-diff-inter-violin} shows the distribution of ratios between the incorrect and correct measurements across trace lengths. For an input that provoked three different observer values appearing 2, 10, and 100 times, this ratio would therefore be 0.12. There appear two sections along the y-axis with higher densities, at approximately 0.1 and 0.75 respectively, with fewer inputs resulting in consistencies at around 0.4. However, I was unable to complete an in-depth evaluation of this phenomenon as part of this thesis.
+
+% \begin{figure}
+%   \includegraphics[width=\columnwidth]{assets/consistency/both-boxplot.png}
+%   \caption{Ratio between incorrect and correct observer measurements across trace lengths when using both feedbacks}
+%   \label{fig:both-inter-boxplot}
+% \end{figure}
+% \begin{figure}
+%   \includegraphics[width=\columnwidth]{assets/consistency/coverage-boxplot.png}
+%   \caption{Ratio between incorrect and correct observer measurements across trace lengths when using coverage feedback}
+%   \label{fig:cov-inter-boxplot}
+% \end{figure}
+% \begin{figure}
+%   \includegraphics[width=\columnwidth]{assets/consistency/state-diff-boxplot.png}
+%   \caption{Ratio between incorrect and correct observer measurements across trace lengths when using state-diff feedback}
+%   \label{fig:state-diff-inter-boxplot}
+% \end{figure}
 \begin{figure}
   \includegraphics[width=\columnwidth]{assets/consistency/state-diff-violin.png}
-  \caption{Ratio between incorrect and correct observer measurements across trace lengths when using state-diff feedback}
+  \caption{Ratio between incorrect and correct observer measurements across trace lengths when using state-diff feedback (violin width indicates density)}
   \label{fig:state-diff-inter-violin}
 \end{figure}
 
 \subsection{Throughput and Overcommit}
 \label{Results:Overcommit}
 
-\begin{figure}[htbp]
+\begin{figure}
   \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/throughput/all-other-to-most-rolling-avg-by-run_time-plot.png}}
   \todo{Add 50oc plot, limit}
   \caption{Consistencies across different overcommit values}
   \label{fig:overcommit-consistencies}
 \end{figure}
-\begin{figure}[htbp]
+\begin{figure}
   \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/throughput/exec-sec-by-run_time-plot.png}}
   \todo{Add 50oc plot, limit}
   \caption{Execution speed across different overcommit values}
   \label{fig:overcommit-exec-speed}
 \end{figure}
 
-When spawning a single fuzzing client per core, as is usual in fuzzing, the CPU averages approximately 0.8\% user space time and 1.9 system space time. Increasing the \code{overcommit} value and thus the number of clients per core increases instability rates for both observers, as seen in \cref{fig:overcommit-consistencies}. However, it simultaneously increases the overall execution speed of the fuzzer as seen in \cref{fig:overcommit-exec-speed}. The CPU loads for \code{overcommit} values of 10, 20, and 50 are 3.9\%/10.1\%, 8.7\%/23.1\%, and 8.3\%/89.9\% respectively.
+When spawning a single fuzzing client per core, as is usual in fuzzing, the CPU time load averages approximately 0.8\% in user space and 1.9 in system space. Increasing the \code{overcommit} value and thus the number of clients per core increases instability rates for both observers, as seen in \cref{fig:overcommit-consistencies}. However, it simultaneously increases the overall execution speed of the fuzzer as seen in \cref{fig:overcommit-exec-speed}. The CPU loads for \code{overcommit} values of 10, 20, and 50 are 3.9\%/10.1\%, 8.7\%/23.1\%, and 8.3\%/89.9\% respectively.
 
 \subsubsection*{Discussion}
 
-As described in \cref{Implementation:ImplementationDetails:Client}, executing a single input on Zephyr leads to a dominating number wait states in both Zephyr and the fuzzer needed for synchronization. Increasing the number of clients per core does not fully load the CPU either, suggesting the limitation of \proj is scheduling over 2500 processes requiring precise timing for their execution consistency. There exists a tradeoff between speed and consistency when configuring \proj. Increased \code{overcommit} values and thus execution speed requires additional measures to mitigate the increased error rates. The primary such mitigation is additional repeated executions of the same input, which in turn slows down the overall execution speed with regard to the number of unique inputs evaluated. For the remaining evaluation, \code{overcommit} values of 10 were used.
+As described in \cref{Implementation:ImplementationDetails:Client}, executing a single input on Zephyr leads to a dominating number wait states in both Zephyr and the fuzzer needed for synchronization. Increasing the number of clients per core does not fully load the CPU either, suggesting the limitation of \proj is scheduling over 2500 processes requiring precise timing for their execution consistency. There exists a tradeoff between speed and consistency when configuring \proj. Increased \code{overcommit} values and thus execution speed requires additional measures to mitigate the increased error rates. The primary such mitigation is additional repeated executions of the same input, which in turn slows down the overall execution speed with regard to the number of unique inputs evaluated. Since the error rates remain approximately consistent for \code{overcommit} values of up to 10, the remaining evaluations were done with \proj configured to run 10 clients per core.
 
 \subsection{State Feedback vs. State-Diff Feedback}
 
