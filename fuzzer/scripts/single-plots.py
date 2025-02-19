@@ -78,7 +78,7 @@ def parse_file(path):
 
 def plot(file_data, x_axis, key, limit_range, out_dir):
     config = global_config[key]
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(12, 6))
 
     # Filter to only files that have the key
     valid_files = {

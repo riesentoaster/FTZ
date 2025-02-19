@@ -428,6 +428,7 @@ Initial experiments showed that certain packets are received at unpredictable in
 \cref{Background:FuzzingNetworkStacksIsHard} introduced multiple challenges in fuzzing network stacks in general, and TCP stacks specifically. \proj implements multiple approaches to mitigate some of those challenges, the details of which are discussed here.
 
 \subsubsection{Trace Modelling and Mutation Target}
+\label{Implementation:InputModelling:MutationTarget}
 
 LibAFL provides a composite input type out of the box: \code{MultipartInput}. It consists of a variable number of entries, each with a name. For mutation, a random entry is chosen. This is equivalent to the algorithm for selecting which input message to mutate presented in AFLNet\cite{AFLNET} or TCP-Fuzz\cite{TCPFuzz}. However, this strategy has one significant intuitive drawback: If the corpus contains a long trace generated across many executions to arrive in a specific state by combining a large number of messages, and the mutation strategy chooses the first message to mutate, the remaining messages are likely going to be irrelevant, because the initial state changes.
 
@@ -666,52 +667,78 @@ The consistencies of both feedbacks show a further notable statistic: The averag
 \label{Results:Overcommit}
 
 \begin{figure}[htbp]
-  % \includegraphics[width=\columnwidth]{assets/overcommit/exec-sec.png}
-  \todo{include}
+  \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/throughput/all-other-to-most-rolling-avg-by-run_time-plot.png}}
+  \todo{Add 50oc plot, limit}
   \caption{Consistencies across different overcommit values}
   \label{fig:overcommit-consistencies}
 \end{figure}
 \begin{figure}[htbp]
-  \todo{include}
-  % \includegraphics[width=\columnwidth]{assets/overcommit/exec-sec.png}
+  \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/throughput/exec-sec-by-run_time-plot.png}}
+  \todo{Add 50oc plot, limit}
   \caption{Execution speed across different overcommit values}
   \label{fig:overcommit-exec-speed}
 \end{figure}
-\begin{figure}[htbp]
-  \todo{include}
-  % \includegraphics[width=\columnwidth]{assets/overcommit/exec-sec.png}
-  \caption{Coverage across different overcommit values}
-  \label{fig:overcommit-cov}
-\end{figure}
-\begin{figure}[htbp]
-  \todo{include}
-  % \includegraphics[width=\columnwidth]{assets/overcommit/exec-sec.png}
-  \caption{state-diff across different overcommit values}
-  \label{fig:overcommit-state-diff}
-\end{figure}
 
-When spawning a single fuzzing client per core, as is usual in fuzzing, the CPU averages approximately 0.8\% user space time and 1.9 system space time. Increasing the \code{overcommit} value and thus the number of clients per core increases instability rates for both observers, as seen in \cref{fig:overcommit-consistencies}. However, it simultaneously increases the overall execution speed of the fuzzer and thus penetration speed of the fuzzer through state-diff and basic block coverage, as seen in \cref{fig:overcommit-cov,fig:overcommit-state-diff,fig:overcommit-exec-speed}. The CPU loads for \code{overcommit} values of 10 and 20 are 3.9\%/10.1\% and 8.7\%/23.1\% respectively.
+When spawning a single fuzzing client per core, as is usual in fuzzing, the CPU averages approximately 0.8\% user space time and 1.9 system space time. Increasing the \code{overcommit} value and thus the number of clients per core increases instability rates for both observers, as seen in \cref{fig:overcommit-consistencies}. However, it simultaneously increases the overall execution speed of the fuzzer as seen in \cref{fig:overcommit-exec-speed}. The CPU loads for \code{overcommit} values of 10, 20, and 50 are 3.9\%/10.1\%, 8.7\%/23.1\%, and \todo{insert} respectively.
 
 \subsubsection*{Discussion}
 
 As described in \cref{Implementation:ImplementationDetails:Client}, executing a single input on Zephyr leads to a dominating number wait states in both Zephyr and the fuzzer needed for synchronization. Increasing the number of clients per core does not fully load the CPU either, suggesting the limitation of \proj is scheduling over 2500 processes requiring precise timing for their execution consistency. There exists a tradeoff between speed and consistency when configuring \proj. Increased \code{overcommit} values and thus execution speed requires additional measures to mitigate the increased error rates. The primary such mitigation is additional repeated executions of the same input, which in turn slows down the overall execution speed with regard to the number of unique inputs evaluated. For the remaining evaluation, \code{overcommit} values of 10 were used.
 
-\subsection{Mutation Target Selection}
-random message vs. last message
+\subsection{State Feedback vs. State-Diff Feedback}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.9\textwidth]{assets/eval/coverage-observer-by-run_time-plot.png}
+  \caption{Code coverage across different configurations}
+  \label{fig:eval-cov}
+\end{figure*}
+
+\cref{fig:eval-cov} shows the coverage achieved by the different configurations of \proj. Note that \proj is configured to measure coverage across all parts of Zephyr, and is therefore unlikely to achieve code coverage of 100\%, as many parts of the logic are not currently examined by \proj. The most stark difference is between the configurations that rely on direct state feedback and those using state-diff feedback.
+
+\begin{figure}
+  \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/eval/state-map-observer-by-run_time-plot.png}}
+  \caption{States in replies recorded by \proj when configured using direct state feedback}
+  \label{fig:eval-state-cov}
+\end{figure}
+
+\begin{figure}
+  \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/eval/corpus-by-run_time-plot.png}}
+  \caption{Number of corpus entries across different configurations}
+  \label{fig:eval-corpus}
+\end{figure}
+
+\cref{fig:eval-state-cov} shows that \proj exhausts all achievable states within the first hours, including propagation to the found inputs to all 640 clients, and is unable to find any further improvements after that. Note that \proj is very unlikely to achieve a state coverage of 100\%, as Zephyr is not built to emit every combination of flags in the TCP header. \cref{fig:eval-corpus} further corroborates this by showing that no inputs are added to the corpus after that.
+
 \subsubsection*{Discussion}
+
+The number of states that can be emitted by Zephyr seems too small to make direct state feedback an effective feedback mechanism for \proj. It may however still improve a fuzzer if it is combined with another form of feedback, like code coverage. This was however not further evaluated due to the unreliability of coverage measurements in \proj (see \cref{Results:Consistency}).
+
+\begin{figure}
+  \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/eval/state-diff-map-observer-by-run_time-plot.png}}
+  \caption{State-diff feedback covered by different configurations of \proj}
+  \label{fig:eval-state-diff-map}
+\end{figure}
+
+\subsection{Mutation Target Selection}
+
+\cref{Implementation:InputModelling:MutationTarget} introduced how \proj can be configured to mutate either a random message in a trace or always focus on the last message. \cref{fig:eval-cov} shows a small difference between the two options, for both byte array and parsed message representation. While the difference is larger in the early stages of the fuzzing campaign, selecting the last message as a mutation target is shown to be more effective even after 24 hours.
+
+\cref{fig:eval-state-diff-map} further demonstrates that the strategy always mutating the last message is also more effective and efficient at covering all possible state-diff map entries.
+
+\subsubsection*{Discussion}
+
+When randomly selecting a message to mutate, \proj with a certain probability selects the last message, which may explain why after a while, it catches up to the alternative strategy of always mutating the last message. This further suggests that the assumption described in \cref{Implementation:InputModelling:MutationTarget} holds, and mutating early messages in long traces often renders the remainder of the trace useless, as the interdependencies between states and messages is broken.
 
 \subsection{Input Modelling and Mutation}
-byte array vs. parsed structure
 
-evtl. different levels of mutators
+\cref{fig:eval-cov,fig:eval-state-diff-map} show that modelling messages as a parsed data structure is more effective and efficient at maximizing code coverage and state-diff coverage.
+
 \subsubsection*{Discussion}
 
+When modelling messages as a parsed structure, \proj is severely limited in the possible input space it can explore. It can only output fixed layer 2 and 3 headers (except for their fields that depend on the packet contents), and even the TCP header always has a correct length field and checksum. However, these experiments show that this actually helps \proj to test more parts of Zephyr.
 
-\subsection{State Feedback vs. State-Diff Feedback}
-\subsubsection*{Discussion}
-
-\subsection{Additional Mutators}
-\subsubsection*{Discussion}
+Byte array modelling of inputs and random mutation in theory is more powerful — it can generate inputs that invalidate only one of the fixed values listed above — it is very unlikely to randomly generate the correct values for all others. This further means that Zephyr will reject most packets generated by such mutation in its first parsing layer, while deeper logic is never reached.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Conclusion %%%%%%%%%%%%%%%%%%
