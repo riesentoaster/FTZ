@@ -102,12 +102,17 @@ def plot(file_data, x_axis, key, limit_range, out_dir):
             x_values, coverage, label=".".join(path.name.split(".")[:-1]), alpha=0.7
         )
 
-    if limit_range:
-        min_x_range = min(
-            max(entry.get(x_axis, 0) for entry in entries)
-            for entries in valid_files.values()
-        )
-        ax.set_xlim(0, min_x_range)
+    if limit_range is not None:
+        if isinstance(limit_range, (int, float)):
+            # Use the provided value as the x-axis limit
+            ax.set_xlim(0, limit_range)
+        else:
+            # Use the original behavior - minimum range across all files
+            min_x_range = min(
+                max(entry.get(x_axis, 0) for entry in entries)
+                for entries in valid_files.values()
+            )
+            ax.set_xlim(0, min_x_range)
 
     ax.set_xlabel("Run Time (seconds)" if x_axis == "run_time" else "Executions")
     ax.set_ylabel(config["ylabel"])
@@ -163,8 +168,10 @@ def main():
     )
     parser.add_argument(
         "--limit-range",
-        action="store_true",
-        help="Limit x-axis range to the minimum range across all input files",
+        type=float,
+        nargs="?",
+        const=True,
+        help="Limit x-axis range. If no value provided, limits to minimum range across all input files. If value provided, limits to that value.",
     )
     parser.add_argument(
         "--out-dir",
