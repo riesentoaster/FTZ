@@ -77,10 +77,15 @@
 \pagenumbering{gobble}
 \begin{titlepage}
   \large
-  \begin{flushright}
-    \includegraphics[width=0.3\textwidth]{assets/zhaw-init-logo.png}
-  \end{flushright}
-  \vspace*{\stretch{1}}
+  \begin{minipage}[c]{0.5\textwidth}
+    \includegraphics[width=0.6\textwidth]{assets/zhaw-init-logo.png}
+  \end{minipage}%
+  \begin{minipage}[c]{0.5\textwidth}
+    \raggedleft
+    \includegraphics[width=0.6\textwidth]{assets/cyd-logo.png}
+  \end{minipage}
+
+  \vspace*{\stretch{2}}
   \begin{center}
     {\Huge\bfseries \proj : A Stateful Fuzzer\\[10pt]for the TCP/IP Stack of Zephyr}\\
     \vspace*{\stretch{1.5}}
