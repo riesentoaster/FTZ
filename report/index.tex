@@ -97,12 +97,12 @@
       Institute of Computer Science InIT\\
       Information Security Research Group
     }\\[2ex]
-    In collaboration with \href{https://www.cydcampus.admin.ch/}{Cyber Defence Campus}\\
+    In collaboration with \href{https://www.cydcampus.admin.ch/}{Cyber-Defence Campus}\\
     \vspace*{\stretch{1}}
 
     Advised by\\
     Dr. Peter Heinrich, Zürich University of Applied Sciences\\
-    Damian Pfammatter, Cyber Defence Campus\\
+    Damian Pfammatter, Cyber-Defence Campus\\
 
     \vspace*{\stretch{1}}
 
@@ -432,11 +432,11 @@ Initial experiments showed that certain packets are received at unpredictable in
 \subsubsection{Trace Modelling and Mutation Target}
 \label{Implementation:InputModelling:MutationTarget}
 
-LibAFL provides a composite input type out of the box: \code{MultipartInput}. It consists of a variable number of entries, each with a name. For mutation, a random entry is chosen. This is equivalent to the algorithm for selecting which input message to mutate presented in AFLNet\cite{AFLNET} or TCP-Fuzz\cite{TCPFuzz}. However, this strategy has one significant intuitive drawback: If the corpus contains a long trace generated across many executions to arrive in a specific state by combining a large number of messages, and the mutation strategy chooses the first message to mutate, the remaining messages are likely going to be irrelevant, because the initial state changes.
+AFLNet\cite{AFLNET} and TCP-Fuzz\cite{TCPFuzz} select a random message from the trace to mutate. However, this strategy has one significant intuitive drawback: If the corpus contains a long trace generated across many executions to arrive in a specific state by combining a large number of messages, and the mutation strategy chooses the first message to mutate, the remaining messages are likely going to be irrelevant, because the initial state changes.
 
 Alternatively, one could approach this problem in a similar fashion to FitM\cite{FitM}. \citeauthor{FitM} essentially build a tree by snapshotting executions and only appending entries. This way, any state can still be reached, but it does not require the fuzzer to needlessly evaluate long traces.
 
-In \proj, I introduce \code{ListInput}. It contains a list of messages, and each entry can be mutated in two ways: Either, the trace is mutated by appending, removing or replacing a message, or individual messages are mutated. For the former category, \proj is configured to append messages from either the recorded interaction or generated randomly. Mutators on individual messages can be configured using \code{ListInput::map_to_mutate_on_last} or \code{ListInput::map_to_mutate_on_random} to either target the last or a random message.
+In \proj, I introduce \code{ListInput}. It contains a list of messages, and each entry can be mutated in two ways: Either, the trace is mutated by appending, removing or replacing a message, or individual messages are mutated. For the former category, \proj is configured to append messages from either the recorded interaction or generated randomly. Mutators on individual messages can be configured using \code{ListInput::map_to_mutate_on_last} or \code{ListInput::map_to_mutate_on_random} to either target the last or a random message, representing the strategies in AFLNet and TCP-Fuzz, and FitM respectively.
 
 \subsubsection{Seeding}
 \label{Implementation:Seeding}
@@ -564,9 +564,9 @@ During this project, I have contributed a range of improvements implemented for 
   \item A set of macros for mapping and combining mutator lists and their types.
   \item Improved flexibility for certain schedulers to work on any observer.
   \item \code{OnDiskJsonAggregateMonitor} logs the data aggregated across all fuzzing clients at a certain interval to a file containing machine-readable data.
-  \item Several bugfixes related to \code{MultipartInput}.
   \item Several general architectural and clean-code improvements.
-  \item An adaptation of \code{ListInput}, including additional mutators.\todo{Change depending on results of the PR}
+  \item A generic adaptation of \code{ListInput}, including additional mutators and support for the existing \code{MultipartInput} — a simplified variant of \code{ListInput} with additional keys for each message.
+  \item Several bugfixes related to \code{MultipartInput}.
   \item \code{StdFuzzer::with_bloom_input_filter}, an improvement to \code{StdFuzzer} which uses a probabilistic filter to reduce repeated execution of the same input\footnote{Not currently used in \proj.}
 \end{itemize}
 
@@ -645,7 +645,9 @@ Unlike with basic block coverage, state-diff coverage seems to be trace-length d
 
 % The consistencies of both feedbacks show a further notable statistic: The average incorrect-to-correct ratios are higher than the medians by a considerable margin across all trace lengths (at least for those that have a significant number of traces evaluated). \cref{fig:both-inter-boxplot,fig:cov-inter-boxplot,fig:state-diff-inter-boxplot} show the distribution of ratios between the incorrect and correct measurements across trace lengths. For an input that provoked three different observer values appearing 2, 10, and 100 times, this ratio would therefore be 0.12. This conjecture is further compounded for state-diff feedback specifically by the distribution of the ratios according to \cref{fig:state-diff-inter-violin}, showing two sections along the y-axis with higher densities, at approximately 0.1 and 0.75 respectively, with fewer inputs resulting in consistencies at around 0.4. These distributions may be used to further evaluate whether either one or both feedbacks behave inconsistent for all inputs equally or if there exists a class of inputs for which Zephyr behaves more or less consistently. However, I was unable to complete an in-depth evaluation of this phenomenon as part of this thesis.
 
-The consistencies of both feedbacks show a further notable statistic: There seems to be a set of inputs triggering inconsistent behavior more likely than others. \cref{fig:state-diff-inter-violin} shows the distribution of ratios between the incorrect and correct measurements across trace lengths. For an input that provoked three different observer values appearing 2, 10, and 100 times, this ratio would therefore be 0.12. There appear two sections along the y-axis with higher densities, at approximately 0.1 and 0.75 respectively, with fewer inputs resulting in consistencies at around 0.4. However, I was unable to complete an in-depth evaluation of this phenomenon as part of this thesis.
+The consistencies of both feedbacks show a further notable statistic: There seems to be a set of inputs triggering inconsistent behavior more likely than others. \cref{fig:state-diff-inter-violin} shows the distribution of ratios between the incorrect and correct measurements across trace lengths. For an input that provoked three different observer values appearing 2, 10, and 100 times, this ratio would therefore be 0.12. There appear two sections along the y-axis with higher densities, at approximately 0.1 and 0.75 respectively, with fewer inputs resulting in consistencies at around 0.4. The same effect does not appear when coverage feedback is used (see \cref{fig:coverage-inter-violin}), and significantly less pronounced when using both feedbacks (see \cref{fig:both-inter-violin}). The latter can be explained by the fact that coverage is less consistent than state-diff, overpowering its effects.
+
+I was unable to create sufficient proof of this conjecture during this thesis, nor find a correlation between the actual traces that would explain this behavior.
 
 % \begin{figure}
 %   \includegraphics[width=\columnwidth]{assets/consistency/both-boxplot.png}
@@ -667,34 +669,44 @@ The consistencies of both feedbacks show a further notable statistic: There seem
   \caption{Ratio between incorrect and correct observer measurements across trace lengths when using state-diff feedback (violin width indicates density)}
   \label{fig:state-diff-inter-violin}
 \end{figure}
+\begin{figure}
+  \includegraphics[width=\columnwidth]{assets/consistency/both-violin.png}
+  \caption{Ratio between incorrect and correct observer measurements across trace lengths when using both feedbacks (violin width indicates density)}
+  \label{fig:both-inter-violin}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=\columnwidth]{assets/consistency/coverage-violin.png}
+  \caption{Ratio between incorrect and correct observer measurements across trace lengths when using coverage feedback (violin width indicates density)}
+  \label{fig:coverage-inter-violin}
+\end{figure}
 
 \subsection{Throughput and Overcommit}
 \label{Results:Overcommit}
 
 \begin{figure}
   \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/throughput/all-other-to-most-rolling-avg-by-run_time-plot.png}}
-  \todo{Add 50oc plot, limit}
   \caption{Consistencies across different overcommit values}
   \label{fig:overcommit-consistencies}
 \end{figure}
 \begin{figure}
   \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/throughput/exec-sec-by-run_time-plot.png}}
-  \todo{Add 50oc plot, limit}
   \caption{Execution speed across different overcommit values}
   \label{fig:overcommit-exec-speed}
 \end{figure}
 
-When spawning a single fuzzing client per core, as is usual in fuzzing, the CPU time load averages approximately 0.8\% in user space and 1.9 in system space. Increasing the \code{overcommit} value and thus the number of clients per core increases instability rates for both observers, as seen in \cref{fig:overcommit-consistencies}. However, it simultaneously increases the overall execution speed of the fuzzer as seen in \cref{fig:overcommit-exec-speed}. The CPU loads for \code{overcommit} values of 10, 20, and 50 are 3.9\%/10.1\%, 8.7\%/23.1\%, and 8.3\%/89.9\% respectively.
+When spawning a single fuzzing client per core, as is usual in fuzzing, the CPU time load averages approximately 0.8\% in user space and 1.9 in system space. Increasing the \code{overcommit} value and thus the number of clients per core increases instability rates for both observers, as seen in \cref{fig:overcommit-consistencies}. However, it simultaneously increases the overall execution speed of the fuzzer up to a certain point, as seen in \cref{fig:overcommit-exec-speed}. The CPU loads for \code{overcommit} values of 10, 20, and 50 are 3.9\%/10.1\%, 8.7\%/23.1\%, and 8.3\%/89.9\% respectively.
 
 \subsubsection*{Discussion}
 
-As described in \cref{Implementation:ImplementationDetails:Client}, executing a single input on Zephyr leads to a dominating number wait states in both Zephyr and the fuzzer needed for synchronization. Increasing the number of clients per core does not fully load the CPU either, suggesting the limitation of \proj is scheduling over 2500 processes requiring precise timing for their execution consistency. There exists a tradeoff between speed and consistency when configuring \proj. Increased \code{overcommit} values and thus execution speed requires additional measures to mitigate the increased error rates. The primary such mitigation is additional repeated executions of the same input, which in turn slows down the overall execution speed with regard to the number of unique inputs evaluated. Since the error rates remain approximately consistent for \code{overcommit} values of up to 10, the remaining evaluations were done with \proj configured to run 10 clients per core.
+As described in \cref{Implementation:ImplementationDetails:Client}, executing a single input on Zephyr leads to a dominating number wait states in both Zephyr and the fuzzer needed for synchronization. Even when increasing the number of clients per core to a level where the CPU is far from being fully loaded increases the inconsistency rate, suggesting the limitation of \proj is in scheduling the number of processes requiring precise timing for their execution consistency. When fully loading the CPU, the execution speed collapses by approximately a factor 10 compared to linear scaling, suggesting a bottleneck besides CPU load.
+
+To mitigate increased inconsistency rates, \code{ReplayingFuzzer} has to be configured to re-execute each input more often, slowing throughput of new inputs down, thus negating some (or even all) of the gained speed. Since the error rates remain approximately consistent for \code{overcommit} values of up to 10, the remaining evaluations were done with \proj configured to run 10 clients per core.
 
 \subsection{State Feedback vs. State-Diff Feedback}
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=0.9\textwidth]{assets/eval/coverage-observer-by-run_time-plot.png}
+  \includegraphics[width=\textwidth]{assets/eval/coverage-observer-by-run_time-plot.png}
   \caption{Code coverage across different configurations}
   \label{fig:eval-cov}
 \end{figure*}
@@ -787,9 +799,7 @@ The experiments show that even limited structure-aware mutation is more efficien
 \end{center}
 \vspace*{\stretch{1}}
 
-\onecolumn
 \newpage
-\twocolumn
 
 \defbibheading{bibliography}[\bibname]{\section*{#1}}
 \addcontentsline{toc}{section}{\bibname}
