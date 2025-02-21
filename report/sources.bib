@@ -524,7 +524,7 @@
   title   = {{SanitizerCoverage}},
   year    = {n.d.},
   url     = {https://clang.llvm.org/docs/SanitizerCoverage.html},
-  urldate = {2024-05-28}
+  urldate = {2025-01-30}
 }
 
 @online{ZephyrAbout,
@@ -720,12 +720,19 @@
 }
 
 @inproceedings{REDQUEEN,
-  title     = {REDQUEEN: Fuzzing with Input-to-State Correspondence.},
+  title     = {REDQUEEN: Fuzzing with Input-to-State Correspondence},
   author    = {Aschermann, Cornelius and Schumilo, Sergej and Blazytko, Tim and Gawlik, Robert and Holz, Thorsten},
-  booktitle = {Proceedings of the 2016 Network and Distributed System Security Symposium (NDSS)},
+  booktitle = {Proceedings of the 2019 Network and Distributed System Security Symposium (NDSS)},
   volume    = {19},
   pages     = {1--15},
   year      = {2019}
+}
+
+@inproceedings{ParaRehosting,
+  title     = {From Library Portability to Para-rehosting: Natively Executing Microcontroller Software on Commodity Hardware},
+  author    = {Wenqiang Li and Le Guan and Jingqiang Lin and Jiameng Shi and Fengjun Li},
+  booktitle = {Proceedings of the 2021 Network and Distributed System Security Symposium (NDSS)},
+  year      = {2021}
 }
 
 @online{Renode,
@@ -791,4 +798,263 @@
   note         = {Retrieved 2024-07-01 16:50:18+02:00},
   url          = {https://www.fuzzingbook.org/},
   urldate      = {2024-07-01 16:50:18+02:00}
+}
+
+@article{HDFuzz,
+  title    = {HD-FUZZ: Hardware dependency-aware firmware fuzzing via hybrid MMIO modeling},
+  journal  = {Journal of Network and Computer Applications},
+  volume   = {224},
+  pages    = {103835},
+  year     = {2024},
+  issn     = {1084-8045},
+  doi      = {https://doi.org/10.1016/j.jnca.2024.103835},
+  url      = {https://www.sciencedirect.com/science/article/pii/S1084804524000122},
+  author   = {Juhwan Kim and Jihyeon Yu and Youngwoo Lee and Dan Dongseong Kim and Joobeom Yun},
+  keywords = {Firmware, Fuzzing, Internet of Things, Symbolic execution, Vulnerability},
+  abstract = {Numerous interconnected small embedded systems, such as Internet of Things (IoT) devices, are pervasive in our daily lives; however, their security lags behind. In particular, firmware vulnerabilities in low-level infrastructure have a more severe impact than application-level vulnerabilities. Fuzzing is the most effective technique for detecting vulnerabilities in firmware, but it encounters several challenges such as hardware-dependency, input channel, and instrumentation. Existing studies attempt to overcome these challenges by applying fuzzing to firmware re-hosting. However, they explore only worthwhile paths based on heuristics and human assistance without identifying security-critical firmware code. This results in low code coverage and reduces the likelihood of discovering potential bugs. In this work, we propose a novel hardware dependency-aware re-hosting system named HD-FUZZ that focuses on the firmware fuzzing process to efficiently discover bugs by exploring all possible paths in security-critical firmware code. The key ideas of HD-FUZZ are: (1) to propose a hybrid memory-mapped I/O (MMIO) modeling; (2) to achieve efficiency by mainly performing MMIO modeling through fuzzing; and (3) to achieve completeness by performing MMIO modeling through symbolic execution only to satisfy complex checks affecting the execution flow. HD-FUZZ has been extensively evaluated on both unit test cases and real-world targets, covering 12 hardware platforms and 67 firmware images. Compared to state-of-the-art works, HD-FUZZ achieves the highest passing rate in unit test benchmarks, reaches up to 2.62 times higher code coverage in fuzzing benchmarks, and generates initial access models up to 11.6 times faster. Notably, HD-FUZZ finds two new bugs, including ones in targets that were previously analyzed by other works.}
+}
+
+@inproceedings{SplITS,
+  author    = {Farrelly, Guy and Quirk, Paul and Kanhere, Salil S. and Camtepe, Seyit and Ranasinghe, Damith C.},
+  editor    = {Tsudik, Gene and Conti, Mauro and Liang, Kaitai and Smaragdakis, Georgios},
+  title     = {SplITS: Split Input-to-State Mapping for Effective Firmware Fuzzing},
+  booktitle = {Computer Security -- ESORICS 2023},
+  year      = {2024},
+  publisher = {Springer Nature Switzerland},
+  address   = {Cham},
+  pages     = {290--310},
+  abstract  = {Ability to test firmware on embedded devices is critical to discovering vulnerabilities prior to their adversarial exploitation. State-of-the-art automated testing methods rehost firmware in emulators and attempt to facilitate inputs from a diversity of methods (interrupt driven, status polling) and a plethora of devices (such as modems and GPS units). Despite recent progress to tackle peripheral input generation challenges in rehosting, a firmware's expectation of multi-byte magic values supplied from peripheral inputs for string operations still pose a significant roadblock. We solve the impediment posed by multi-byte magic strings in monolithic firmware. We propose feedback mechanisms for input-to-state mapping and retaining seeds for targeted replacement mutations with an efficient method to solve multi-byte comparisons. The feedback allows an efficient search over a combinatorial solution-space. We evaluate our prototype implementation, SplITS, with a diverse set of 21 real-world monolithic firmware binaries used in prior works, and 3 new binaries from popular open source projects. SplITS automatically solves 497{\%} more multi-byte magic strings guarding further execution to uncover new code and bugs compared to state-of-the-art. In 11 of the 12 real-world firmware binaries with string comparisons, including those extensively analyzed by prior works, SplITS outperformed, statistically significantly. We observed up to 161{\%} increase in blocks covered and discovered 6 new bugs that remained guarded by string comparisons. Significantly, deep and difficult to reproduce bugs guarded by comparisons, identified in prior work, were found consistently.},
+  isbn      = {978-3-031-51482-1}
+}
+
+@misc{ESFuzz,
+  title         = {ES-FUZZ: Improving the Coverage of Firmware Fuzzing with Stateful and Adaptable MMIO Models},
+  author        = {Wei-Lun Huang and Kang G. Shin},
+  year          = {2024},
+  eprint        = {2403.06281},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CR},
+  url           = {https://arxiv.org/abs/2403.06281}
+}
+
+@inproceedings{Veri,
+  author    = {Herdt, Vladimir and Gro\ss{}e, Daniel and Wloka, Jonas and G\"{u}neysu, Tim and Drechsler, Rolf},
+  title     = {Verification of Embedded Binaries using Coverage-guided Fuzzing with SystemC-based Virtual Prototypes},
+  year      = {2020},
+  isbn      = {9781450379441},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3386263.3406899},
+  doi       = {10.1145/3386263.3406899},
+  abstract  = {Extensive verification of embedded SW is very important to avoid errors and security vulnerabilities. Therefore, mainly simulation-based methods are employed that leverage Virtual Prototypes (VPs) for SW execution early in the design flow. VPs are essentially abstract models of the entire HW platform including peripherals. They are predominantly created in SystemC. However, a comprehensive simulation-based verification requires integration of sophisticated test generation techniques.In this paper we propose to leverage state-of-the-art Coverage-guided Fuzzing (CGF) methods in combination with SystemC-based VPs for verification of embedded SW binaries. Using VPs, our approach allows a fast and accurate binary-level SW analysis and enables checking of complex HW/SW interactions. To guide the fuzzing process we combine the coverage from the embedded SW with the coverage of the SystemC-based peripherals. Our experiments, using RISC-V embedded SW binaries as examples, demonstrate the effectiveness of our approach.},
+  booktitle = {Proceedings of the 2020 on Great Lakes Symposium on VLSI},
+  pages     = {101–106},
+  numpages  = {6},
+  keywords  = {virtual prototype, verification, risc-v, fuzzing, SystemC},
+  location  = {Virtual Event, China},
+  series    = {GLSVLSI '20}
+}
+
+@inproceedings{PATA,
+  author    = {Li, Tuo and Bai, Jia-Ju and Sui, Yulei and Hu, Shi-Min},
+  title     = {Path-sensitive and alias-aware typestate analysis for detecting OS bugs},
+  year      = {2022},
+  isbn      = {9781450392051},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3503222.3507770},
+  doi       = {10.1145/3503222.3507770},
+  abstract  = {Operating system (OS) is the cornerstone for modern computer systems. It manages devices and provides fundamental service for user-level applications. Thus, detecting bugs in OSes is important to improve reliability and security of computer systems. Static typestate analysis is a common technique for detecting different types of bugs, but it is often inaccurate or unscalable for large-size OS code, due to imprecision of identifying alias relationships as well as high costs of typestate tracking and path-feasibility validation.  In this paper, we present PATA, a novel path-sensitive and aliasaware typestate analysis framework to detect OS bugs. To improve the precision of identifying alias relationships in OS code, PATA performs a path-based alias analysis based on control-flow paths and access paths. With these alias relationships, PATA reduces the costs of typestate tracking and path-feasibility validation, to boost the efficiency of path-sensitive typestate analysis for bug detection. We have evaluated PATA on the Linux kernel and three popular IoT OSes (Zephyr, RIOT and TencentOS-tiny) to detect three common types of bugs (null-pointer dereferences, uninitialized variable accesses and memory leaks). PATA finds 574 real bugs with a false positive rate of 28\%. 206 of these bugs have been confirmed by the developers of the four OSes.We also compare PATA to seven state-of-the-art static approaches (Cppcheck, Coccinelle, Smatch,CSA, Infer, Saber and SVF). PATA finds many real bugs missed by them, with a lower false positive rate.},
+  booktitle = {Proceedings of the 27th ACM International Conference on Architectural Support for Programming Languages and Operating Systems},
+  pages     = {859–872},
+  numpages  = {14},
+  keywords  = {bug detection, operation system, static analysis},
+  location  = {Lausanne, Switzerland},
+  series    = {ASPLOS '22}
+}
+
+@inproceedings{EmberIO,
+  author    = {Farrelly, Guy and Chesser, Michael and Ranasinghe, Damith C.},
+  title     = {Ember-IO: Effective Firmware Fuzzing with Model-Free Memory Mapped IO},
+  year      = {2023},
+  isbn      = {9798400700989},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3579856.3582840},
+  doi       = {10.1145/3579856.3582840},
+  abstract  = {Exponential growth in embedded systems is driving the research imperative to develop fuzzers to automate firmware testing to uncover software bugs and security vulnerabilities. But, employing fuzzing techniques in this context present a uniquely challenging proposition; a key problem is the need to deal with the diverse and large number of peripheral communications in an automated testing framework. Recent fuzzing approaches: i)&nbsp;employ re-hosting methods by executing code in an emulator because fuzzing on resource limited embedded systems is slow and unscalable; and ii)&nbsp;integrate models of hardware behaviour to overcome the challenges faced by the massive input-space to be explored created by peripheral devices and to generate inputs that are effective in aiding a fuzzer to make progress. Our efforts expounds upon program execution behaviours unique to firmware to address the resulting input-space search problem. The techniques we propose improve the fuzzer’s ability to generate values likely to progress execution and avoids time consumed on mutating inputs that are functionally equivalent to other test cases. We demonstrate the methods are highly efficient and effective at overcoming the input-space search problem. Our emulation-based implementation, Ember-IO, when compared to the existing state-of-the-art fuzzing framework across 21 firmware binaries, demonstrates up to 255\% improvement in blocks covered. Further Ember-IO discovered 6 new bugs in the real-world firmware, previously not identified by state-of-the-art fuzzing frameworks. Importantly, Ember-IO integrated with the state-of-the-art fuzzer, Fuzzware, demonstrates similar or improved coverage across all firmware binaries whilst reproducing 3 of the 6 new bugs discovered by Ember-IO.},
+  booktitle = {Proceedings of the 2023 ACM Asia Conference on Computer and Communications Security},
+  pages     = {401–414},
+  numpages  = {14},
+  keywords  = {coverage instrumentation, firmware, fuzzing, grey-box fuzzing},
+  location  = {Melbourne, VIC, Australia},
+  series    = {ASIA CCS '23}
+}
+
+@phdthesis{Esoteric,
+  author  = {Chen, Zitai},
+  title   = {Security of esoteric firmware and trusted execution environments},
+  school  = {University of Birmingham},
+  year    = {2023},
+  address = {http://etheses.bham.ac.uk/id/eprint/13842}
+}
+
+@inproceedings{EnhanceVP,
+  author    = {Herdt, Vladimir and Drechsler, Rolf},
+  booktitle = {2020 IEEE Computer Society Annual Symposium on VLSI (ISVLSI)},
+  title     = {Efficient Techniques to Strongly Enhance the Virtual Prototype Based Design Flow},
+  year      = {2020},
+  volume    = {},
+  number    = {},
+  pages     = {182-187},
+  keywords  = {Benchmark testing;Object oriented modeling;Open source software;Runtime;Analytical models;Time-varying systems;Virtual Prototype;Verification;SystemC;RISC V},
+  doi       = {10.1109/ISVLSI49217.2020.00041}
+}
+
+
+@article{EmbeddedReview,
+  title        = {IoT Firmware Emulation and Its Security Application in Fuzzing: A Critical Revisit},
+  author       = {Zhou, Wei and Shen, Shandian and Liu, Peng},
+  abstractnote = {As IoT devices with microcontroller (MCU)-based firmware become more common in our lives, memory corruption vulnerabilities in their firmware are increasingly targeted by adversaries. Fuzzing is a powerful method for detecting these vulnerabilities, but it poses unique challenges when applied to IoT devices. Direct fuzzing on these devices is inefficient, and recent efforts have shifted towards creating emulation environments for dynamic firmware testing. However, unlike traditional software, firmware interactions with peripherals that are significantly more diverse presents new challenges for achieving scalable full-system emulation and effective fuzzing. This paper reviews 27 state-of-the-art works in MCU-based firmware emulation and its applications in fuzzing. Instead of classifying existing techniques based on their capabilities and features, we first identify the fundamental challenges faced by firmware emulation and fuzzing. We then revisit recent studies, organizing them according to the specific challenges they address, and discussing how each specific challenge is addressed. We compare the emulation fidelity and bug detection capabilities of various techniques to clearly demonstrate their strengths and weaknesses, aiding users in selecting or combining tools to meet their needs. Finally, we highlight the remaining technical gaps and point out important future research directions in firmware emulation and fuzzing.},
+  doi          = {10.3390/fi17010019},
+  journal      = {Future Internet},
+  number       = 1,
+  volume       = 17,
+  place        = {Country unknown/Code not available},
+  year         = {2025},
+  month        = {1}
+}
+
+@inproceedings{Fuzzware,
+  author    = {Tobias Scharnowski and Nils Bars and Moritz Schloegel and Eric Gustafson and Marius Muench and Giovanni Vigna and Christopher Kruegel and Thorsten Holz and Ali Abbasi},
+  title     = {Fuzzware: Using Precise {MMIO} Modeling for Effective Firmware Fuzzing},
+  booktitle = {31st USENIX Security Symposium (USENIX Security 22)},
+  year      = {2022},
+  isbn      = {978-1-939133-31-1},
+  address   = {Boston, MA},
+  pages     = {1239--1256},
+  url       = {https://www.usenix.org/conference/usenixsecurity22/presentation/scharnowski},
+  publisher = {USENIX Association},
+  month     = aug
+}
+
+@inproceedings{NetworkBugsReview,
+  author    = {Amusuo, Paschal C. and Méndez, Ricardo Andrés Calvo and Xu, Zhongwei and Machiry, Aravind and Davis, James C.},
+  booktitle = {2023 38th IEEE/ACM International Conference on Automated Software Engineering (ASE)},
+  title     = {Systematically Detecting Packet Validation Vulnerabilities in Embedded Network Stacks},
+  year      = {2023},
+  volume    = {},
+  number    = {},
+  pages     = {926-938},
+  keywords  = {Systematics;Protocols;Fuzzing;Cyber-physical systems;Software systems;Internet of Things;Computer security;Automated Testing;Validation;Cybersecurity;Embedded systems;IoT;Networking;Empirical Software Engineering;Fuzzing},
+  doi       = {10.1109/ASE56229.2023.00095}
+}
+
+@article{Tardis,
+  author   = {Shen, Yuheng and Xu, Yiru and Sun, Hao and Liu, Jianzhong and Xu, Zichen and Cui, Aiguo and Shi, Heyuan and Jiang, Yu},
+  journal  = {IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems},
+  title    = {Tardis: Coverage-Guided Embedded Operating System Fuzzing},
+  year     = {2022},
+  volume   = {41},
+  number   = {11},
+  pages    = {4563-4574},
+  keywords = {Kernel;Fuzzing;Task analysis;Instruments;Hardware;Runtime;Computer bugs;Embedded operating system (Embedded OSs);fuzz testing;vulnerability detection},
+  doi      = {10.1109/TCAD.2022.3198910}
+}
+
+@inproceedings{Hoedur,
+  author    = {Scharnowski, Tobias and W\"{o}rner, Simon and Buchmann, Felix and Bars, Nils and Schloegel, Moritz and Holz, Thorsten},
+  title     = {HOEDUR: embedded firmware fuzzing using multi-stream inputs},
+  year      = {2023},
+  isbn      = {978-1-939133-37-3},
+  publisher = {USENIX Association},
+  address   = {USA},
+  abstract  = {Embedded systems with their diverse, interconnected components form the backbone of our digital infrastructure. Despite their importance, analyzing their security in a scalable way has remained elusive and challenging. Recent firmware rehosting work has brought scalable, dynamic analyses to embedded systems, making fuzzing for automated vulnerability assessments feasible. As these works focus on modeling device behavior rather than fuzzing, they integrate with off-the-shelf fuzzers in an ad-hoc manner. They reinterpret traditional flat binary fuzzing input as a sequence of hardware responses. In practice, this presents the fuzzer with an input layout that is fragile, opaque, and hard to mutate effectively.Our work is based on the insight that while firmware emulation recently matured significantly, the input space is presented to the fuzzer in an ineffective manner. We propose a novel method for a firmware-aware fuzzing integration based on multi-stream inputs. We reorganize the previously flat, sequential, and opaque firmware fuzzing input into multiple strictly typed and cohesive streams. This allows our fuzzer, HOEDUR, to perform type-aware mutations and maintain its progress. It also enables firmware fuzzing to use state-of-the-art mutation techniques. Overall, we find that these techniques significantly increase fuzzing effectiveness. Our evaluation shows that HOEDUR achieves up to 5x the coverage of state-of-the-art firmware fuzzers, finds bugs that other fuzzers do not, and discovers known bugs up to 550x faster. In total, HOEDUR uncovered 23 previously unknown bugs.},
+  booktitle = {Proceedings of the 32nd USENIX Conference on Security Symposium},
+  articleno = {162},
+  numpages  = {18},
+  location  = {Anaheim, CA, USA},
+  series    = {SEC '23}
+}
+
+@inproceedings{MultiFuzz,
+  author    = {Michael Chesser and Surya Nepal and Damith C. Ranasinghe},
+  title     = {{MultiFuzz}: A {Multi-Stream} Fuzzer For Testing Monolithic Firmware},
+  booktitle = {33rd USENIX Security Symposium (USENIX Security 24)},
+  year      = {2024},
+  isbn      = {978-1-939133-44-1},
+  address   = {Philadelphia, PA},
+  pages     = {5359--5376},
+  url       = {https://www.usenix.org/conference/usenixsecurity24/presentation/chesser},
+  publisher = {USENIX Association},
+  month     = aug
+}
+
+
+@inproceedings{SoK,
+  author    = {Fasano, Andrew and Ballo, Tiemoko and Muench, Marius and Leek, Tim and Bulekov, Alexander and Dolan-Gavitt, Brendan and Egele, Manuel and Francillon, Aur\'{e}lien and Lu, Long and Gregory, Nick and Balzarotti, Davide and Robertson, William},
+  title     = {SoK: Enabling Security Analyses of Embedded Systems via Rehosting},
+  year      = {2021},
+  isbn      = {9781450382878},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3433210.3453093},
+  doi       = {10.1145/3433210.3453093},
+  abstract  = {Closely monitoring the behavior of a software system during its execution enables developers and analysts to observe, and ultimately understand, how it works. This kind of dynamic analysis can be instrumental to reverse engineering, vulnerability discovery, exploit development, and debugging. While these analyses are typically well-supported for homogeneous desktop platforms (e.g., x86 desktop PCs), they can rarely be applied in the heterogeneous world of embedded systems. One approach to enable dynamic analyses of embedded systems is to move software stacks from physical systems into virtual environments that sufficiently model hardware behavior. This process which we call "rehosting" poses a significant research challenge with major implications for security analyses. Although rehosting has traditionally been an unscientific and ad-hoc endeavor undertaken by domain experts with varying time and resources at their disposal, researchers are beginning to address rehosting challenges systematically and in earnest. In this paper, we establish that emulation is insufficient to conduct large-scale dynamic analysis of real-world hardware systems and present rehosting as a firmware-centric alternative. Furthermore, we taxonomize preliminary rehosting efforts, identify the fundamental components of the rehosting process, and propose directions for future research.},
+  booktitle = {Proceedings of the 2021 ACM Asia Conference on Computer and Communications Security},
+  pages     = {687–701},
+  numpages  = {15},
+  keywords  = {virtualization, rehosting, internet of things, firmware security, emulation, embedded systems, dynamic program analysis},
+  location  = {Virtual Event, Hong Kong},
+  series    = {ASIA CCS '21}
+}
+
+@article{ChallengesReHosting,
+  author     = {Wright, Christopher and Moeglein, William A. and Bagchi, Saurabh and Kulkarni, Milind and Clements, Abraham A.},
+  title      = {Challenges in Firmware Re-Hosting, Emulation, and Analysis},
+  year       = {2021},
+  issue_date = {January 2022},
+  publisher  = {Association for Computing Machinery},
+  address    = {New York, NY, USA},
+  volume     = {54},
+  number     = {1},
+  issn       = {0360-0300},
+  url        = {https://doi.org/10.1145/3423167},
+  doi        = {10.1145/3423167},
+  abstract   = {System emulation and firmware re-hosting have become popular techniques to answer various security and performance related questions, such as determining whether a firmware contain security vulnerabilities or meet timing requirements when run on a specific hardware platform. While this motivation for emulation and binary analysis has previously been explored and reported, starting to either work or research in the field is difficult. To this end, we provide a comprehensive guide for the practitioner or system emulation researcher. We layout common challenges faced during firmware re-hosting, explaining successive steps and surveying common tools used to overcome these challenges. We provide classification techniques on five different axes, including emulator methods, system type, fidelity, emulator purpose, and control. These classifications and comparison criteria enable the practitioner to determine the appropriate tool for emulation. We use our classifications to categorize popular works in the field and present 28 common challenges faced when creating, emulating, and analyzing a system from obtaining firmwares to post emulation analysis.},
+  journal    = {ACM Comput. Surv.},
+  month      = jan,
+  articleno  = {5},
+  numpages   = {36},
+  keywords   = {system emulation, reverse engineering, emulator classification, emulation fidelity, emulation challenges, embedded systems, binary analysis, Firmware re-hosting}
+}
+@article{IoTSurvey,
+  author   = {Feng, Xiaotao and Zhu, Xiaogang and Han, Qing-Long and Zhou, Wei and Wen, Sheng and Xiang, Yang},
+  journal  = {IEEE/CAA Journal of Automatica Sinica},
+  title    = {Detecting Vulnerability on IoT Device Firmware: A Survey},
+  year     = {2023},
+  volume   = {10},
+  number   = {1},
+  pages    = {25-41},
+  keywords = {Microprogramming;Internet of Things;Security;Fuzzing;Embedded systems;Codes;Software;Firmware emulation;internet of things (IoT) firmware;network fuzzing;security;static analysis},
+  doi      = {10.1109/JAS.2022.105860}
+}
+
+@online{QEMU,
+  title   = {{QEMU}},
+  year    = {n.d.},
+  url     = {https://www.qemu.org},
+  urldate = {2025-02-20}
+}
+
+@inproceedings{HALucinator,
+  author    = {Abraham A Clements and Eric Gustafson and Tobias Scharnowski and Paul Grosen and David Fritz and Christopher Kruegel and Giovanni Vigna and Saurabh Bagchi and Mathias Payer},
+  title     = {{HALucinator}: Firmware Re-hosting Through Abstraction Layer Emulation},
+  booktitle = {29th USENIX Security Symposium (USENIX Security 20)},
+  year      = {2020},
+  isbn      = {978-1-939133-17-5},
+  pages     = {1201--1218},
+  url       = {https://www.usenix.org/conference/usenixsecurity20/presentation/clements},
+  publisher = {USENIX Association},
+  month     = aug
 }
