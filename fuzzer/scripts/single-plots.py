@@ -25,7 +25,7 @@ global_config = {
         "ymin": 0.01,
     },
     "all_other_to_most_rolling_avg": {"ylabel": "Consistency Ratio", "ymin": 0.0001},
-    "corpus": {"ylabel": "Corpus Size"},
+    "corpus": {"ylabel": "Corpus Size", "ymin": 5},
     "exec_sec": {"ylabel": "Execution Speed (executions/s)"},
     "executions": {"ylabel": "Executions"},
     "free_memory": {"ylabel": "Free Memory (bytes)", "print-minor-ticks": True},
