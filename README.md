@@ -1,4 +1,4 @@
-# Fuzzing Zephyr's Network Stack
+# FTZ: A State-Inferring Fuzzer for the TCP/IP Stack of Zephyr
 
 Using LibAFL, I want to fuzz the TCP/IP stack of Zephyr.
 
