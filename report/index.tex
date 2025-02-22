@@ -1,4 +1,6 @@
 \documentclass[twocolumn]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
 \usepackage[hidelinks]{hyperref}
 \usepackage{csquotes}
 \usepackage[vmargin=25mm, hmargin=20mm]{geometry}
@@ -62,6 +64,7 @@
 ]{biblatex}
 \addbibresource{sources.bib}
 \renewcommand*{\bibfont}{\footnotesize}
+\renewcommand{\abstractname}{\section*{Abstract}\vspace{4ex}}
 
 \setlength{\columnsep}{13mm}
 
@@ -115,29 +118,89 @@
 
 \clearpage\newpage
 \onecolumn
+
+
 \begin{center}
-  \begin{minipage}{0.8\textwidth}
-    \vspace{70px}
-    \begin{abstract}
-
-      Fuzzing has proven to be an effective technique for finding software errors. However, applying it to complex targets such as the TCP/IP stack of the real-time operating system Zephyr remains challenging because of its deep OS integration, highly structured input data, and state-dependent behavior.
-
-      This thesis presents \proj, an open-source state-inferring fuzzer targeting the TCP/IP stack of Zephyr. Built on LibAFL, \proj uses NativeSimulator alongside a custom shared memory-based network driver to run Zephyr efficiently. It supports modeling and mutating network packets as binary data or parsed structures and two strategies for targeting input parts to mutate. To further improve performance, \proj uses a heuristic based on received packets to estimate the state of Zephyr, which is then used either directly or mapped to state transitions as feedback to the fuzzer.
-
-      Initial experiments show that Zephyr does not behave consistently, with both coverage and state feedback fluctuating. \proj investigates the source of these inconsistencies and implements additional logic to statistically decrease inconsistency rates. Evaluating the techniques in \proj shows that modeling packets as parsed structures is more effective, even though it limits the input space the fuzzer can generate. Selecting the last input message to mutate improves performance compared to mutating a random packet. Finally, state transition feedback allows \proj to reach higher code coverage in Zephyr than directly using the state of incoming packets.
-
-      This thesis shows the feasibility of performing efficient fuzz testing on Zephyr. It further introduces a novel state-inference heuristic and shows how simple strategies can be employed to significantly increase the performance of a fuzzer for a stateful target with complex input data interdependencies.
-    \end{abstract}
-  \end{minipage}
-  \vspace{70px}
-
   \begin{minipage}{0.7\textwidth}
+    \vspace{100px}
+
+    \begin{center}
+      \section*{Declaration of Originality}
+    \end{center}
+    \vspace{3ex}
+
+    \setlength{\parindent}{1.5em}
+
+    Hiermit versichere ich, dass ich die vorliegende Arbeit selbstständig, oder gemeinsam mit den aufgeführten Gruppenmitgliedern, verfasst habe. Ich habe ausschliesslich die im Text oder Anhang angegeben Quellen und Hilfsmittel (auch Internetseiten und generative KI-Tools) benutzt. Ich trage die Verantwortung für die Qualität des Textes sowie die Auswahl aller Inhalte und habe sichergestellt, dass Informationen und Argumente mit geeigneten wissenschaftlichen Quellen belegt bzw. gestützt werden. Generative KI-Tools wurden summarisch unter der Angabe des Namens und des Zwecks angegeben.
+
+    \vspace{10ex}
+    \begin{minipage}[b]{0.5\textwidth}
+      Löhningen, 22.02.2025
+    \end{minipage}%
+    \begin{minipage}[b]{0.5\textwidth}
+
+      \includegraphics[width=0.9\textwidth]{assets/signature.png}
+
+      \setlength{\parindent}{4em}
+      Valentin Huber
+
+    \end{minipage}
+  \end{minipage}
+\end{center}
+
+
+\clearpage\newpage
+
+\begin{center}
+  \begin{minipage}{0.7\textwidth}
+    \vspace{100px}
+
+    \begin{center}
+      \section*{Acknowledgments}
+      \verb|--–-—–––—-–-———––—–-––———–-–—--—–-—––-|
+    \end{center}
+    \vspace{3ex}
+
+    \setlength{\parindent}{1.5em}
+
+    I would like to express my sincere gratitude to my advisors, Dr. Peter Heinrich and Damian Pfammatter, for their invaluable support throughout this project. Your guidance and insightful suggestions provided me with the confidence to explore ambitious ideas while ensuring I stayed on the right path. I have truly enjoyed learning about fuzzing and research under your mentorship.
+
+    I am also deeply grateful to the CYD Master Thesis Fellowship program for the opportunity to undertake this thesis, for their financial support, and for fostering an inspiring environment filled with brilliant students tackling diverse cybersecurity challenges.
+
+    A heartfelt thank you to the maintainers of LibAFL, particularly Dr. Dominik Maier and Dongjia Zhang, for your openness in integrating my contributions and for your support throughout that process. Your collaboration has been invaluable.
+
+    Lastly, I want to thank my parents for their unwavering support throughout my educational journey. You were there for me from the time I needed help tying my shoes in kindergarten through lessons in nine different schools — and now I'm done with my master's thesis. Without you, all of this would not have been possible.
+
+  \end{minipage}
+\end{center}
+
+\clearpage\newpage
+
+\begin{center}
+  \begin{minipage}{0.7\textwidth}
+    \vspace{100px}
+    \begin{center}
+      \section*{Abstract}
+    \end{center}
+    \vspace{3ex}
+
+    \setlength{\parindent}{1.5em}
+
+    Fuzzing has proven to be an effective technique for finding software errors. However, applying it to complex targets such as the TCP/IP stack of the real-time operating system Zephyr remains challenging because of its deep OS integration, highly structured input data, and state-dependent behavior.
+
+    This thesis presents \proj, an open-source state-inferring fuzzer targeting the TCP/IP stack of Zephyr. Built on LibAFL, \proj uses NativeSimulator alongside a custom shared memory-based network driver to run Zephyr efficiently. It supports modeling and mutating network packets as binary data or parsed structures and two strategies for targeting input parts to mutate. To further improve performance, \proj uses a heuristic based on received packets to estimate the state of Zephyr, which is then used either directly or mapped to state transitions as feedback to the fuzzer.
+
+    Initial experiments show that Zephyr does not behave consistently, with both coverage and state feedback fluctuating. \proj investigates the source of these inconsistencies and implements additional logic to statistically decrease inconsistency rates. Evaluating the techniques in \proj shows that modeling packets as parsed structures is more effective, even though it limits the input space the fuzzer can generate. Selecting the last input message to mutate improves performance compared to mutating a random packet. Finally, state transition feedback allows \proj to reach higher code coverage in Zephyr than directly using the state of incoming packets.
+
+    This thesis shows the feasibility of performing efficient fuzz testing on Zephyr. It further introduces a novel state-inference heuristic and shows how simple strategies can be employed to significantly increase the performance of a fuzzer for a stateful target with complex input data interdependencies.
+    \vspace{70px}
+
     \textbf{Keywords}: Protocol Fuzzing, Stateful Fuzzing, Zephyr, LibAFL.
   \end{minipage}
 \end{center}
 
 \clearpage\newpage
-\onecolumn
+
 
 \tableofcontents
 \clearpage\newpage
@@ -155,7 +218,7 @@ Zephyr is an open-source real-time operating system (OS) hosted by the Linux Fou
 
 Zephyr projects typically connect to other devices or the internet using one of the OS' networking libraries, such as the Zephyr TCP/IP stack. As many of these devices require internet access, any defect in the network stack is comparatively likely to be remotely exploitable and may propagate from device to device, and is thus critical\cite{Fuzzware}. Combined with the potentially dangerous devices Zephyr runs on, this makes the correctness of these parts of Zephyr arguably important\cite{Tardis}. Recent research further found that errors within a network stack are concentrated in the transport and network layer\cite{NetworkBugsReview}.
 
-Fuzzing has been established as a widely used technique\cite{Demystifying} to find software defects by repeatedly running a particular program under test (PUT) with a wide range of inputs and observing the execution for illegal program states such as crashes. It has been applied to great effect: Microsoft requires dominant software to be fuzzed prior to release\cite{Demystifying}, and its fuzzer SAGE\cite{SAGE} \textquote{reportedly found a third of the Windows 7 bugs between 2007-2009}\cite{FuzzingTheStateOfTheArt}. Google mentioned finding 20,000 vulnerabilities in Chrome alone using fuzz testing\cite{Demystifying}, while its OSS-Fuzz program continuously fuzzing open-source software has resulted in over 6,500 vulnerabilities and 21,000 functional bugs fixed across 500 projects deemed critical enough to be included in OSS-Fuzz\cite{ClusterFuzzLite}.
+Fuzzing has been established as a widely used technique\cite{Demystifying} to find software defects by repeatedly running a particular program under test (PUT) with a wide range of inputs and observing the execution for illegal program states such as crashes. It has been applied to great effect: Microsoft requires dominant software to be fuzzed prior to release\cite{Demystifying}, and its fuzzer SAGE\cite{SAGE} \textquote{reportedly found a third of the Windows 7 bugs between 2007-2009}\cite{FuzzingTheStateOfTheArt}. Google reported finding 20,000 vulnerabilities in Chrome alone using fuzz testing\cite{Demystifying}, while its OSS-Fuzz program continuously fuzzing open-source software has resulted in over 6,500 vulnerabilities and 21,000 functional bugs fixed across 500 projects deemed critical enough to be included in OSS-Fuzz\cite{ClusterFuzzLite}.
 
 Ever since its inception in the nominal work by \citeauthor{UNIX}\cite{UNIX}, who used random data to test Unix utilities, many improvements to fuzzing have been introduced to the state of the art. Among many others (Google Scholar retrieves more than 60,000 results in a search for \textquote{fuzz testing}\cite{GoogleScholarFuzzing}) include observing the program execution to guide the fuzzer when selecting the next input to test or improved oracles such as memory sanitizers, which introduce additional runtime checks for illegal actions such as out-of-bounds memory accesses. \cref{Background:MutationalFuzzing} provides additional background on the specific fuzzing technique employed in this project called mutational fuzzing.
 
@@ -255,7 +318,7 @@ To test the network stack of an operating system using a fuzzer, one therefore h
       \multicolumn{2}{|l|}{Payload} & variable                                                                 \\\hhline{|-|-|-|}
       Ethernet                      & \cellcolor{blue!10}Frame Check Sequence    & \cellcolor{blue!10}4 bytes  \\\hline
     \end{tabular}
-    \caption{Structure of a TCP/IP packet encapsulated in an ethernet frame, as used during seeding of \proj. Gray fields are optional, green fields are length-dependent, and blue fields are checksums.}
+    \caption{Structure of a TCP/IP packet encapsulated in an Ethernet frame, with optional fields (gray), length-dependent fields (green), and checksums (blue)}
     \label{tab:NetworkPacket}
   \end{center}
 \end{table}
@@ -486,7 +549,7 @@ This improved seeding strategy does not diminish the state space the fuzzer can 
 
 \subsubsection{Input Message Modeling and Mutation}
 \label{Implementation:InputModeling:MessageModeling}
-Then, there is the question of how to model individual messages. Here, three fundamental approaches could be considered: (1) any representation and exclusive crossover mutations, (2) byte arrays and random mutation, and (3) parsed structure with different levels of manual fixing of values after random mutation.
+Then, there is the question of how to model individual messages. Here, three fundamental approaches could be considered: (1) any representation and exclusive whole-message crossover mutations, (2) byte arrays and random mutation, and (3) parsed structure with different levels of manual fixing of values after random mutation.
 
 First, when one only allows crossover mutation of full messages, i.e. appending a message randomly drawn from any other entry in the corpus or a fixed list, how the input is modeled does not matter, since the messages themselves never change. However, this approach limits the kinds of traces a fuzzer is able to generate to permutations of seed messages and is thus unsuitable for general fuzzing.
 
@@ -528,7 +591,7 @@ This section describes the implementation of the different parts of \proj in det
 
 \subsubsection{Central Infrastructure}
 
-The fuzzer relies on \code{CentralizedLauncher} to spawn its clients, each with its data structures and each spawning its own instance of Zephyr. \code{CentralizedLauncher} synchronizes inputs added to one of the client's corpi to minimize re-execution and combine the progress made across all clients. Two clients are spawned with a different configuration compared to all other clients: The central synchronizing client does not receive a mutational stage; its only job is synchronization. The last client receives additional feedbacks with constant interestingness values, which report data about the host system, such as available memory, to the monitor.
+The fuzzer relies on \code{CentralizedLauncher} to spawn its clients, each with its data structures and each spawning its own instance of Zephyr. \code{CentralizedLauncher} synchronizes inputs added to one of the client's corpora to minimize re-execution and combine the progress made across all clients. Two clients are spawned with a different configuration compared to all other clients: The central synchronizing client does not receive a mutational stage; its only job is synchronization. The last client receives additional feedbacks with constant interestingness values, which report data about the host system, such as available memory, to the monitor.
 
 Communication between clients is done through Low Level Message Passing (LLMP), a shared memory-based message-passing system provided by LibAFL. The absence of a requirement for kernel-based synchronization primitives such as locks allows \proj to scale across thousands of clients effectively.
 
@@ -550,8 +613,8 @@ At the start of the fuzzing process, each client initializes its data structures
           \item A \code{PacketMetadataFeedback} attaching the metadata provided by the \code{PacketObserver} to the testcase containing the input.
           \item A \code{TimeFeedback}, \code{InputLenFeedback}, and for the last client host system measuring feedbacks, attaching the execution time, input length, and other information to the metadata.
         \end{itemize}
-  \item Two corpi: a \code{InMemoryCorpus} for the working corpus of the fuzzer, and an \code{OnDiskCorpus} for all crashes found.
-  \item A \code{StdState} containing a random number generator and the corpi.
+  \item Two corpora: a \code{InMemoryCorpus} for the working corpus of the fuzzer, and an \code{OnDiskCorpus} for all crashes found.
+  \item A \code{StdState} containing a random number generator and the corpora.
   \item The appropriate mutators depending on the selected representation of the trace (see \cref{Implementation:InputModeling}).
   \item \code{StdMOptMutator} is used as a mutator scheduler — it implements the algorithm first presented in MOpt\cite{MOpt}.
   \item A \code{StdMutationalStage} wrapping the mutator scheduler and handling the main mutation workflow.
@@ -662,7 +725,6 @@ Both coverage and state-diff results show inconsistencies when Zephyr is run by 
   \caption{Packets exchanged for the same input in 10 executions, recorded 4, 4, and 2 times respectively}
   \label{fig:wireshark-combined}
 \end{figure*}
-\paragraph{Distribution}
 
 \paragraph{Coverage}
 As discussed in \cref{Implementation:SanCov}, for certain coverage entries, \textit{how often} a certain basic block is executed is expected to be inconsistent because of inherent inconsistencies of the non-deterministic host scheduler. However, since \proj only taints executed basic blocks, the differences measured are between a basic block being executed any number of times and the basic block not being executed at all. Functions such as \code{net_init} should be called on every launch, and if they are not executed, Zephyr may not be initialized correctly, thus invalidating any evaluation on it, indicating that the differences in coverage can not be ignored by \proj. It is further notable that many of the functions in the list of inconsistently executed basic blocks appear to be related to system startup and initialization. Finally, coverage is measured with high consistency across trace length, suggesting that the logic only executed sometimes is unrelated to packet handling.
@@ -706,12 +768,12 @@ I was unable to create sufficient proof of this conjecture during this thesis, n
 
 \begin{figure}
   \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/throughput/all-other-to-most-rolling-avg-by-run_time-plot.png}}
-  \caption{Consistencies across different overcommit values}
+  \caption{Ratio between incorrect and correct observer measurements for different overcommit values}
   \label{fig:overcommit-consistencies}
 \end{figure}
 \begin{figure}
   \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/throughput/exec-sec-by-run_time-plot.png}}
-  \caption{Execution speed across different overcommit values}
+  \caption{Execution speed for different overcommit values}
   \label{fig:overcommit-exec-speed}
 \end{figure}
 
@@ -729,7 +791,7 @@ To mitigate increased inconsistency rates, \code{ReplayingFuzzer} has to be conf
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{assets/eval/coverage-observer-by-run_time-plot.png}
-  \caption{Code coverage across different configurations}
+  \caption{Code coverage for different configurations}
   \label{fig:eval-cov}
 \end{figure*}
 \begin{figure}
@@ -744,7 +806,7 @@ To mitigate increased inconsistency rates, \code{ReplayingFuzzer} has to be conf
 \end{figure}
 \begin{figure}
   \makebox[\columnwidth]{\includegraphics[width=1.1\columnwidth]{assets/eval/corpus-by-run_time-plot.png}}
-  \caption{Number of corpus entries across different configurations}
+  \caption{Number of corpus entries for different configurations}
   \label{fig:eval-corpus}
 \end{figure}
 
@@ -790,7 +852,7 @@ The starkly diminished results from the experiment where \proj is configured wit
 \label{Conclusion}
 
 \cref{Introduction:ResearchQuestions} introduces a set of research questions, which have been explored throughout this thesis:
-\paragraph{RQ 1a, 1b, and 1c} \cref{Implementation:native_sim} introduces \code{native_sim}, a wrapper that allows running Zephyr natively. In conjunction with this, \proj uses a custom ethernet driver based on shared memory to exchange packets with the fuzzer, as introduced in \cref{Implementation:NetworkInterface}. Implementation details are given in \cref{Implementation:ImplementationDetails}. \cref{Implementation:native_sim,Implementation:SanCov} show how Zephyr is instrumented with AddressSanitizer to capture additional memory errors and with CoverageSanitizer to provide coverage feedback to the fuzzer.
+\paragraph{RQ 1a, 1b, and 1c} \cref{Implementation:native_sim} introduces \code{native_sim}, a wrapper that allows running Zephyr natively. In conjunction with this, \proj uses a custom ethernet driver based on shared memory to exchange packets with the fuzzer, as introduced in \cref{Implementation:NetworkInterface}. \cref{Implementation:native_sim,Implementation:SanCov} show how Zephyr is instrumented with AddressSanitizer to capture additional memory errors and with CoverageSanitizer to provide coverage feedback to the fuzzer.
 
 However, Zephyr does not behave consistently when executed by \proj. \cref{Results:Consistency,Results:Overcommit} present initial research into the extent and source of these inconsistencies, along with additional performance testing.
 
@@ -822,16 +884,16 @@ However, the same challenges outlined in \cref{RelatedWorks:ProtocolFuzzing:Targ
 
 Alternatively, \proj could be evaluated on other implementations of TCP/IP stacks, such as userland implementations (\cref{Implementation:ImplementationDetails:HelperFunctionality} discusses how one such implementation is already partially integrated into \proj), or the network stacks of other OSs. The main challenge in this is the adaptation of the target similar to what is described in \cref{Implementation}, such as sanitizer and code coverage instrumentation and drivers for the shared memory-based pseudo-networking or an alternate way of exchanging packets. Access to alternate implementations would also allow \proj to implement differential fuzzing, testing the behavior of the different targets against each other to find logic errors that do not corrupt the memory and thus cannot currently be found by \proj.
 
-\subsubsection{Checks on and Alternate Uses for State Feedback}
+\subsubsection{Accuracy of State-Inferrence Heuristic and Alternate Uses for State Feedback}
 
 The effectiveness of the state-inferring heuristic presented in this thesis could be evaluated by introducing direct state feedback similar to Ijon and other related works (refer to \cref{RelatedWorks:ProtocolFuzzing:ObservingState}) and comparing their effects on the fuzzer's performance. Finally, one could investigate how state information could be used besides feedback. \cref{RelatedWorks:ProtocolFuzzing:UseOfState} discusses advancements other projects have shown by using state information in other parts of the fuzzer, such as the scheduler.
 
 \subsection{Contributions and Summary}
-This thesis presents \proj, a proof-of-concept fuzzer targeting the TCP/IP stack of Zephyr. To achieve this, it introduces a custom ethernet driver based on shared memory to reduce host kernel dependencies. \code{native_sim}, the environment simulation wrapper, is used to run Zephyr without the need for a dynamic emulation layer. It is built on and extends the fuzzing framework LibAFL.
+This thesis presents \proj, a proof-of-concept fuzzer targeting the TCP/IP stack of Zephyr. To achieve this, it introduces a custom ethernet driver based on shared memory to reduce host kernel dependencies. \code{native_sim}, the environment simulation wrapper, is used to run Zephyr without the need for a dynamic emulation layer. \proj is built on and extends the fuzzing framework LibAFL.
 
-In addition to the initial investigation into the reasons for Zephyr's at times unpredictable behavior, I evaluated the differences in performance of mutations on serialized and parsed packet representations, two strategies to select which message in a trace to mutate, and two heuristics to estimate the TCP state of a connection based on returned packets.
+In addition to the initial investigation into the reasons for Zephyr's at times unpredictable behavior, I evaluated the differences in performance of mutations on serialized and parsed packet representations, two strategies to select which message in a trace to mutate, and two uses of state inferred by a heuristics based on returned packets to estimate the TCP state of a connection.
 
-The experiments show that even limited structure-aware mutation is more efficient at covering both code coverage and the state space than naïve random mutation. In addition to appending new packets, mutating the last message of a trace is more efficient than selecting a random message to mutate. Finally, I present that maximizing simple state feedback as calculated by the heuristic quickly saturates the possible state space, after which \proj no longer makes progress. Conversely, maximizing coverage across state transitions proves to be more effective.
+The experiments show that even limited structure-aware mutation is more efficient and effective at covering both code coverage and the state space than naïve random mutation. In addition to appending new packets, mutating the last message of a trace is more efficient than selecting a random message to mutate. Finally, I present that maximizing simple state feedback as calculated by the heuristic quickly saturates the possible state space, after which \proj no longer makes progress. Conversely, maximizing coverage across state transitions proves to be more effective.
 
 \vspace*{\stretch{2}}
 \begin{center}
@@ -840,10 +902,9 @@ The experiments show that even limited structure-aware mutation is more efficien
 
   \vspace{8px}
 
-  \href{https://github.com/riesentoaster/fuzzing-zephyr-network-stack}{github.com/riesentoaster/fuzzing-zephyr-network-stack}.\todo{change url}
-  \todo{Re-render plots at higher DPI, fix placement}
+  \href{https://github.com/riesentoaster/ftz}{github.com/riesentoaster/FTZ}.
 \end{center}
-\vspace*{\stretch{1}}
+% \vspace*{\stretch{1}}
 
 \newpage
 
