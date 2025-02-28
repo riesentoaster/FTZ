@@ -29,7 +29,7 @@ global_config = {
     "exec_sec": {"ylabel": "Execution Speed (executions/s)"},
     "executions": {"ylabel": "Executions"},
     "free_memory": {"ylabel": "Free Memory (bytes)", "print-minor-ticks": True},
-    "input_len": {"ylabel": "Average Input Length"},
+    "input_len": {"ylabel": "Average Input Length", "ymin": 1},
     "objectives": {"ylabel": "Objectives"},
     "run_time": {"ylabel": "Run Time (seconds)"},
     "second_to_most_rolling_avg": {
@@ -139,7 +139,7 @@ def plot(file_data, x_axis, key, limit_range, out_dir):
 
     ax.legend()
     ax.grid(which="both")
-    output = Path(out_dir) / f"{key.replace('_', '-')}-by-{x_axis}-plot.svg"
+    output = Path(out_dir) / f"{x_axis}-{key.replace('_', '-')}-plot.svg"
     fig.tight_layout()
     output.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output)

@@ -111,6 +111,11 @@ def main():
         action="store_true",
         help="Include additional plots showing recent data (last quarter or last hour)",
     )
+    parser.add_argument(
+        "--output",
+        type=str,
+        help="Path where the output SVG file should be saved",
+    )
     args = parser.parse_args()
 
     # Process all input files
@@ -228,9 +233,24 @@ def main():
         if "." in args.inputs[0]
         else args.inputs[0]
     )
-    fig.suptitle(base.split("/")[-1])
-    # fig.tight_layout()
-    fig.savefig(f"{base}.svg", dpi=100)
+    filename = base.split("/")[-1]
+    fig.suptitle(filename)
+
+    # Construct output path
+    if args.output:
+        import os
+
+        # Create directory if it doesn't exist
+        output_dir = os.path.dirname(args.output)
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+        output_path = args.output
+    else:
+        output_path = f"{base}.svg"
+
+    fig.savefig(output_path, dpi=100)
+    plt.close(fig)
+    print(f"Plot saved to: {output_path}")
 
 
 if __name__ == "__main__":
